@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{6e45e527-70e9-4f23-86fc-6df15d5399c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imgui\ext">
+      <UniqueIdentifier>{abafeaca-4245-4661-ba0c-5163018a3bf0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{01200998-a27b-46b7-b6f2-ee8a67d85bef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui\ext">
+      <UniqueIdentifier>{6374b88f-9ac1-4a50-8365-7ef8d26fe547}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\RaffleEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\glad\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_win32.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_tables.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.cpp">
+      <Filter>Source Files\imgui\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp">
+      <Filter>Source Files\imgui\ext</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_extension.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_rectpack.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_textedit.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.h">
+      <Filter>Header Files\imgui\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h">
+      <Filter>Header Files\imgui\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h">
+      <Filter>Header Files\imgui\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h">
+      <Filter>Header Files\imgui\ext</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
