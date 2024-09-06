@@ -115,6 +115,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\glfw-3.4\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmodL.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -135,6 +138,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\glfw-3.4\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmod.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -151,6 +157,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\glfw-3.4\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmodL.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -171,6 +180,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\glfw-3.4\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmod.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
