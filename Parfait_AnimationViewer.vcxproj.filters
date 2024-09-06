@@ -63,6 +63,12 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanUtility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\ParfaitEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui-1.90.6\imconfig.h">
@@ -107,5 +113,14 @@
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\ParfaitEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="fonts\TMP.TTF" />
   </ItemGroup>
 </Project>
