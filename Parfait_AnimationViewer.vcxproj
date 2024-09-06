@@ -30,7 +30,7 @@
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_win32.cpp" />
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui_tables.cpp" />
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp" />
-    <ClCompile Include="src\RaffleEngine.cpp" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.h" />
