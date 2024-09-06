@@ -13,6 +13,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include <fmod.hpp>
+#include <vulkan/vulkan.hpp>
 
 const int WIDTH = 1920;
 const int HEIGHT = 1080;
