@@ -50,10 +50,15 @@
     <ClInclude Include="External Libraries\imgui-1.90.6\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
+    <ClInclude Include="src\Renderer\BufferObject.h" />
     <ClInclude Include="src\Renderer\VulkanUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\shader.frag" />
+    <None Include="Shaders\shader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -11,6 +11,7 @@
 #include <optional>
 
 #include "Renderer/VulkanUtility.h"
+#include "Renderer/BufferObject.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -85,8 +86,13 @@ class ParfaitEngine
 		uint32_t m_CurrentFrame = 0;
 		bool m_FrameBufferResized = false;
 
+		VkBuffer m_VertexBuffer;
+		VkDeviceMemory m_VertexBufferMemory;
+		VkBuffer m_IndexBuffer;
+		VkDeviceMemory m_IndexBufferMemory;
+
 		// - Vulkan Functions
-		// -- Create Functions
+		// -- Create Core Functions
 		void CreateVulkanInstance();
 		void CreateSurface();
 		void CreateLogicalDevice();
@@ -96,24 +102,33 @@ class ParfaitEngine
 		void CreateGraphicsPipeline();
 		void CreateFramebuffers();
 		void CreateCommandPool();
+		void CreateVertexBuffer(); 
+		void CreateIndexBuffer();
 		void CreateCommandBuffer();
 		void CreateSyncObjects();
 
 		void RecreateSwapChain();
+
 		// -- Getter Functions
 		std::vector<const char*> GetRequiredExtensions();
 		VkPhysicalDevice GetPhysicalDevice();
+		
 		// -- Checker Functions
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool IsDeviceExtensionSupport(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		
 		// -- Support Functions
 		Parfait::vulkan::QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		Parfait::vulkan::SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
 		// -- Validation Layer Functions
 		void SetupDebugMessenger();
 		bool CheckValidationLayerSupport();
