@@ -3,12 +3,18 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <iostream>
 #include <exception>
 #include <vector>
 #include <set>
 #include <map>
 #include <optional>
+#include <chrono>
+#include <filesystem>
 
 #include "Renderer/VulkanUtility.h"
 #include "Renderer/BufferObject.h"
@@ -74,6 +80,7 @@ class ParfaitEngine
 		std::vector<VkFramebuffer> m_SwapchainFramebuffers;
 		
 		VkRenderPass m_RenderPass;
+		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkPipelineLayout m_PipelineLayout;
 		VkPipeline m_GraphicsPipeline;
 
@@ -91,6 +98,13 @@ class ParfaitEngine
 		VkBuffer m_IndexBuffer;
 		VkDeviceMemory m_IndexBufferMemory;
 
+		std::vector<VkBuffer> m_UniformBuffers;
+		std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+		std::vector<void*> m_UniformBuffersMapped;
+
+		VkDescriptorPool m_DescriptorPool;
+		std::vector<VkDescriptorSet> m_DescriptorSets;
+
 		// - Vulkan Functions
 		// -- Create Core Functions
 		void CreateVulkanInstance();
@@ -99,11 +113,15 @@ class ParfaitEngine
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateRenderPass();
+		void CreateDescriptorSetLayout();
 		void CreateGraphicsPipeline();
 		void CreateFramebuffers();
 		void CreateCommandPool();
-		void CreateVertexBuffer(); 
+		void CreateVertexBuffer();
 		void CreateIndexBuffer();
+		void CreateUniformBuffer();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
 		void CreateCommandBuffer();
 		void CreateSyncObjects();
 
@@ -128,6 +146,7 @@ class ParfaitEngine
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+		void UpdateUniformBuffer(uint32_t currentImage);
 
 		// -- Validation Layer Functions
 		void SetupDebugMessenger();
