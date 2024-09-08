@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <stb_image.h>
+
 #include <iostream>
 #include <exception>
 #include <vector>
@@ -93,6 +95,11 @@ class ParfaitEngine
 		uint32_t m_CurrentFrame = 0;
 		bool m_FrameBufferResized = false;
 
+		VkImage m_TextureImage;
+		VkDeviceMemory m_TextureImageMemory;
+		VkImageView m_TextureImageView;
+		VkSampler m_TextureSampler;
+
 		VkBuffer m_VertexBuffer;
 		VkDeviceMemory m_VertexBufferMemory;
 		VkBuffer m_IndexBuffer;
@@ -117,6 +124,9 @@ class ParfaitEngine
 		void CreateGraphicsPipeline();
 		void CreateFramebuffers();
 		void CreateCommandPool();
+		void CreateTextureImage();
+		void CreateTextureImageView();
+		void CreateTextureSampler();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 		void CreateUniformBuffer();
@@ -143,7 +153,13 @@ class ParfaitEngine
 		Parfait::vulkan::SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		VkCommandBuffer BeginSingleTimeCommands();
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+		VkImageView CreateImageView(VkImage image, VkFormat format);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		void UpdateUniformBuffer(uint32_t currentImage);
