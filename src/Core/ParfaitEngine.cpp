@@ -763,7 +763,6 @@ void ParfaitEngine::LoadModel()
 			m_Indices.push_back(uniqueVertices[vertex]);
 		}
 	}
-	std::cout << m_Vertices.size();
 }
 void ParfaitEngine::CreateVertexBuffer()
 {
