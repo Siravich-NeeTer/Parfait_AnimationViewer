@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <stb_image.h>
+#include <tiny_obj_loader.h>
 
 #include <iostream>
 #include <exception>
@@ -17,12 +18,16 @@
 #include <optional>
 #include <chrono>
 #include <filesystem>
+#include <unordered_map>
 
 #include "Renderer/VulkanUtility.h"
 #include "Renderer/BufferObject.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+
+const std::string MODEL_PATH = "Models/viking_room.obj";
+const std::string TEXTURE_PATH = "Textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -104,6 +109,8 @@ class ParfaitEngine
 		VkImageView m_TextureImageView;
 		VkSampler m_TextureSampler;
 
+		std::vector<Parfait::Vertex> m_Vertices;
+		std::vector<uint32_t> m_Indices;
 		VkBuffer m_VertexBuffer;
 		VkDeviceMemory m_VertexBufferMemory;
 		VkBuffer m_IndexBuffer;
@@ -132,6 +139,7 @@ class ParfaitEngine
 		void CreateTextureImage();
 		void CreateTextureImageView();
 		void CreateTextureSampler();
+		void LoadModel();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 		void CreateUniformBuffer();
