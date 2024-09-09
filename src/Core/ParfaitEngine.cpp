@@ -377,7 +377,7 @@ void ParfaitEngine::CreateImageViews()
 
 	for (size_t i = 0; i < m_SwapchainImageViews.size(); i++)
 	{
-		m_SwapchainImageViews[i] = CreateImageView(m_SwapchainImages[i], m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
+		m_SwapchainImageViews[i] = CreateImageView(m_SwapchainImages[i], m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 	}
 }
 void ParfaitEngine::CreateRenderPass()
