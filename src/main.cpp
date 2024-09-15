@@ -4,11 +4,10 @@
 
 int main()
 {
-	ParfaitEngine pfEngine;
-
 	try
 	{
-		pfEngine.Run();
+		Parfait::ParfaitEngine parfaitEngine(800, 600);
+		parfaitEngine.Run();
 	}
 	catch (const std::exception& e)
 	{

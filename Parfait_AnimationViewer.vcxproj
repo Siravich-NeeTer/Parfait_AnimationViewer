@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External Libraries\glad\src\glad.c" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.cpp" />
     <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp" />
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui.cpp" />
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui_demo.cpp" />
@@ -34,10 +33,19 @@
     <ClCompile Include="External Libraries\tinyobjloader\tiny_obj_loader.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
+    <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
+    <ClCompile Include="src\Renderer\VulkanContext.cpp" />
+    <ClCompile Include="src\Renderer\VulkanFramebuffer.cpp" />
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.cpp" />
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.h" />
+    <ClCompile Include="src\Renderer\VulkanRenderPass.cpp" />
+    <ClCompile Include="src\Renderer\VulkanShader.cpp" />
+    <ClCompile Include="src\Renderer\VulkanSurfaceSwapchain.cpp" />
     <ClCompile Include="src\Renderer\VulkanUtility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.h" />
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h" />
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h" />
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h" />
@@ -55,6 +63,14 @@
     <ClInclude Include="External Libraries\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\BufferObject.h" />
+    <ClInclude Include="src\Renderer\Renderer.h" />
+    <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
+    <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
+    <ClInclude Include="src\Renderer\VulkanContext.h" />
+    <ClInclude Include="src\Renderer\VulkanFramebuffer.h" />
+    <ClInclude Include="src\Renderer\VulkanRenderPass.h" />
+    <ClInclude Include="src\Renderer\VulkanShader.h" />
+    <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h" />
     <ClInclude Include="src\Renderer\VulkanUtility.h" />
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +79,8 @@
   <ItemGroup>
     <None Include="Shaders\shader.frag" />
     <None Include="Shaders\shader.vert" />
+    <None Include="Shaders\temp.frag" />
+    <None Include="Shaders\temp.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -120,7 +138,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PARFAIT_DEBUG;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -129,7 +147,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib32-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;$(VULKAN_SDK)/Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmodL.dll" "$(OutDir)"</Command>
@@ -152,7 +170,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib32-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;$(VULKAN_SDK)/Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmod.dll" "$(OutDir)"</Command>
@@ -162,7 +180,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PARFAIT_DEBUG;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -171,7 +189,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;$(VULKAN_SDK)/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;opencv_world490d.lib;fmodL_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmodL.dll" "$(OutDir)"</Command>
@@ -194,7 +212,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;$(VULKAN_SDK)/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;opencv_world490.lib;fmod_vc.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmod.dll" "$(OutDir)"</Command>

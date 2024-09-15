@@ -54,25 +54,52 @@
     <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.cpp">
-      <Filter>Source Files\imgui\ext</Filter>
-    </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp">
-      <Filter>Source Files\imgui\ext</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\VulkanUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\ParfaitEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="External Libraries\stb\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="External Libraries\tinyobjloader\tiny_obj_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanSurfaceSwapchain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanFramebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanCommandPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\ParfaitEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,20 +134,11 @@
     <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.h">
-      <Filter>Header Files\imgui\ext</Filter>
-    </ClInclude>
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h">
-      <Filter>Header Files\imgui\ext</Filter>
-    </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h">
       <Filter>Header Files\imgui\ext</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Core\ParfaitEngine.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\VulkanUtility.h">
       <Filter>Header Files</Filter>
@@ -134,6 +152,36 @@
     <ClInclude Include="External Libraries\tinyobjloader\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanRenderPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanFramebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanCommandPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanCommandBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\ParfaitEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
@@ -141,5 +189,7 @@
   <ItemGroup>
     <None Include="Shaders\shader.frag" />
     <None Include="Shaders\shader.vert" />
+    <None Include="Shaders\temp.frag" />
+    <None Include="Shaders\temp.vert" />
   </ItemGroup>
 </Project>
