@@ -63,7 +63,6 @@ namespace Parfait
 		}
 		VulkanContext::~VulkanContext()
 		{
-			vkDeviceWaitIdle(m_Device);
 			vkDestroyDevice(m_Device, nullptr);
 
 			if (enableValidationLayers) 

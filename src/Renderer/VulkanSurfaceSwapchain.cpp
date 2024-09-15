@@ -9,17 +9,20 @@ namespace Parfait
 			m_WindowRef(_window)
 		{
 			CreateSurface();
+			CreateSwapchain();
 			CreateImageViews();
 		}
 		VulkanSurfaceSwapchain::~VulkanSurfaceSwapchain()
 		{
-			for (const VkImageView& imageView : m_SwapchainImageViews)
-			{
-				vkDestroyImageView(m_VulkanContextRef.GetLogicalDevice(), imageView, nullptr);
-			}
-
-			vkDestroySwapchainKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, nullptr);
+			DestroySwapchainImageViews();
 			vkDestroySurfaceKHR(m_VulkanContextRef.GetInstance(), m_Surface, nullptr);
+		}
+		void VulkanSurfaceSwapchain::RecreateSwapchainImageViews()
+		{
+			DestroySwapchainImageViews();
+
+			CreateSwapchain();
+			CreateImageViews();
 		}
 
 		void VulkanSurfaceSwapchain::CreateSurface()
@@ -29,7 +32,18 @@ namespace Parfait
 			{
 				throw std::runtime_error("Failed to create Window Surface!");
 			}
+		}
+		void VulkanSurfaceSwapchain::CreateImageViews()
+		{
+			m_SwapchainImageViews.resize(m_SwapchainImages.size());
 
+			for (size_t i = 0; i < m_SwapchainImages.size(); i++)
+			{
+				m_SwapchainImageViews[i] = CreateImageView(m_SwapchainImages[i], m_SurfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+			}
+		}
+		void VulkanSurfaceSwapchain::CreateSwapchain()
+		{
 			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanContextRef.GetPhysicalDevice(), m_Surface, &m_SurfaceCapabilities);
 
 			m_SurfaceFormat = ChooseSwapSurfaceFormat();
@@ -68,7 +82,7 @@ namespace Parfait
 			createInfo.clipped = VK_TRUE;
 			createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-			if (vkCreateSwapchainKHR(m_VulkanContextRef.GetLogicalDevice(), &createInfo, nullptr, &m_Swapchain) != VK_SUCCESS) 
+			if (vkCreateSwapchainKHR(m_VulkanContextRef.GetLogicalDevice(), &createInfo, nullptr, &m_Swapchain) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create swap chain!");
 			}
@@ -76,15 +90,6 @@ namespace Parfait
 			vkGetSwapchainImagesKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, &imageCount, nullptr);
 			m_SwapchainImages.resize(imageCount);
 			vkGetSwapchainImagesKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, &imageCount, m_SwapchainImages.data());
-		}
-		void VulkanSurfaceSwapchain::CreateImageViews()
-		{
-			m_SwapchainImageViews.resize(m_SwapchainImages.size());
-
-			for (size_t i = 0; i < m_SwapchainImages.size(); i++)
-			{
-				m_SwapchainImageViews[i] = CreateImageView(m_SwapchainImages[i], m_SurfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-			}
 		}
 		VkImageView VulkanSurfaceSwapchain::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 		{
@@ -166,6 +171,16 @@ namespace Parfait
 
 				return actualExtent;
 			}
+		}
+
+		void VulkanSurfaceSwapchain::DestroySwapchainImageViews()
+		{
+			for (const VkImageView& imageView : m_SwapchainImageViews)
+			{
+				vkDestroyImageView(m_VulkanContextRef.GetLogicalDevice(), imageView, nullptr);
+			}
+
+			vkDestroySwapchainKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, nullptr);
 		}
 	}
 }

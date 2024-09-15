@@ -64,8 +64,8 @@
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\BufferObject.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
-    <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
+    <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
     <ClInclude Include="src\Renderer\VulkanContext.h" />
     <ClInclude Include="src\Renderer\VulkanFramebuffer.h" />
     <ClInclude Include="src\Renderer\VulkanRenderPass.h" />

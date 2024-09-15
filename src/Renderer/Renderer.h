@@ -12,6 +12,8 @@ namespace Parfait
 {
 	namespace Graphics
 	{
+		const int MAX_FRAMES_IN_FLIGHT = 2;
+
 		class Renderer
 		{
 			public:
@@ -25,19 +27,24 @@ namespace Parfait
 
 			private:
 				std::unique_ptr<VulkanContext> m_VkContext;
-				VulkanSurfaceSwapchain m_VkSurfaceSwapchain;
-				VulkanRenderPass m_VkRenderPass;
+				std::unique_ptr<VulkanSurfaceSwapchain> m_VkSurfaceSwapchain;
+				std::unique_ptr<VulkanRenderPass> m_VkRenderPass;
 				std::unique_ptr<VulkanGraphicsPipeline> m_VkGraphicsPipeline;
 				std::unique_ptr<VulkanFramebuffer> m_VkFramebuffer;
 				VulkanCommandPool m_VkCommandPool;
-				VulkanCommandBuffer m_VkCommandBuffer;
+				std::vector<std::unique_ptr<VulkanCommandBuffer>> m_VkCommandBuffers;
 
-				VkSemaphore m_PresentSemaphore;
-				VkSemaphore m_RenderSemaphore;
-				VkFence m_Fence;
+				std::vector<VkSemaphore> m_PresentSemaphores;
+				std::vector<VkSemaphore> m_RenderSemaphores;
+				std::vector<VkFence> m_InflightFence;
+
+				int m_CurrentFrame = 0;
+
+				void CreateCommandBuffers(uint32_t _size);
+				void RecreateSwapchain();
 
 				// Create both VkSemaphore and VkFence
-				void CreateSyncObject();
+				void CreateSyncObject(uint32_t _size);
 				void DestroySyncObject();
 		};
 	}

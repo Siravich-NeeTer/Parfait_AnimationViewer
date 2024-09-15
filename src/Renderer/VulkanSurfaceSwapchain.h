@@ -16,6 +16,8 @@ namespace Parfait
 				VulkanSurfaceSwapchain(const VulkanContext& _vulkanContext, GLFWwindow& _window);
 				~VulkanSurfaceSwapchain();
 
+				void RecreateSwapchainImageViews();
+
 				const VkSurfaceKHR& GetSurface() const { return m_Surface; }
 				const VkSurfaceFormatKHR& GetSurfaceFormat() const { return m_SurfaceFormat; }
 				const VkSurfaceCapabilitiesKHR& GetSurfaceCapabilities() const { return m_SurfaceCapabilities; }
@@ -41,12 +43,15 @@ namespace Parfait
 				std::vector<VkImageView> m_SwapchainImageViews;
 
 				void CreateSurface();
+				void CreateSwapchain();
 				void CreateImageViews();
 				VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
 				VkSurfaceFormatKHR ChooseSwapSurfaceFormat();
 				VkPresentModeKHR ChooseSwapPresentMode();
 				VkExtent2D ChooseSwapExtent();
+
+				void DestroySwapchainImageViews();
 		};
 	}
 }
