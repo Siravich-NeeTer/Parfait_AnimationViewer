@@ -2,34 +2,42 @@
 
 namespace Parfait
 {
-	ParfaitEngine::ParfaitEngine(int _width, int _height)
-	{
-		InitWindow(_width, _height);
-
-		m_Renderer = std::make_unique<Graphics::Renderer>(m_Window);
-	}
-	void ParfaitEngine::Run() 
-	{
-		while (!glfwWindowShouldClose(m_Window))
-		{
-			glfwPollEvents();
-			m_Renderer->Draw();
-		}
-
-	}
-
-	void ParfaitEngine::InitWindow(int _width, int _height)
+	ParfaitEngine::ParfaitEngine()
 	{
 		if (glfwInit() == GLFW_FALSE)
 		{
 			throw std::runtime_error("GLFW Init Error!\n");
 		}
-
 		// GLFW_NO_API for specifying not to create OpenGL context
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+		m_VkContext = std::make_unique<Graphics::VulkanContext>();
+	}
+
+	void ParfaitEngine::CreateWindow(int _width, int _height, const char* _title)
+	{
 		// 4th parameter : Optionally specify a monitor to open the window
 		// 5th parameter : Only for OpenGL
-		m_Window = glfwCreateWindow(_width, _height, "ParfaitEngine", nullptr, nullptr);
+		GLFWwindow* window = glfwCreateWindow(_width, _height, _title, nullptr, nullptr);
+		m_Windows.emplace_back(window);
+		m_WindowResources.emplace_back(std::make_unique<Graphics::VulkanWindowResources>(*m_VkContext, window));
+	}
+	void ParfaitEngine::Run() 
+	{
+		while (!m_Windows.empty())
+		{
+			for (size_t i = 0; i < m_WindowResources.size(); i++)
+			{
+				m_WindowResources[i].get()->Update();
+
+				if (glfwWindowShouldClose(m_Windows[i]))
+				{
+					m_WindowResources[i].reset();
+					m_WindowResources.erase(m_WindowResources.begin() + i);
+					m_Windows.erase(m_Windows.begin() + i);
+					continue;
+				}
+			}
+		}
 	}
 }

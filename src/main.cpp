@@ -6,7 +6,12 @@ int main()
 {
 	try
 	{
-		Parfait::ParfaitEngine parfaitEngine(800, 600);
+		const int WIDTH = 800;
+		const int HEIGHT = 600;
+		Parfait::ParfaitEngine parfaitEngine;
+		
+		parfaitEngine.CreateWindow(WIDTH, HEIGHT, "Parfait Engine");
+
 		parfaitEngine.Run();
 	}
 	catch (const std::exception& e)

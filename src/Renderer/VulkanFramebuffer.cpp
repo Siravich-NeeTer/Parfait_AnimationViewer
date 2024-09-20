@@ -13,10 +13,13 @@ namespace Parfait
 		}
 		VulkanFramebuffer::~VulkanFramebuffer()
 		{
-			for (const VkFramebuffer& framebuffer : m_Framebuffers)
-			{
-				vkDestroyFramebuffer(m_VulkanContextRef.GetLogicalDevice(), framebuffer, nullptr);
-			}
+			DestroyFramebuffer();
+		}
+
+		void VulkanFramebuffer::RecreateFramebuffer()
+		{
+			DestroyFramebuffer();
+			CreateFramebuffer();
 		}
 
 		void VulkanFramebuffer::CreateFramebuffer()
@@ -45,6 +48,13 @@ namespace Parfait
 				{
 					throw std::runtime_error("Failed to create framebuffer!");
 				}
+			}
+		}
+		void VulkanFramebuffer::DestroyFramebuffer()
+		{
+			for (const VkFramebuffer& framebuffer : m_Framebuffers)
+			{
+				vkDestroyFramebuffer(m_VulkanContextRef.GetLogicalDevice(), framebuffer, nullptr);
 			}
 		}
 	}

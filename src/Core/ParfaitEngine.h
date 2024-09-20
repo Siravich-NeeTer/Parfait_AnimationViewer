@@ -1,23 +1,21 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include "Renderer/Renderer.h"
+#include "Renderer/VulkanWindowResources.h"
 
 namespace Parfait
 {
 	class ParfaitEngine
 	{
 		public:
-			ParfaitEngine(int _width, int _height);
+			ParfaitEngine();
 
+			void CreateWindow(int _width, int _height, const char* _title);
 			void Run();
 
-			const Graphics::Renderer& GetRenderer() const { return *m_Renderer; }
-
 		private:
-			GLFWwindow* m_Window;
-			std::unique_ptr <Graphics::Renderer> m_Renderer;
-
-			void InitWindow(int _width, int _height);
+			std::unique_ptr <Graphics::VulkanContext> m_VkContext;
+			std::vector<std::unique_ptr<Graphics::VulkanWindowResources>> m_WindowResources;
+			std::vector<GLFWwindow*> m_Windows;
 	};
 }

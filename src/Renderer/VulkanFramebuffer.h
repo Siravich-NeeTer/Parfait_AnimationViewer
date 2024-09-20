@@ -14,6 +14,8 @@ namespace Parfait
 				VulkanFramebuffer(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain, const VulkanRenderPass& _vulkanRenderPass);
 				~VulkanFramebuffer();
 
+				void RecreateFramebuffer();
+
 				const std::vector<VkFramebuffer>& GetFramebuffers() const { return m_Framebuffers; }
 
 			private:
@@ -24,6 +26,7 @@ namespace Parfait
 				std::vector<VkFramebuffer> m_Framebuffers;
 
 				void CreateFramebuffer();
+				void DestroyFramebuffer();
 		};
 	}
 }

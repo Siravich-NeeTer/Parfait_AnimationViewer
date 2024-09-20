@@ -44,6 +44,7 @@
     <ClCompile Include="src\Renderer\VulkanShader.cpp" />
     <ClCompile Include="src\Renderer\VulkanSurfaceSwapchain.cpp" />
     <ClCompile Include="src\Renderer\VulkanUtility.cpp" />
+    <ClCompile Include="src\Renderer\VulkanWindowResources.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h" />
@@ -72,6 +73,7 @@
     <ClInclude Include="src\Renderer\VulkanShader.h" />
     <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h" />
     <ClInclude Include="src\Renderer\VulkanUtility.h" />
+    <ClInclude Include="src\Renderer\VulkanWindowResources.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
