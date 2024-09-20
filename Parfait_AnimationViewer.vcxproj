@@ -34,6 +34,7 @@
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Renderer\VulkanBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
     <ClCompile Include="src\Renderer\VulkanContext.cpp" />
@@ -65,6 +66,7 @@
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\BufferObject.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
+    <ClInclude Include="src\Renderer\VulkanBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
     <ClInclude Include="src\Renderer\VulkanContext.h" />
@@ -144,6 +146,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,6 +168,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -186,6 +190,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -207,6 +212,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

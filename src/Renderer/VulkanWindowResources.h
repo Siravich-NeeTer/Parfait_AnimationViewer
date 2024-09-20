@@ -43,6 +43,8 @@ namespace Parfait
 				std::vector<VkSemaphore> m_RenderSemaphores;
 				std::vector<VkFence> m_InflightFence;
 
+				std::unique_ptr<VulkanBuffer> m_Buffer;
+
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;
 

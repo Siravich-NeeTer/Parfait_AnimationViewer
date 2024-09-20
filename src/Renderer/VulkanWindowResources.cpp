@@ -12,6 +12,9 @@ namespace Parfait
 			m_Framebuffers(std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
+			// Init Vertex Buffer
+			m_Buffer = std::make_unique<VulkanBuffer>(_vulkanContext);
+
 			CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 
@@ -73,7 +76,11 @@ namespace Parfait
 				scissor.extent = m_SurfaceSwapchain->GetExtent();
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 3, 1, 0, 0);
+				VkBuffer vertexBuffers[] = { m_Buffer.get()->GetBuffer()};
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
+
+				vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 			}
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
 
