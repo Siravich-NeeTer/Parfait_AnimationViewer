@@ -13,18 +13,12 @@ namespace Parfait
 {
 	namespace Graphics
 	{
-		const std::string APPLICATION_NAME = "Parfait Animation Viewer";
-		const std::string ENGINE_NAME= "Parfait Engine";
-		const uint32_t VK_API_VERSION = VK_API_VERSION_1_3;
+		extern const std::string APPLICATION_NAME;
+		extern const std::string ENGINE_NAME;
+		extern const uint32_t VK_API_VERSION;
 
-		const std::vector<const char*> deviceExtensions = 
-		{
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
-		const std::vector<const char*> validationLayers =
-		{
-			"VK_LAYER_KHRONOS_validation"
-		};
+		extern const std::vector<const char*> deviceExtensions;
+		extern const std::vector<const char*> validationLayers;
 
 		#ifdef PARFAIT_DEBUG
 			const bool enableValidationLayers = true;

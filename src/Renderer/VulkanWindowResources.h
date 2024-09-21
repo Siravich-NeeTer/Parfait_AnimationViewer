@@ -10,6 +10,9 @@
 #include "Renderer/VulkanCommandPool.h"
 #include "Renderer/VulkanCommandBuffer.h"
 
+#include "Renderer/Buffers/VulkanVertexBuffer.h"
+#include "Renderer/Buffers/VulkanIndexBuffer.h"
+
 namespace Parfait
 {
 	namespace Graphics
@@ -43,7 +46,8 @@ namespace Parfait
 				std::vector<VkSemaphore> m_RenderSemaphores;
 				std::vector<VkFence> m_InflightFence;
 
-				std::unique_ptr<VulkanBuffer> m_Buffer;
+				std::unique_ptr<VulkanVertexBuffer<Vertex>> m_VertexBuffer;
+				std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
 
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;

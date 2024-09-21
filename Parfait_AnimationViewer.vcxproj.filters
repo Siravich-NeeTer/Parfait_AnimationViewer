@@ -105,7 +105,10 @@
     <ClCompile Include="src\Renderer\VulkanWindowResources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Renderer\VulkanBuffer.cpp">
+    <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -191,7 +194,10 @@
     <ClInclude Include="src\Renderer\VulkanWindowResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\VulkanBuffer.h">
+    <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

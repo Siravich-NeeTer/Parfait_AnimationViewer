@@ -8,7 +8,7 @@
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanShader.h"
 #include "Renderer/VulkanRenderPass.h"
-#include "Renderer/VulkanBuffer.h"
+#include "Renderer/Buffers/VulkanBuffer.h"
 
 namespace Parfait
 {

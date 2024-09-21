@@ -4,6 +4,18 @@ namespace Parfait
 {
 	namespace Graphics
 	{
+		const std::string APPLICATION_NAME = "Parfait Animation Viewer";
+		const std::string ENGINE_NAME = "Parfait Engine";
+		const uint32_t VK_API_VERSION = VK_API_VERSION_1_3;
+
+		const std::vector<const char*> deviceExtensions =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
+		const std::vector<const char*> validationLayers =
+		{
+			"VK_LAYER_KHRONOS_validation"
+		};
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -9,6 +9,7 @@
 #include <array>
 
 #include "Renderer/VulkanContext.h"
+#include "Renderer/VulkanCommandPool.h"
 
 namespace Parfait
 {
@@ -46,27 +47,26 @@ namespace Parfait
 			}
 		};
 		
-		const std::vector<Vertex> vertices = {
-			{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-		};
+		extern const std::vector<Vertex> vertices;
+		extern const std::vector<uint16_t> indices;
 
 		class VulkanBuffer
 		{
 			public:
-				VulkanBuffer(const VulkanContext& _vulkanContext);
-				~VulkanBuffer();
+				VulkanBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkDeviceSize _size, const void* _data);
+				virtual ~VulkanBuffer();
 
 				const VkBuffer& GetBuffer() const { return m_Buffer; }
 
 			private:
 				const VulkanContext& m_VulkanContextRef;
+				const VulkanCommandPool& m_VulkanCommandPoolRef;
 
 				VkBuffer m_Buffer;
 				VkDeviceMemory m_BufferMemory;
 
-				void CreateBuffer();
+				void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
+				void CopyBuffer(VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
 
 				uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		};

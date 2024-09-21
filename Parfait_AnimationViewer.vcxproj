@@ -33,8 +33,9 @@
     <ClCompile Include="External Libraries\tinyobjloader\tiny_obj_loader.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h" />
     <ClCompile Include="src\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Renderer\VulkanBuffer.cpp" />
+    <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
     <ClCompile Include="src\Renderer\VulkanContext.cpp" />
@@ -65,8 +66,9 @@
     <ClInclude Include="External Libraries\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\BufferObject.h" />
+    <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
-    <ClInclude Include="src\Renderer\VulkanBuffer.h" />
+    <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
     <ClInclude Include="src\Renderer\VulkanContext.h" />
