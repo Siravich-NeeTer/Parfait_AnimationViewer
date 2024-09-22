@@ -8,10 +8,10 @@ namespace Parfait
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
 		}
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const std::vector<std::filesystem::path>& _shaderPaths)
+		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
-			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass());
+			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor);
 		}
 		VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 		{
@@ -24,7 +24,7 @@ namespace Parfait
 			}
 		}
 
-		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass)
+		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass, const VulkanDescriptor& _vulkanDescriptor)
 		{
 			CreateShaderModule();
 
@@ -56,7 +56,7 @@ namespace Parfait
 			rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 			rasterizer.lineWidth = 1.0f;
 			rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-			rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+			rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 			rasterizer.depthBiasEnable = VK_FALSE;
 
 			VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -91,7 +91,8 @@ namespace Parfait
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			pipelineLayoutInfo.setLayoutCount = 0;
+			pipelineLayoutInfo.setLayoutCount = 1;
+			pipelineLayoutInfo.pSetLayouts = &_vulkanDescriptor.GetDescriptorSetLayout();
 			pipelineLayoutInfo.pushConstantRangeCount = 0;
 
 			// TODO: Better Error Handler

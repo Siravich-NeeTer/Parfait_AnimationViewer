@@ -14,23 +14,30 @@ namespace Parfait
 			0, 1, 2, 2, 3, 0
 		};
 
+		VulkanBuffer::VulkanBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkDeviceSize _size)
+			: m_VulkanContextRef(_vulkanContext), m_VulkanCommandPoolRef(_vulkanCommandPool)
+		{
+			m_BufferSize = _size;
+
+			CreateBuffer(m_BufferSize, _usage, _properties, m_Buffer, m_BufferMemory);
+		}
 		VulkanBuffer::VulkanBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkDeviceSize _size, const void* _data)
 			: m_VulkanContextRef(_vulkanContext), m_VulkanCommandPoolRef(_vulkanCommandPool)
 		{
-			VkDeviceSize bufferSize = _size;
+			m_BufferSize = _size;
 
 			VkBuffer stagingBuffer;
 			VkDeviceMemory stagingBufferMemory;
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+			CreateBuffer(m_BufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 			void* data;
-			vkMapMemory(m_VulkanContextRef.GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-			memcpy(data, _data, (size_t)bufferSize);
+			vkMapMemory(m_VulkanContextRef.GetLogicalDevice(), stagingBufferMemory, 0, m_BufferSize, 0, &data);
+			memcpy(data, _data, (size_t)m_BufferSize);
 			vkUnmapMemory(m_VulkanContextRef.GetLogicalDevice(), stagingBufferMemory);
 
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | _usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Buffer, m_BufferMemory);
+			CreateBuffer(m_BufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | _usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Buffer, m_BufferMemory);
 
-			CopyBuffer(stagingBuffer, m_Buffer, bufferSize);
+			CopyBuffer(stagingBuffer, m_Buffer, m_BufferSize);
 
 			vkDestroyBuffer(m_VulkanContextRef.GetLogicalDevice(), stagingBuffer, nullptr);
 			vkFreeMemory(m_VulkanContextRef.GetLogicalDevice(), stagingBufferMemory, nullptr);

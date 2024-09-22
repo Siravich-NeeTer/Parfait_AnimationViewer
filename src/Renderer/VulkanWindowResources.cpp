@@ -8,16 +8,31 @@ namespace Parfait
 			: m_VkContextRef(_vulkanContext), m_WindowRef(_window),
 			m_SurfaceSwapchain(std::make_unique<VulkanSurfaceSwapchain>(_vulkanContext, *_window)),
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
-			m_GraphicsPipeline(std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"})),
+			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext, MAX_FRAMES_IN_FLIGHT)),
 			m_Framebuffers(std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
 			// Init Vertex & Index Buffer
 			m_VertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex>>(_vulkanContext, *m_CommandPool, vertices.data(), vertices.size());
 			m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(_vulkanContext, *m_CommandPool, indices.data(), indices.size());
+			m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				m_UniformBuffers[i] = std::make_unique<VulkanUniformBuffer<UniformBufferObject>>(_vulkanContext, *m_CommandPool);
+			}
+
+			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				void* mapBuffer = m_UniformBuffers[i]->GetMappedBuffer();
+				vkMapMemory(_vulkanContext.GetLogicalDevice(), m_UniformBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), 0, &m_UniformBuffers[i]->GetMappedBuffer());
+				m_Descriptor.get()->WriteBuffer(0, m_UniformBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), i);
+			}
+
+			m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
 
 			CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
+
 
 			glfwSetWindowUserPointer(_window, this);
 			BindWindowEvents();
@@ -56,6 +71,8 @@ namespace Parfait
 				throw std::runtime_error("failed to acquire swap chain image!");
 			}
 
+			UpdateUniform(m_CurrentFrame);
+
 			vkResetFences(m_VkContextRef.GetLogicalDevice(), 1, &m_InflightFence[m_CurrentFrame]);
 
 			vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), /*VkCommandBufferResetFlagBits*/ 0);
@@ -81,7 +98,7 @@ namespace Parfait
 				VkDeviceSize offsets[] = { 0 };
 				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
-
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
 				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 			}
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
@@ -131,6 +148,21 @@ namespace Parfait
 			}
 
 			m_CurrentFrame = (m_CurrentFrame + 1) / MAX_FRAMES_IN_FLIGHT;
+		}
+		void VulkanWindowResources::UpdateUniform(uint32_t _currentFrame)
+		{
+			static auto startTime = std::chrono::high_resolution_clock::now();
+
+			auto currentTime = std::chrono::high_resolution_clock::now();
+			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+			UniformBufferObject ubo{};
+			ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 10.0f);
+			ubo.projection[1][1] *= -1;
+
+			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
 		}
 
 		void VulkanWindowResources::BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex)

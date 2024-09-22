@@ -8,6 +8,7 @@
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanShader.h"
 #include "Renderer/VulkanRenderPass.h"
+#include "Renderer/VulkanDescriptor.h"
 #include "Renderer/Buffers/VulkanBuffer.h"
 
 namespace Parfait
@@ -18,7 +19,7 @@ namespace Parfait
 		{
 			public:
 				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const std::vector<std::filesystem::path>& _shaderPaths);
-				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const std::vector<std::filesystem::path>& _shaderPaths);
+				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths);
 				~VulkanGraphicsPipeline();
 
 				const VkPipeline GetPipeline() const { return m_GraphicsPipeline; }
@@ -35,7 +36,7 @@ namespace Parfait
 
 				const VulkanContext& m_VulkanContextRef;
 
-				void CreateGraphicsPipeline(const VkRenderPass& _renderPass);
+				void CreateGraphicsPipeline(const VkRenderPass& _renderPass, const VulkanDescriptor& _vulkanDescriptor);
 				void CreateShaderModule();
 		};
 	}

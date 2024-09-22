@@ -46,6 +46,12 @@ namespace Parfait
 				return attributeDescriptions;
 			}
 		};
+		struct UniformBufferObject
+		{
+			glm::mat4 model;
+			glm::mat4 view;
+			glm::mat4 projection;
+		};
 		
 		extern const std::vector<Vertex> vertices;
 		extern const std::vector<uint16_t> indices;
@@ -53,17 +59,21 @@ namespace Parfait
 		class VulkanBuffer
 		{
 			public:
+				VulkanBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkDeviceSize _size);
 				VulkanBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkDeviceSize _size, const void* _data);
 				virtual ~VulkanBuffer();
 
 				const VkBuffer& GetBuffer() const { return m_Buffer; }
+				const VkDeviceMemory& GetDeviceMemory() const { return m_BufferMemory; }
+				const VkDeviceSize& GetDeviceSize() const { return m_BufferSize; }
 
-			private:
+			protected:
 				const VulkanContext& m_VulkanContextRef;
 				const VulkanCommandPool& m_VulkanCommandPoolRef;
 
 				VkBuffer m_Buffer;
 				VkDeviceMemory m_BufferMemory;
+				VkDeviceSize m_BufferSize;
 
 				void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
 				void CopyBuffer(VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
