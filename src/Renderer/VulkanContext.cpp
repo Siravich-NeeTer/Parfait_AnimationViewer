@@ -17,54 +17,6 @@ namespace Parfait
 			"VK_LAYER_KHRONOS_validation"
 		};
 
-		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-			VkDebugUtilsMessageTypeFlagsEXT messageType,
-			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-			void* pUserData)
-		{
-			if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			{
-				std::cerr << pCallbackData->pMessage << "\n";
-			}
-			return VK_FALSE;
-		}
-		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
-		{
-			PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-			if (func != nullptr)
-			{
-				return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-			}
-			else
-			{
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-			}
-		}
-		void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
-		{
-			// Pointer function of vkDestroyDebugUtilsMessengerEXT
-			PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-			if (func != nullptr)
-				return func(instance, debugMessenger, pAllocator);
-		}
-		void SetupDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
-		{
-			createInfo = {};
-			createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			// Which message severity will call pfnUserCallback (Verbose, Warning, Error)
-			createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			// Type of message callback get called
-			createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			createInfo.pfnUserCallback = DebugCallback;
-			// Optional (Will automatically be null from createInfo{})
-			createInfo.pUserData = nullptr;
-		}
-
 		VulkanContext::VulkanContext()
 		{
 			CreateInstance();
@@ -79,7 +31,7 @@ namespace Parfait
 
 			if (enableValidationLayers) 
 			{
-				DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+				vulkan::DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 			}
 
 			vkDestroyInstance(m_Instance, nullptr);
@@ -124,7 +76,7 @@ namespace Parfait
 				createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 				createInfo.ppEnabledLayerNames = validationLayers.data();
 
-				SetupDebugMessengerCreateInfo(debugCreateInfo);
+				vulkan::SetupDebugMessengerCreateInfo(debugCreateInfo);
 				createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 			}
 			else
@@ -145,10 +97,10 @@ namespace Parfait
 			}
 
 			VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-			SetupDebugMessengerCreateInfo(createInfo);
+			vulkan::SetupDebugMessengerCreateInfo(createInfo);
 			
 			// TODO: Better Error Handler
-			if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) 
+			if (vulkan::CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to set up debug messenger!");
 			}
@@ -227,7 +179,7 @@ namespace Parfait
 			}
 
 			VkPhysicalDeviceFeatures deviceFeatures{};
-			//deviceFeatures.samplerAnisotropy = VK_TRUE;
+			deviceFeatures.samplerAnisotropy = VK_TRUE;
 			//deviceFeatures.sampleRateShading = VK_TRUE;
 
 			VkDeviceCreateInfo createInfo{};
@@ -311,7 +263,74 @@ namespace Parfait
 			
 			return physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
 				physicalDeviceFeatures.geometryShader &&
+				physicalDeviceFeatures.samplerAnisotropy && 
 				IsDeviceExtensionSupport(device);
+		}
+
+		// Utilities Functions
+		VkCommandBuffer BeginSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool)
+		{
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandPool = _commandPool;
+			allocInfo.commandBufferCount = 1;
+
+			VkCommandBuffer commandBuffer;
+			vkAllocateCommandBuffers(_vulkanContext.GetLogicalDevice(), &allocInfo, &commandBuffer);
+
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+			vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+			return commandBuffer;
+		}
+		void EndSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkCommandBuffer commandBuffer)
+		{
+			vkEndCommandBuffer(commandBuffer);
+
+			VkSubmitInfo submitInfo{};
+			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+
+			vkQueueSubmit(_vulkanContext.GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+			vkQueueWaitIdle(_vulkanContext.GetGraphicsQueue());
+
+			vkFreeCommandBuffers(_vulkanContext.GetLogicalDevice(), _commandPool, 1, &commandBuffer);
+		}
+		void CopyBuffer(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size)
+		{
+			VkCommandBuffer commandBuffer = BeginSingleTimeCommands(_vulkanContext, _commandPool);
+
+			VkBufferCopy copyRegion{};
+			copyRegion.size = _size;
+			vkCmdCopyBuffer(commandBuffer, _srcBuffer, _dstBuffer, 1, &copyRegion);
+
+			EndSingleTimeCommands(_vulkanContext, _commandPool, commandBuffer);
+		}
+		VkImageView CreateImageView(const VulkanContext& _vulkanContext, VkImage image, VkFormat format)
+		{
+			VkImageViewCreateInfo viewInfo{};
+			viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			viewInfo.image = image;
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewInfo.format = format;
+			viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			viewInfo.subresourceRange.baseMipLevel = 0;
+			viewInfo.subresourceRange.levelCount = 1;
+			viewInfo.subresourceRange.baseArrayLayer = 0;
+			viewInfo.subresourceRange.layerCount = 1;
+
+			VkImageView imageView;
+			if (vkCreateImageView(_vulkanContext.GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) 
+			{
+				throw std::runtime_error("Failed to create texture image view!");
+			}
+
+			return imageView;
 		}
 	}
 }

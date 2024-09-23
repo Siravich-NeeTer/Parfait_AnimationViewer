@@ -9,10 +9,16 @@ namespace Parfait
 		class VulkanDescriptor
 		{
 			public:
-				VulkanDescriptor(const VulkanContext& _vulkanContext, uint32_t _descriptorSize);
+				VulkanDescriptor(const VulkanContext& _vulkanContext);
 				~VulkanDescriptor();
 
-				void WriteBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex);
+				void AddLayoutBinding(VkDescriptorSetLayoutBinding layoutBinding);
+
+				void Init();
+
+				void WriteUniformBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex);
+				void WriteImageBuffer(uint32_t _binding, VkImageView _imageView, VkSampler _sampler, uint32_t _frameIndex);
+				void UpdateDescriptorSet();
 
 				const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
 				const VkDescriptorPool& GetDescriptorPool() const { return m_DescriptorPool; }
@@ -22,11 +28,14 @@ namespace Parfait
 			private:
 				const VulkanContext& m_VulkanContextRef;
 
+				std::vector<VkDescriptorSetLayoutBinding> m_DescriptorSetLayoutBinding;
 				VkDescriptorSetLayout m_DescriptorSetLayout;
 				VkDescriptorPool m_DescriptorPool;
 				std::vector<VkDescriptorSet> m_DescriptorSets;
+				std::vector<VkWriteDescriptorSet> m_WriteDescriptorSets;
 
-				uint32_t m_DescriptorSize;
+				std::vector<VkDescriptorBufferInfo> m_BufferInfos;
+				std::vector<VkDescriptorImageInfo> m_ImageInfos;
 
 				void CreateDescriptorSetLayout();
 				void CreateDescriptorPool();

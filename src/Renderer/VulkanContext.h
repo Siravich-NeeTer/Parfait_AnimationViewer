@@ -9,6 +9,8 @@
 #include <set>
 #include <optional>
 
+#include "Renderer/VulkanValidation.h"
+
 namespace Parfait
 {
 	namespace Graphics
@@ -19,6 +21,8 @@ namespace Parfait
 
 		extern const std::vector<const char*> deviceExtensions;
 		extern const std::vector<const char*> validationLayers;
+
+		static const int MAX_FRAMES_IN_FLIGHT = 2;
 
 		#ifdef PARFAIT_DEBUG
 			const bool enableValidationLayers = true;
@@ -83,5 +87,11 @@ namespace Parfait
 				bool IsDeviceExtensionSupport(const VkPhysicalDevice& device);
 				bool IsPhysicalDeviceValid(const VkPhysicalDevice& device);
 		};
+
+		// Utilities Functions
+		VkCommandBuffer BeginSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool);
+		void EndSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkCommandBuffer commandBuffer);
+		void CopyBuffer(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
+		VkImageView CreateImageView(const VulkanContext& _vulkanContext, VkImage image, VkFormat format);
 	}
 }

@@ -39,7 +39,7 @@ namespace Parfait
 
 			for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 			{
-				m_SwapchainImageViews[i] = CreateImageView(m_SwapchainImages[i], m_SurfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+				m_SwapchainImageViews[i] = CreateImageView(m_VulkanContextRef, m_SwapchainImages[i], m_SurfaceFormat.format);
 			}
 		}
 		void VulkanSurfaceSwapchain::CreateSwapchain()
@@ -90,32 +90,6 @@ namespace Parfait
 			vkGetSwapchainImagesKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, &imageCount, nullptr);
 			m_SwapchainImages.resize(imageCount);
 			vkGetSwapchainImagesKHR(m_VulkanContextRef.GetLogicalDevice(), m_Swapchain, &imageCount, m_SwapchainImages.data());
-		}
-		VkImageView VulkanSurfaceSwapchain::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
-		{
-			VkImageViewCreateInfo viewInfo{};
-			viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			viewInfo.image = image;
-			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			viewInfo.format = format;
-			viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			viewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			viewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			viewInfo.subresourceRange.aspectMask = aspectFlags;
-			viewInfo.subresourceRange.baseMipLevel = 0;
-			viewInfo.subresourceRange.levelCount = mipLevels;
-			viewInfo.subresourceRange.baseArrayLayer = 0;
-			viewInfo.subresourceRange.layerCount = 1;
-
-			VkImageView imageView;
-			// TODO: Better Error Handler
-			if (vkCreateImageView(m_VulkanContextRef.GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
-			{
-				throw std::runtime_error("Failed to create texture image view!");
-			}
-
-			return imageView;
 		}
 
 		VkSurfaceFormatKHR VulkanSurfaceSwapchain::ChooseSwapSurfaceFormat()

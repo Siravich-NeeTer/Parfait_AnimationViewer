@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External Libraries\glad\src\glad.c" />
+    <ClCompile Include="External Libraries\imgui\extensions\imgui_combo.cpp" />
     <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_demo.cpp" />
@@ -46,10 +47,11 @@
     <ClCompile Include="src\Renderer\VulkanRenderPass.cpp" />
     <ClCompile Include="src\Renderer\VulkanShader.cpp" />
     <ClCompile Include="src\Renderer\VulkanSurfaceSwapchain.cpp" />
-    <ClCompile Include="src\Renderer\VulkanUtility.cpp" />
+    <ClCompile Include="src\Renderer\VulkanTexture.cpp" />
     <ClCompile Include="src\Renderer\VulkanWindowResources.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_combo.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h" />
@@ -79,7 +81,8 @@
     <ClInclude Include="src\Renderer\VulkanRenderPass.h" />
     <ClInclude Include="src\Renderer\VulkanShader.h" />
     <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h" />
-    <ClInclude Include="src\Renderer\VulkanUtility.h" />
+    <ClInclude Include="src\Renderer\VulkanTexture.h" />
+    <ClInclude Include="src\Renderer\VulkanValidation.h" />
     <ClInclude Include="src\Renderer\VulkanWindowResources.h" />
   </ItemGroup>
   <ItemGroup>

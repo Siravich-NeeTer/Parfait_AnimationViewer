@@ -21,12 +21,12 @@
 #include "Renderer/Buffers/VulkanIndexBuffer.h"
 #include "Renderer/Buffers/VulkanUniformBuffer.h"
 
+#include "Renderer/VulkanTexture.h"
+
 namespace Parfait
 {
 	namespace Graphics
 	{
-		const int MAX_FRAMES_IN_FLIGHT = 2;
-
 		class VulkanWindowResources
 		{
 			public:
@@ -59,6 +59,8 @@ namespace Parfait
 				std::unique_ptr<VulkanVertexBuffer<Vertex>> m_VertexBuffer;
 				std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
 				std::vector<std::unique_ptr<VulkanUniformBuffer<UniformBufferObject>>> m_UniformBuffers;
+				
+				std::vector<std::unique_ptr<VulkanTexture>> m_Textures;
 
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;
