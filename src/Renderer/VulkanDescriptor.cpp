@@ -14,6 +14,7 @@ namespace Parfait
 		}
 		VulkanDescriptor::~VulkanDescriptor()
 		{
+			vkDestroyDescriptorPool(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorPool, nullptr);
 			vkDestroyDescriptorSetLayout(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
 		}
 
