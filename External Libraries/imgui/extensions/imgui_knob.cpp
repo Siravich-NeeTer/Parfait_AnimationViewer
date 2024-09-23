@@ -4,8 +4,8 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <imgui.h>
-#include <imgui_internal.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 #define IMGUIKNOBS_PI 3.14159265358979323846f
 

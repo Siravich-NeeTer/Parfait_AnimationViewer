@@ -30,28 +30,28 @@
     <ClCompile Include="External Libraries\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_demo.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_demo.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_draw.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_draw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_impl_opengl3.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_win32.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_tables.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_tables.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
@@ -81,7 +81,7 @@
     <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp">
+    <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\VulkanRenderPass.cpp">
@@ -111,42 +111,45 @@
     <ClCompile Include="src\Renderer\VulkanDescriptor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="External Libraries\imgui\imgui_impl_vulkan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imconfig.h">
+    <ClInclude Include="External Libraries\imgui\imconfig.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui.h">
+    <ClInclude Include="External Libraries\imgui\imgui.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_extension.h">
+    <ClInclude Include="External Libraries\imgui\imgui_extension.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.h">
+    <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.h">
+    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3_loader.h">
+    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_internal.h">
+    <ClInclude Include="External Libraries\imgui\imgui_internal.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_rectpack.h">
+    <ClInclude Include="External Libraries\imgui\imstb_rectpack.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_textedit.h">
+    <ClInclude Include="External Libraries\imgui\imstb_textedit.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h">
+    <ClInclude Include="External Libraries\imgui\imstb_truetype.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h">
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h">
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\VulkanUtility.h">
@@ -170,7 +173,7 @@
     <ClInclude Include="src\Renderer\VulkanShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h">
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\VulkanRenderPass.h">
@@ -201,6 +204,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

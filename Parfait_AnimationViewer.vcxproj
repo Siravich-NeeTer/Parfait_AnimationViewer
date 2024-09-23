@@ -20,15 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External Libraries\glad\src\glad.c" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_demo.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_draw.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_win32.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_tables.cpp" />
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_demo.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_draw.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_tables.cpp" />
+    <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="External Libraries\stb\stb_image.cpp" />
     <ClCompile Include="External Libraries\tinyobjloader\tiny_obj_loader.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
@@ -49,19 +50,20 @@
     <ClCompile Include="src\Renderer\VulkanWindowResources.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imconfig.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_extension.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_internal.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_rectpack.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_textedit.h" />
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h" />
+    <ClInclude Include="External Libraries\imgui\imconfig.h" />
+    <ClInclude Include="External Libraries\imgui\imgui.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_extension.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="External Libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="External Libraries\imgui\imstb_rectpack.h" />
+    <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
+    <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="External Libraries\stb\stb_image.h" />
     <ClInclude Include="External Libraries\tinyobjloader\tiny_obj_loader.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
@@ -147,7 +149,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PARFAIT_DEBUG;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -169,7 +171,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -191,7 +193,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PARFAIT_DEBUG;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -213,7 +215,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries\imgui-1.90.6;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

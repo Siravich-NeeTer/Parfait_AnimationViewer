@@ -19,8 +19,8 @@
 
 #include <type_traits> // For std::enable_if to minimize template error dumps
 #include <vector>
-#include <imgui.h>
-#include <imgui_internal.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // FORWARD DECLARATIONS
