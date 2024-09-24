@@ -37,6 +37,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h" />
     <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp" />
+    <ClCompile Include="src\Renderer\Utilities\VulkanUtilities.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
     <ClCompile Include="src\Renderer\VulkanContext.cpp" />
@@ -73,6 +74,7 @@
     <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
+    <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
     <ClInclude Include="src\Renderer\VulkanContext.h" />
@@ -82,7 +84,7 @@
     <ClInclude Include="src\Renderer\VulkanShader.h" />
     <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h" />
     <ClInclude Include="src\Renderer\VulkanTexture.h" />
-    <ClInclude Include="src\Renderer\VulkanValidation.h" />
+    <ClInclude Include="src\Renderer\Utilities\VulkanValidation.h" />
     <ClInclude Include="src\Renderer\VulkanWindowResources.h" />
   </ItemGroup>
   <ItemGroup>

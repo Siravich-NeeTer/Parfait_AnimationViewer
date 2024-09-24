@@ -9,9 +9,11 @@ namespace Parfait
 			m_SurfaceSwapchain(std::make_unique<VulkanSurfaceSwapchain>(_vulkanContext, *_window)),
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
-			m_Framebuffers(std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
+			CreateDepthResources();
+			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
+
 			// Init Vertex, Index & Uniform Buffer
 			m_VertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex>>(_vulkanContext, *m_CommandPool, vertices.data(), vertices.size());
 			m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(_vulkanContext, *m_CommandPool, indices.data(), indices.size());
@@ -49,6 +51,8 @@ namespace Parfait
 		VulkanWindowResources::~VulkanWindowResources()
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
+
+			DestroyDepthResources();
 			DestroySyncObject();
 		}
 
@@ -185,9 +189,12 @@ namespace Parfait
 			renderPassInfo.renderArea.offset = { 0, 0 };
 			renderPassInfo.renderArea.extent = m_SurfaceSwapchain->GetExtent();
 
-			VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-			renderPassInfo.clearValueCount = 1;
-			renderPassInfo.pClearValues = &clearColor;
+			std::array<VkClearValue, 2> clearValues{};
+			clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+			clearValues[1].depthStencil = { 1.0f, 0 };
+
+			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassInfo.pClearValues = clearValues.data();
 
 			vkCmdBeginRenderPass(_VkCommandBuffer.GetCommandBuffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		}
@@ -234,6 +241,19 @@ namespace Parfait
 				}
 			}
 		}
+		void VulkanWindowResources::CreateDepthResources()
+		{
+			VkFormat depthFormat = FindDepthFormat(m_VkContextRef);
+
+			CreateImage(m_VkContextRef,
+				m_SurfaceSwapchain.get()->GetExtent().width, m_SurfaceSwapchain.get()->GetExtent().height,
+				depthFormat,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				m_DepthImage, m_DepthImageMemory);
+			m_DepthImageView = CreateImageView(m_VkContextRef, m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		}
 
 		void VulkanWindowResources::RecreateSwapchain()
 		{
@@ -248,7 +268,13 @@ namespace Parfait
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 
 			m_SurfaceSwapchain.get()->RecreateSwapchainImageViews();
-			m_Framebuffers.get()->RecreateFramebuffer();
+
+			// Re-Create Depth Resource
+			DestroyDepthResources();
+			CreateDepthResources();
+			
+			// Re-Bind depth attachment to Framebuffer
+			m_Framebuffers.get()->RecreateFramebuffer({ m_DepthImageView });
 		}
 
 		void VulkanWindowResources::DestroySyncObject()
@@ -265,6 +291,12 @@ namespace Parfait
 			{
 				vkDestroyFence(m_VkContextRef.GetLogicalDevice(), m_InflightFence[i], nullptr);
 			}
+		}
+		void VulkanWindowResources::DestroyDepthResources()
+		{
+			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_DepthImageView, nullptr);
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_DepthImage, nullptr);
+			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_DepthImageMemory, nullptr);
 		}
 
 		void VulkanWindowResources::BindWindowEvents()

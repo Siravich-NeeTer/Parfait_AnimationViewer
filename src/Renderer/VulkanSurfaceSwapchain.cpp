@@ -39,7 +39,7 @@ namespace Parfait
 
 			for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 			{
-				m_SwapchainImageViews[i] = CreateImageView(m_VulkanContextRef, m_SwapchainImages[i], m_SurfaceFormat.format);
+				m_SwapchainImageViews[i] = CreateImageView(m_VulkanContextRef, m_SwapchainImages[i], m_SurfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 			}
 		}
 		void VulkanSurfaceSwapchain::CreateSwapchain()

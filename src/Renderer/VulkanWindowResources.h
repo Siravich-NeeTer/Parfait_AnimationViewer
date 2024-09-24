@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -62,15 +63,22 @@ namespace Parfait
 				
 				std::vector<std::unique_ptr<VulkanTexture>> m_Textures;
 
+				// Depth Buffer
+				VkImage m_DepthImage;
+				VkDeviceMemory m_DepthImageMemory;
+				VkImageView m_DepthImageView;
+
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;
 
 				void CreateCommandBuffers(uint32_t _size);
 				void CreateSyncObject(uint32_t _size);
+				void CreateDepthResources();
 
 				void RecreateSwapchain();
 
 				void DestroySyncObject();
+				void DestroyDepthResources();
 
 				// Window Events
 				void BindWindowEvents();

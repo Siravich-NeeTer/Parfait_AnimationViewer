@@ -11,10 +11,10 @@ namespace Parfait
 		class VulkanFramebuffer
 		{
 			public:
-				VulkanFramebuffer(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain, const VulkanRenderPass& _vulkanRenderPass);
+				VulkanFramebuffer(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain, const VulkanRenderPass& _vulkanRenderPass, const std::vector<VkImageView>& _attachments = {});
 				~VulkanFramebuffer();
 
-				void RecreateFramebuffer();
+				void RecreateFramebuffer(const std::vector<VkImageView>& _attachments = {});
 
 				const std::vector<VkFramebuffer>& GetFramebuffers() const { return m_Framebuffers; }
 
@@ -24,6 +24,7 @@ namespace Parfait
 				const VulkanRenderPass& m_VulkanRenderPassRef;
 
 				std::vector<VkFramebuffer> m_Framebuffers;
+				std::vector<VkImageView> m_ImageAttachments;
 
 				void CreateFramebuffer();
 				void DestroyFramebuffer();

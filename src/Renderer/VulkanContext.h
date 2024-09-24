@@ -9,7 +9,8 @@
 #include <set>
 #include <optional>
 
-#include "Renderer/VulkanValidation.h"
+#include "Renderer/Utilities/VulkanValidation.h"
+#include "Renderer/Utilities/VulkanUtilities.h"
 
 namespace Parfait
 {
@@ -87,11 +88,5 @@ namespace Parfait
 				bool IsDeviceExtensionSupport(const VkPhysicalDevice& device);
 				bool IsPhysicalDeviceValid(const VkPhysicalDevice& device);
 		};
-
-		// Utilities Functions
-		VkCommandBuffer BeginSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool);
-		void EndSingleTimeCommands(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkCommandBuffer commandBuffer);
-		void CopyBuffer(const VulkanContext& _vulkanContext, const VkCommandPool& _commandPool, VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
-		VkImageView CreateImageView(const VulkanContext& _vulkanContext, VkImage image, VkFormat format);
 	}
 }

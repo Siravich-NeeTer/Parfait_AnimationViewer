@@ -73,10 +73,6 @@ namespace Parfait
 				const VkDeviceMemory& GetDeviceMemory() const { return m_BufferMemory; }
 				const VkDeviceSize& GetDeviceSize() const { return m_BufferSize; }
 
-				static void CreateBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
-				static void CopyBuffer(const VulkanContext& _vulkanContext, const VulkanCommandPool& _vulkanCommandPool, VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
-				static uint32_t FindMemoryType(const VulkanContext& _vulkanContext, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
 			protected:
 				const VulkanContext& m_VulkanContextRef;
 				const VulkanCommandPool& m_VulkanCommandPoolRef;

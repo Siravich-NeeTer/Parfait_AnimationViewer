@@ -117,6 +117,9 @@
     <ClCompile Include="src\Renderer\VulkanTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Renderer\Utilities\VulkanUtilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui\imconfig.h">
@@ -215,7 +218,10 @@
     <ClInclude Include="src\Renderer\VulkanTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\VulkanValidation.h">
+    <ClInclude Include="src\Renderer\Utilities\VulkanValidation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

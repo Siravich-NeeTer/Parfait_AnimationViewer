@@ -24,8 +24,8 @@ namespace Parfait
 				const VkDeviceMemory& GetDeviceMemory() const { return m_TextureImageMemory; }
 				const VkImageView& GetImageView() const { return m_TextureImageView; }
 				const VkSampler& GetSampler() const { return m_TextureSampler; }
-
-			private:
+			
+		private:
 				const VulkanContext& m_VulkanContextRef;
 				const VulkanCommandPool& m_VulkanCommandPoolRef;
 
@@ -40,9 +40,6 @@ namespace Parfait
 				void CreateTextureImageView();
 				void CreateTextureSampler();
 
-				void CreateImage(const VulkanContext& _vulkanContext, uint32_t _width, uint32_t _height, VkFormat _format, VkImageTiling _tiling, VkImageUsageFlags _usage, VkMemoryPropertyFlags _properties, VkImage& _image, VkDeviceMemory& _imageMemory);
-				void CopyBufferToImage(VkBuffer _buffer, VkImage _image, uint32_t _width, uint32_t _height);
-				void TransitionImageLayout(VkImage _image, VkFormat _format, VkImageLayout _oldLayout, VkImageLayout _newLayout);
 		};
 	}
 }
