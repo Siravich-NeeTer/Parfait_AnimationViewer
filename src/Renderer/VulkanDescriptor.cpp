@@ -31,7 +31,7 @@ namespace Parfait
 			CreateDescriptorSets();
 		}
 
-		void VulkanDescriptor::WriteUniformBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, size_t _frameIndex)
+		void VulkanDescriptor::WriteUniformBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex)
 		{
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = _buffer;
