@@ -48,6 +48,8 @@ namespace Parfait
 
 			glfwSetWindowUserPointer(_window, this);
 			BindWindowEvents();
+
+			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
@@ -57,9 +59,24 @@ namespace Parfait
 			DestroySyncObject();
 		}
 
-		void VulkanWindowResources::Update()
+		void VulkanWindowResources::Update(float dt)
 		{
 			glfwPollEvents();
+			if (Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_RIGHT))
+			{
+				m_Camera.ResetMousePosition();
+				isCameraMove = true;
+				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			}
+			else if (Input::IsKeyEndPressed(GLFW_MOUSE_BUTTON_RIGHT))
+			{
+				isCameraMove = false;
+				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+
+			if(isCameraMove)
+				m_Camera.ProcessMousesMovement();
+			m_Camera.Input(dt);
 			Draw();
 
 			if (glfwWindowShouldClose(m_WindowRef))
@@ -173,7 +190,7 @@ namespace Parfait
 			UniformBufferObject ubo{};
 			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 			ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			ubo.view = m_Camera.GetViewMatrix();
 			ubo.projection = glm::perspectiveRH_ZO(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
@@ -389,6 +406,10 @@ namespace Parfait
 		void VulkanWindowResources::BindWindowEvents()
 		{
 			glfwSetFramebufferSizeCallback(m_WindowRef, FramebufferResizeCallback);
+
+			glfwSetKeyCallback(m_WindowRef, Input::KeyCallBack);
+			glfwSetCursorPosCallback(m_WindowRef, Input::CursorCallBack);
+			glfwSetMouseButtonCallback(m_WindowRef, Input::MouseCallBack);
 		}
 		void VulkanWindowResources::FramebufferResizeCallback(GLFWwindow* window, int width, int height) 
 		{

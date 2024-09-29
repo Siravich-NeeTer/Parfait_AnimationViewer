@@ -32,10 +32,12 @@
     <ClCompile Include="External Libraries\imgui\imgui_tables.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="External Libraries\stb\stb_image.cpp" />
+    <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h" />
     <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp" />
+    <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\Renderer\Utilities\VulkanUtilities.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
@@ -67,11 +69,13 @@
     <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="External Libraries\stb\stb_image.h" />
+    <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\BufferObject.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
+    <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />

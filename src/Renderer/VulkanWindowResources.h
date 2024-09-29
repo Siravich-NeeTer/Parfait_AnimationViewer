@@ -14,6 +14,9 @@
 
 #include <chrono>
 
+#include "Core/Input.h"
+#include "Core/Camera.h"
+
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
 #include "Renderer/VulkanGraphicsPipeline.h"
@@ -39,7 +42,7 @@ namespace Parfait
 				VulkanWindowResources(const VulkanContext& _vulkanContext, GLFWwindow* _window);
 				~VulkanWindowResources();
 
-				void Update();
+				void Update(float dt);
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
 
@@ -53,6 +56,9 @@ namespace Parfait
 			private:
 				const VulkanContext& m_VkContextRef;
 				GLFWwindow* m_WindowRef;
+
+				bool isCameraMove = false;
+				Camera m_Camera;
 
 				std::unique_ptr<VulkanSurfaceSwapchain> m_SurfaceSwapchain;
 				std::unique_ptr<VulkanRenderPass> m_RenderPass;

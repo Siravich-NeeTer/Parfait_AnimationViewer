@@ -24,11 +24,16 @@ namespace Parfait
 	}
 	void ParfaitEngine::Run() 
 	{
+		float prevTime = 0.0f;
 		while (!m_Windows.empty())
 		{
 			for (size_t i = 0; i < m_WindowResources.size(); i++)
 			{
-				m_WindowResources[i].get()->Update();
+				float currentTime = glfwGetTime();
+
+				m_WindowResources[i].get()->Update(currentTime - prevTime);
+
+				Input::EndFrame();
 
 				if (glfwWindowShouldClose(m_Windows[i]))
 				{
@@ -37,6 +42,8 @@ namespace Parfait
 					m_Windows.erase(m_Windows.begin() + i);
 					continue;
 				}
+
+				prevTime = currentTime;
 			}
 		}
 	}
