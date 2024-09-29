@@ -18,6 +18,7 @@ namespace Parfait
 
 				void WriteUniformBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex);
 				void WriteImageBuffer(uint32_t _binding, VkImageView _imageView, VkSampler _sampler, uint32_t _frameIndex);
+				void WriteImageArrayBuffer(uint32_t _binding, const std::vector<VkDescriptorImageInfo>& imageInfos, uint32_t _frameIndex);
 				void UpdateDescriptorSet();
 
 				const VkDescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }

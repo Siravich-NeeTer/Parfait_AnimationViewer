@@ -13,6 +13,8 @@
 #include <assimp/postprocess.h>
 
 #include <chrono>
+#include <windows.h>
+#include <string>
 
 #include "Core/Input.h"
 #include "Core/Camera.h"
@@ -77,6 +79,7 @@ namespace Parfait
 				std::vector<std::unique_ptr<VulkanUniformBuffer<UniformBufferObject>>> m_UniformBuffers;
 				
 				std::vector<std::unique_ptr<VulkanTexture>> m_Textures;
+				std::unique_ptr<VulkanTexture> m_DebugTexture;
 
 				// Depth Buffer
 				VkImage m_DepthImage;

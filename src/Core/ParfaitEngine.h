@@ -10,7 +10,7 @@ namespace Parfait
 		public:
 			ParfaitEngine();
 
-			void CreateWindow(int _width, int _height, const char* _title);
+			void MakeWindow(int _width, int _height, const char* _title);
 			void Run();
 
 		private:

@@ -11,7 +11,7 @@ namespace Parfait
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
-			LoadModel("Models/test_model.fbx");
+			LoadModel("Models/Alisa Mikhailovna (3D Model).fbx");
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
 
@@ -25,18 +25,37 @@ namespace Parfait
 				vkMapMemory(_vulkanContext.GetLogicalDevice(), m_UniformBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), 0, &m_UniformBuffers[i]->GetMappedBuffer());
 			}
 
-			// Init Texture
-			m_Textures.push_back(std::make_unique<VulkanTexture>(_vulkanContext, *m_CommandPool));
-			m_Textures[0].get()->LoadTexture("Models/test_textures.png");
+			std::vector<VkDescriptorImageInfo> imageInfos;
+			m_DebugTexture = std::make_unique<VulkanTexture>(_vulkanContext, *m_CommandPool);
+			m_DebugTexture->LoadTexture("Models/null.png");
 
 			m_Descriptor.get()->AddLayoutBinding({ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr });
-			m_Descriptor.get()->AddLayoutBinding({ 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr });
+			m_Descriptor.get()->AddLayoutBinding({ 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 20, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr });
 			m_Descriptor.get()->Init();
 			// Write Uniform Buffer to Descriptor
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
 				m_Descriptor.get()->WriteUniformBuffer(0, m_UniformBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), i);
-				m_Descriptor.get()->WriteImageBuffer(1, m_Textures[0].get()->GetImageView(), m_Textures[0].get()->GetSampler(), i);
+				//m_Descriptor.get()->WriteImageBuffer(1, m_Textures[0].get()->GetImageView(), m_Textures[0].get()->GetSampler(), i);
+				
+				for (size_t j = 0; j < 20; j++)
+				{
+					VkDescriptorImageInfo imageInfo{};
+					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+					if (j < m_Textures.size())
+					{
+						imageInfo.imageView = m_Textures[j]->GetImageView();
+						imageInfo.sampler = m_Textures[j]->GetSampler();
+					}
+					else
+					{
+						imageInfo.imageView = m_DebugTexture->GetImageView();
+						imageInfo.sampler = m_DebugTexture->GetSampler();
+					}
+					imageInfos.push_back(imageInfo);
+				}
+				m_Descriptor.get()->WriteImageArrayBuffer(1, imageInfos, i);
+
 				m_Descriptor.get()->UpdateDescriptorSet();
 			}
 
@@ -189,7 +208,8 @@ namespace Parfait
 
 			UniformBufferObject ubo{};
 			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
+			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.view = m_Camera.GetViewMatrix();
 			ubo.projection = glm::perspectiveRH_ZO(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
@@ -200,11 +220,44 @@ namespace Parfait
 		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
 		{
 			Assimp::Importer importer;
-			const aiScene* scene = importer.ReadFile(_path.string(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+			const aiScene* scene = importer.ReadFile(_path.string(), 
+				aiProcess_Triangulate | 
+				aiProcess_FlipUVs | 
+				aiProcess_JoinIdenticalVertices |
+				aiProcess_PreTransformVertices |
+				aiProcess_TransformUVCoords
+			);
 
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
 				throw std::runtime_error("ERROR::ASSIMP " + std::string(importer.GetErrorString()));
+			}
+
+			for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
+				aiMaterial* material = scene->mMaterials[i];
+
+				aiTextureType textureTypes[] = {
+					aiTextureType_DIFFUSE
+					// aiTextureType_SPECULAR,
+					// aiTextureType_NORMALS,
+					// aiTextureType_HEIGHT,
+					// Add other texture types you may need
+				};
+
+				for (auto type : textureTypes) {
+					if (material->GetTextureCount(type) > 0) {
+						aiString texturePath;
+						material->GetTexture(type, 0, &texturePath);
+						std::string fullPath = texturePath.C_Str();
+						// Load the texture into Vulkan
+
+						std::cout << fullPath << "\n";
+
+						m_Textures.push_back(std::make_unique<VulkanTexture>(m_VkContextRef, *m_CommandPool));
+						m_Textures.back().get()->LoadTexture("Models/" + fullPath);
+						//m_Textures[0].get()->LoadTexture(fullPath);
+					}
+				}
 			}
 
 			ProcessNode(scene->mRootNode, scene);
@@ -234,14 +287,7 @@ namespace Parfait
 			for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 			{
 				Vertex vertex;
-				glm::vec3 vector;
-				vector.x = mesh->mVertices[i].x;
-				vector.y = mesh->mVertices[i].y;
-				vector.z = mesh->mVertices[i].z;
-
-				glm::vec4 v4 = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_transform) * glm::vec4(vector, 1.0f);
-				
-				vertex.pos = v4;
+				vertex.pos = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
 
 				if (mesh->mTextureCoords[0]) // Check for texture coordinates
 				{
@@ -249,29 +295,13 @@ namespace Parfait
 					vec.x = mesh->mTextureCoords[0][i].x;
 					vec.y = mesh->mTextureCoords[0][i].y;
 					vertex.texCoord = vec;
+					vertex.texIndex = mesh->mMaterialIndex;
 				}
 				else
 				{
 					vertex.texCoord = glm::vec2(0.0f, 0.0f);
 				}
 
-				/*
-				// Check if the vertex is unique
-				auto it = uniqueVertices.find(vertex);
-				if (it != uniqueVertices.end())
-				{
-					// Vertex already exists, use its index
-					_indices.push_back(it->second);
-				}
-				else
-				{
-					// New vertex, assign an index
-					uniqueVertices[vertex] = indexCount;
-					_vertices.push_back(vertex);
-					_indices.push_back(indexCount);
-					indexCount++;
-				}
-				*/
 				m_Vertices.push_back(vertex);
 			}
 			for (unsigned int i = 0; i < mesh->mNumFaces; i++)

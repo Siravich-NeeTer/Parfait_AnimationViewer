@@ -10,7 +10,7 @@ int main()
 		const int HEIGHT = 600;
 		Parfait::ParfaitEngine parfaitEngine;
 		
-		parfaitEngine.CreateWindow(WIDTH, HEIGHT, "Parfait Engine");
+		parfaitEngine.MakeWindow(WIDTH, HEIGHT, "Parfait Engine");
 
 		parfaitEngine.Run();
 	}

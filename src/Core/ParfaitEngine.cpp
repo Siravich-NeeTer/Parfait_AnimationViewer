@@ -14,7 +14,7 @@ namespace Parfait
 		m_VkContext = std::make_unique<Graphics::VulkanContext>();
 	}
 
-	void ParfaitEngine::CreateWindow(int _width, int _height, const char* _title)
+	void ParfaitEngine::MakeWindow(int _width, int _height, const char* _title)
 	{
 		// 4th parameter : Optionally specify a monitor to open the window
 		// 5th parameter : Only for OpenGL

@@ -61,11 +61,24 @@ namespace Parfait
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = m_DescriptorSets[_frameIndex];
-			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstBinding = _binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pImageInfo = &m_ImageInfos.back();
+
+			m_WriteDescriptorSets.push_back(descriptorWrite);
+		}
+		void VulkanDescriptor::WriteImageArrayBuffer(uint32_t _binding, const std::vector<VkDescriptorImageInfo>& imageInfos, uint32_t _frameIndex)
+		{
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_DescriptorSets[_frameIndex];
+			descriptorWrite.dstBinding = _binding;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrite.descriptorCount = static_cast<uint32_t>(imageInfos.size());
+			descriptorWrite.pImageInfo = imageInfos.data();
 
 			m_WriteDescriptorSets.push_back(descriptorWrite);
 		}
