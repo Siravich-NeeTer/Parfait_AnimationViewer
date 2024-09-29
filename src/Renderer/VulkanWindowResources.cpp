@@ -61,12 +61,12 @@ namespace Parfait
 
 			m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
 
-			CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
-			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
-
-
 			glfwSetWindowUserPointer(_window, this);
 			BindWindowEvents();
+
+			CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
+			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
+			CreateImGui();
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
 		}
@@ -76,6 +76,11 @@ namespace Parfait
 
 			DestroyDepthResources();
 			DestroySyncObject();
+
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+			vkDestroyDescriptorPool(m_VkContextRef.GetLogicalDevice(), m_ImGuiPool, nullptr);
 		}
 
 		void VulkanWindowResources::Update(float dt)
@@ -96,6 +101,7 @@ namespace Parfait
 			if(isCameraMove)
 				m_Camera.ProcessMousesMovement();
 			m_Camera.Input(dt);
+
 			Draw();
 
 			if (glfwWindowShouldClose(m_WindowRef))
@@ -150,6 +156,16 @@ namespace Parfait
 				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
 				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+
+				// Render ImGui
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+
+				ImGui::NewFrame();
+				ImGui::ShowDemoWindow();
+
+				ImGui::Render();
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
 
@@ -262,7 +278,6 @@ namespace Parfait
 
 			ProcessNode(scene->mRootNode, scene);
 		}
-		// processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
 		void VulkanWindowResources::ProcessNode(aiNode* node, const aiScene* scene)
 		{
 			// process each mesh located at the current node
@@ -280,7 +295,6 @@ namespace Parfait
 			}
 
 		}
-
 		void VulkanWindowResources::ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiMatrix4x4 _transform)
 		{
 			uint32_t startIdx = m_Vertices.size();
@@ -387,6 +401,58 @@ namespace Parfait
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 				m_DepthImage, m_DepthImageMemory);
 			m_DepthImageView = CreateImageView(m_VkContextRef, m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		}
+		void VulkanWindowResources::CreateImGui()
+		{
+			//1: create descriptor pool for IMGUI
+			// the size of the pool is very oversize, but it's copied from imgui demo itself.
+			VkDescriptorPoolSize pool_sizes[] =
+			{
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+			};
+
+			VkDescriptorPoolCreateInfo pool_info = {};
+			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			pool_info.maxSets = 1000;
+			pool_info.poolSizeCount = std::size(pool_sizes);
+			pool_info.pPoolSizes = pool_sizes;
+
+			vkCreateDescriptorPool(m_VkContextRef.GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiPool);
+
+			// 2: initialize imgui library
+			ImGui::CreateContext();
+			
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+			ImGui::StyleColorsDark();
+
+			ImGui_ImplGlfw_InitForVulkan(m_WindowRef, true);
+
+			ImGui_ImplVulkan_InitInfo init_info = {};
+			init_info.Instance = m_VkContextRef.GetInstance();
+			init_info.PhysicalDevice = m_VkContextRef.GetPhysicalDevice();
+			init_info.Device = m_VkContextRef.GetLogicalDevice();
+			init_info.Queue = m_VkContextRef.GetGraphicsQueue();
+			init_info.DescriptorPool = m_ImGuiPool;
+			init_info.RenderPass = m_RenderPass->GetRenderPass();
+			init_info.MinImageCount = 3;
+			init_info.ImageCount = 3;
+			init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+			ImGui_ImplVulkan_Init(&init_info);
+			ImGui_ImplVulkan_CreateFontsTexture();
 		}
 
 		void VulkanWindowResources::RecreateSwapchain()

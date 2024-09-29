@@ -12,6 +12,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_vulkan.h>
+
 #include <chrono>
 #include <windows.h>
 #include <string>
@@ -89,12 +93,15 @@ namespace Parfait
 				std::vector<Vertex> m_Vertices;
 				std::vector<uint32_t> m_Indices;
 
+				VkDescriptorPool m_ImGuiPool;
+
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;
 
 				void CreateCommandBuffers(uint32_t _size);
 				void CreateSyncObject(uint32_t _size);
 				void CreateDepthResources();
+				void CreateImGui();
 
 				void RecreateSwapchain();
 
