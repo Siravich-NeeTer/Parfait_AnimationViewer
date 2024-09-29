@@ -7,6 +7,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/Exporter.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #include <chrono>
 
 #include "Renderer/VulkanContext.h"
@@ -38,6 +43,10 @@ namespace Parfait
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
 
+				void LoadModel(const std::filesystem::path& _path);
+				void ProcessNode(aiNode* node, const aiScene* scene);
+				void ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiMatrix4x4 _transform);
+
 				void BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex);
 				void EndRenderPass(const VulkanCommandBuffer& _VkCommandBuffer);
 
@@ -67,6 +76,9 @@ namespace Parfait
 				VkImage m_DepthImage;
 				VkDeviceMemory m_DepthImageMemory;
 				VkImageView m_DepthImageView;
+
+				std::vector<Vertex> m_Vertices;
+				std::vector<uint32_t> m_Indices;
 
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;

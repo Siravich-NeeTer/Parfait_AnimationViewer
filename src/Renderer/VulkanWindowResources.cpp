@@ -11,12 +11,13 @@ namespace Parfait
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
+			LoadModel("Models/test_model.fbx");
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
 
 			// Init Vertex, Index & Uniform Buffer
-			m_VertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex>>(_vulkanContext, *m_CommandPool, vertices.data(), vertices.size());
-			m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(_vulkanContext, *m_CommandPool, indices.data(), indices.size());
+			m_VertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex>>(_vulkanContext, *m_CommandPool, m_Vertices.data(), m_Vertices.size());
+			m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(_vulkanContext, *m_CommandPool, m_Indices.data(), m_Indices.size());
 			m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
@@ -26,7 +27,7 @@ namespace Parfait
 
 			// Init Texture
 			m_Textures.push_back(std::make_unique<VulkanTexture>(_vulkanContext, *m_CommandPool));
-			m_Textures[0].get()->LoadTexture("Textures/texture.jpg");
+			m_Textures[0].get()->LoadTexture("Models/test_textures.png");
 
 			m_Descriptor.get()->AddLayoutBinding({ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr });
 			m_Descriptor.get()->AddLayoutBinding({ 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr });
@@ -110,9 +111,9 @@ namespace Parfait
 				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer()};
 				VkDeviceSize offsets[] = { 0 };
 				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
+				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
-				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 			}
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
 
@@ -170,12 +171,98 @@ namespace Parfait
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 			UniformBufferObject ubo{};
-			ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 10.0f);
+			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+			ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			ubo.projection = glm::perspectiveRH_ZO(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
+		}
+
+		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
+		{
+			Assimp::Importer importer;
+			const aiScene* scene = importer.ReadFile(_path.string(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+
+			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+			{
+				throw std::runtime_error("ERROR::ASSIMP " + std::string(importer.GetErrorString()));
+			}
+
+			ProcessNode(scene->mRootNode, scene);
+		}
+		// processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
+		void VulkanWindowResources::ProcessNode(aiNode* node, const aiScene* scene)
+		{
+			// process each mesh located at the current node
+			for (unsigned int i = 0; i < node->mNumMeshes; i++)
+			{
+				// the node object only contains indices to index the actual objects in the scene. 
+				// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
+				aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+				ProcessMesh(mesh, scene, node->mTransformation);
+			}
+			// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
+			for (unsigned int i = 0; i < node->mNumChildren; i++)
+			{
+				ProcessNode(node->mChildren[i], scene);
+			}
+
+		}
+
+		void VulkanWindowResources::ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiMatrix4x4 _transform)
+		{
+			uint32_t startIdx = m_Vertices.size();
+			for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+			{
+				Vertex vertex;
+				glm::vec3 vector;
+				vector.x = mesh->mVertices[i].x;
+				vector.y = mesh->mVertices[i].y;
+				vector.z = mesh->mVertices[i].z;
+
+				glm::vec4 v4 = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_transform) * glm::vec4(vector, 1.0f);
+				
+				vertex.pos = v4;
+
+				if (mesh->mTextureCoords[0]) // Check for texture coordinates
+				{
+					glm::vec2 vec;
+					vec.x = mesh->mTextureCoords[0][i].x;
+					vec.y = mesh->mTextureCoords[0][i].y;
+					vertex.texCoord = vec;
+				}
+				else
+				{
+					vertex.texCoord = glm::vec2(0.0f, 0.0f);
+				}
+
+				/*
+				// Check if the vertex is unique
+				auto it = uniqueVertices.find(vertex);
+				if (it != uniqueVertices.end())
+				{
+					// Vertex already exists, use its index
+					_indices.push_back(it->second);
+				}
+				else
+				{
+					// New vertex, assign an index
+					uniqueVertices[vertex] = indexCount;
+					_vertices.push_back(vertex);
+					_indices.push_back(indexCount);
+					indexCount++;
+				}
+				*/
+				m_Vertices.push_back(vertex);
+			}
+			for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+			{
+				aiFace face = mesh->mFaces[i];
+				for (unsigned int j = 0; j < face.mNumIndices; j++)
+					m_Indices.push_back(startIdx + face.mIndices[j]);
+			}
 		}
 
 		void VulkanWindowResources::BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex)
