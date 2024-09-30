@@ -68,12 +68,17 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
+			prepareOffscreen();
+			offscrenPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, offscreenPass.renderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
+			ds = ImGui_ImplVulkan_AddTexture(offscreenPass.sampler, offscreenPass.color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 
+			destroyOffscreen();
 			DestroyDepthResources();
 			DestroySyncObject();
 
@@ -132,8 +137,73 @@ namespace Parfait
 			vkResetFences(m_VkContextRef.GetLogicalDevice(), 1, &m_InflightFence[m_CurrentFrame]);
 
 			vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), /*VkCommandBufferResetFlagBits*/ 0);
-			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
+
+			m_CommandBuffers[m_CurrentFrame]->Begin();
+			/*
+				First render pass: Offscreen rendering
+			*/
 			{
+				VkClearValue clearValues[2];
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				VkRenderPassBeginInfo renderPassBeginInfo{};
+				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassBeginInfo.renderPass = offscreenPass.renderPass;
+				renderPassBeginInfo.framebuffer = offscreenPass.frameBuffer;
+				renderPassBeginInfo.renderArea.extent.width = offscreenPass.width;
+				renderPassBeginInfo.renderArea.extent.height = offscreenPass.height;
+				renderPassBeginInfo.clearValueCount = 2;
+				renderPassBeginInfo.pClearValues = clearValues;
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+				VkViewport viewport{};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = (float)offscreenPass.width;
+				viewport.height = (float)offscreenPass.height;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+				vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
+
+				VkRect2D scissor{};
+				scissor.offset = { 0, 0 };
+				scissor.extent = { (unsigned int)offscreenPass.width, (unsigned int)offscreenPass.height };
+				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
+
+				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer() };
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
+				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, offscrenPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, offscrenPipeline.get()->GetPipeline());
+				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+			}
+			
+			ImVec2 currentOffscreenSize;
+			/*
+			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
+			*/
+			{
+				VkRenderPassBeginInfo renderPassInfo{};
+				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
+				renderPassInfo.framebuffer = m_Framebuffers->GetFramebuffers()[imageIndex];
+				renderPassInfo.renderArea.offset = { 0, 0 };
+				renderPassInfo.renderArea.extent = m_SurfaceSwapchain->GetExtent();
+
+				std::array<VkClearValue, 2> clearValues{};
+				clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+				renderPassInfo.pClearValues = clearValues.data();
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipeline());
 
 				VkViewport viewport{};
@@ -162,12 +232,27 @@ namespace Parfait
 				ImGui_ImplGlfw_NewFrame();
 
 				ImGui::NewFrame();
+				
+				ImGui::Begin("Viewport");
+
+				ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+				ImGui::Image(ds, ImVec2{ (float)offscreenPass.width, (float)offscreenPass.height });
+				currentOffscreenSize = ImGui::GetWindowSize();
+				//std::cout << ImGui::GetWindowSize().x << " " << ImGui::GetWindowSize().y << "\n";
+
+				ImGui::End();
+
 				ImGui::ShowDemoWindow();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
+			m_CommandBuffers[m_CurrentFrame]->End();
+			/*
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
+			*/
 
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -211,6 +296,15 @@ namespace Parfait
 			else if (result != VK_SUCCESS) 
 			{
 				throw std::runtime_error("Failed to present swap chain image!");
+			}
+
+			if ((int)currentOffscreenSize.x != (int)offscreenSize.x ||
+				(int)currentOffscreenSize.y != (int)offscreenSize.y)
+			{
+				offscreenSize = currentOffscreenSize;
+				offscreenPass.width = offscreenSize.x;
+				offscreenPass.height = offscreenSize.y;
+				recreateOffscreen();
 			}
 
 			m_CurrentFrame = (m_CurrentFrame + 1) / MAX_FRAMES_IN_FLIGHT;
@@ -424,8 +518,8 @@ namespace Parfait
 			VkDescriptorPoolCreateInfo pool_info = {};
 			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-			pool_info.maxSets = 1000;
-			pool_info.poolSizeCount = std::size(pool_sizes);
+			pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 			pool_info.pPoolSizes = pool_sizes;
 
 			vkCreateDescriptorPool(m_VkContextRef.GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiPool);

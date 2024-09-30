@@ -20,6 +20,7 @@ namespace Parfait
 			public:
 				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const std::vector<std::filesystem::path>& _shaderPaths);
 				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths);
+				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths);
 				~VulkanGraphicsPipeline();
 
 				const VkPipeline GetPipeline() const { return m_GraphicsPipeline; }

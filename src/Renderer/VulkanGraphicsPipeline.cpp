@@ -13,6 +13,12 @@ namespace Parfait
 		{
 			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor);
 		}
+
+		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
+			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
+		{
+			CreateGraphicsPipeline(_vulkanRenderPass, _vulkanDescriptor);
+		}
 		VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 		{
 			vkDestroyPipeline(m_VulkanContextRef.GetLogicalDevice(), m_GraphicsPipeline, nullptr);
