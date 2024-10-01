@@ -103,6 +103,11 @@ namespace Parfait
 				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			}
 
+			if (Input::scroll > 0.0f || Input::scroll < 0.0f)
+			{
+				m_Camera.MoveAlongZ(Input::scroll);
+			}
+
 			if(isCameraMove)
 				m_Camera.ProcessMousesMovement();
 			m_Camera.Input(dt);
@@ -608,6 +613,7 @@ namespace Parfait
 			glfwSetKeyCallback(m_WindowRef, Input::KeyCallBack);
 			glfwSetCursorPosCallback(m_WindowRef, Input::CursorCallBack);
 			glfwSetMouseButtonCallback(m_WindowRef, Input::MouseCallBack);
+			glfwSetScrollCallback(m_WindowRef, Input::ScrollCallback);
 		}
 		void VulkanWindowResources::FramebufferResizeCallback(GLFWwindow* window, int width, int height) 
 		{
