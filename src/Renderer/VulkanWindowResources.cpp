@@ -144,7 +144,7 @@ namespace Parfait
 			*/
 			{
 				VkClearValue clearValues[2];
-				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 				clearValues[1].depthStencil = { 1.0f, 0 };
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -225,27 +225,33 @@ namespace Parfait
 				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
-				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+				// vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 
 				// Render ImGui
 				ImGui_ImplVulkan_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 
 				ImGui::NewFrame();
-				
-				ImGui::Begin("Viewport");
 
-				ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-				ImGui::Image(ds, ImVec2{ (float)offscreenPass.width, (float)offscreenPass.height });
-				currentOffscreenSize = ImGui::GetWindowSize();
-				//std::cout << ImGui::GetWindowSize().x << " " << ImGui::GetWindowSize().y << "\n";
+				ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
+				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
+					ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+						ImGui::Image(ds, ImVec2{ (float)offscreenPass.width, (float)offscreenPass.height });
+						currentOffscreenSize = ImGui::GetWindowSize();
+					ImGui::EndChild();
 				ImGui::End();
 
 				ImGui::ShowDemoWindow();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+				
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -321,7 +327,8 @@ namespace Parfait
 			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.view = m_Camera.GetViewMatrix();
-			ubo.projection = glm::perspectiveRH_ZO(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
+			ubo.projection = glm::perspective(glm::radians(45.0f), offscreenPass.width / (float)offscreenPass.height, 0.1f, 100.0f);
+			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
@@ -526,11 +533,12 @@ namespace Parfait
 
 			// 2: initialize imgui library
 			ImGui::CreateContext();
-			
-			ImGuiIO& io = ImGui::GetIO(); (void)io;
-			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 			ImGui::StyleColorsDark();
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
+			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable Docking
+			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enable Multi-Viewport / Platform Windows
 
 			ImGui_ImplGlfw_InitForVulkan(m_WindowRef, true);
 
