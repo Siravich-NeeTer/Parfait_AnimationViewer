@@ -178,15 +178,29 @@ namespace Parfait
 				queueCreateInfos.push_back(queueCreateInfo);
 			}
 
-			VkPhysicalDeviceFeatures deviceFeatures{};
-			deviceFeatures.samplerAnisotropy = VK_TRUE;
-			//deviceFeatures.sampleRateShading = VK_TRUE;
+			VkPhysicalDeviceRobustness2FeaturesEXT robustFeature{};
+			robustFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
+			robustFeature.nullDescriptor = VK_TRUE;
+
+			VkPhysicalDeviceVulkan12Features features12{};
+			features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+			features12.runtimeDescriptorArray = VK_TRUE;
+			features12.descriptorIndexing = VK_TRUE;
+			features12.pNext = &robustFeature;
+
+			VkPhysicalDeviceFeatures2 features2{};
+			features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			features2.pNext = &features12;
+
+			// Let Vulkan fill in all features that hardware support
+			vkGetPhysicalDeviceFeatures2(m_PhysicalDevice, &features2);
 
 			VkDeviceCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			createInfo.pNext = &features2;
 			createInfo.pQueueCreateInfos = queueCreateInfos.data();
 			createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-			createInfo.pEnabledFeatures = &deviceFeatures;
+			createInfo.pEnabledFeatures = nullptr;
 			createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 			createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 			// TODO: Validation Layers

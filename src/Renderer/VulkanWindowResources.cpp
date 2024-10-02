@@ -57,6 +57,7 @@ namespace Parfait
 				m_Descriptor.get()->WriteImageArrayBuffer(1, imageInfos, i);
 
 				m_Descriptor.get()->UpdateDescriptorSet();
+				imageInfos.clear();
 			}
 
 			m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
