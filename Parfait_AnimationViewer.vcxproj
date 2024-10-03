@@ -38,6 +38,7 @@
     <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h" />
     <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
+    <ClCompile Include="src\Renderer\OffScreenRenderer.cpp" />
     <ClCompile Include="src\Renderer\Utilities\VulkanUtilities.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Renderer\VulkanCommandPool.cpp" />
@@ -76,6 +77,7 @@
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
     <ClInclude Include="src\Core\Camera.h" />
+    <ClInclude Include="src\Renderer\OffScreenRenderer.h" />
     <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />

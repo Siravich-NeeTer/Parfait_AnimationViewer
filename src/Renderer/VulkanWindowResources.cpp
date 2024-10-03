@@ -36,7 +36,6 @@ namespace Parfait
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
 				m_Descriptor.get()->WriteUniformBuffer(0, m_UniformBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), i);
-				//m_Descriptor.get()->WriteImageBuffer(1, m_Textures[0].get()->GetImageView(), m_Textures[0].get()->GetSampler(), i);
 				
 				for (size_t j = 0; j < 20; j++)
 				{
@@ -69,9 +68,8 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
-			prepareOffscreen();
-			offscrenPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, offscreenPass.renderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
-			ds = ImGui_ImplVulkan_AddTexture(offscreenPass.sampler, offscreenPass.color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, *m_Descriptor);
+			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
 		}
@@ -79,7 +77,6 @@ namespace Parfait
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 
-			destroyOffscreen();
 			DestroyDepthResources();
 			DestroySyncObject();
 
@@ -155,10 +152,10 @@ namespace Parfait
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
 				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassBeginInfo.renderPass = offscreenPass.renderPass;
-				renderPassBeginInfo.framebuffer = offscreenPass.frameBuffer;
-				renderPassBeginInfo.renderArea.extent.width = offscreenPass.width;
-				renderPassBeginInfo.renderArea.extent.height = offscreenPass.height;
+				renderPassBeginInfo.renderPass = m_OffscreenRenderer->GetRenderPass();
+				renderPassBeginInfo.framebuffer = m_OffscreenRenderer->GetFramebuffer();
+				renderPassBeginInfo.renderArea.extent.width = m_OffscreenRenderer->GetWidth();
+				renderPassBeginInfo.renderArea.extent.height = m_OffscreenRenderer->GetHeight();
 				renderPassBeginInfo.clearValueCount = 2;
 				renderPassBeginInfo.pClearValues = clearValues;
 
@@ -167,23 +164,23 @@ namespace Parfait
 				VkViewport viewport{};
 				viewport.x = 0.0f;
 				viewport.y = 0.0f;
-				viewport.width = (float)offscreenPass.width;
-				viewport.height = (float)offscreenPass.height;
+				viewport.width = (float)m_OffscreenRenderer->GetWidth();
+				viewport.height = (float)m_OffscreenRenderer->GetHeight();
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 				vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
 
 				VkRect2D scissor{};
 				scissor.offset = { 0, 0 };
-				scissor.extent = { (unsigned int)offscreenPass.width, (unsigned int)offscreenPass.height };
+				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
 				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer() };
 				VkDeviceSize offsets[] = { 0 };
 				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, offscrenPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, offscrenPipeline.get()->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
@@ -243,7 +240,7 @@ namespace Parfait
 
 				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
 					ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-						ImGui::Image(ds, ImVec2{ (float)offscreenPass.width, (float)offscreenPass.height });
+						ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight()});
 						currentOffscreenSize = ImGui::GetWindowSize();
 					ImGui::EndChild();
 				ImGui::End();
@@ -310,15 +307,12 @@ namespace Parfait
 				throw std::runtime_error("Failed to present swap chain image!");
 			}
 
-			if ((int)currentOffscreenSize.x != (int)offscreenSize.x ||
-				(int)currentOffscreenSize.y != (int)offscreenSize.y)
+			if (m_OffscreenRenderer->UpdateScreenSize(currentOffscreenSize.x, currentOffscreenSize.y))
 			{
-				offscreenSize = currentOffscreenSize;
-				offscreenPass.width = offscreenSize.x;
-				offscreenPass.height = offscreenSize.y;
-				recreateOffscreen();
+				vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
+				m_OffscreenRenderer->ReCreateFrameBuffer(currentOffscreenSize.x, currentOffscreenSize.y);
+				m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			}
-
 			m_CurrentFrame = (m_CurrentFrame + 1) / MAX_FRAMES_IN_FLIGHT;
 		}
 		void VulkanWindowResources::UpdateUniform(uint32_t _currentFrame)
@@ -333,7 +327,7 @@ namespace Parfait
 			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.view = m_Camera.GetViewMatrix();
-			ubo.projection = glm::perspective(glm::radians(45.0f), offscreenPass.width / (float)offscreenPass.height, 0.1f, 100.0f);
+			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 100.0f);
 			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
@@ -378,7 +372,6 @@ namespace Parfait
 
 						m_Textures.push_back(std::make_unique<VulkanTexture>(m_VkContextRef, *m_CommandPool));
 						m_Textures.back().get()->LoadTexture("Models/" + fullPath);
-						//m_Textures[0].get()->LoadTexture(fullPath);
 					}
 				}
 			}
