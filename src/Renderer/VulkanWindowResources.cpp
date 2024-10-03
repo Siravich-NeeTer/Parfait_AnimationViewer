@@ -36,7 +36,6 @@ namespace Parfait
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
 				m_Descriptor.get()->WriteUniformBuffer(0, m_UniformBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), i);
-				//m_Descriptor.get()->WriteImageBuffer(1, m_Textures[0].get()->GetImageView(), m_Textures[0].get()->GetSampler(), i);
 				
 				for (size_t j = 0; j < 20; j++)
 				{
@@ -57,6 +56,7 @@ namespace Parfait
 				m_Descriptor.get()->WriteImageArrayBuffer(1, imageInfos, i);
 
 				m_Descriptor.get()->UpdateDescriptorSet();
+				imageInfos.clear();
 			}
 
 			m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
@@ -67,6 +67,9 @@ namespace Parfait
 			CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
+
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, *m_Descriptor);
+			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
 		}
@@ -96,6 +99,11 @@ namespace Parfait
 			{
 				isCameraMove = false;
 				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+
+			if (Input::scroll > 0.0f || Input::scroll < 0.0f)
+			{
+				m_Camera.MoveAlongZ(Input::scroll);
 			}
 
 			if(isCameraMove)
@@ -132,8 +140,73 @@ namespace Parfait
 			vkResetFences(m_VkContextRef.GetLogicalDevice(), 1, &m_InflightFence[m_CurrentFrame]);
 
 			vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), /*VkCommandBufferResetFlagBits*/ 0);
-			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
+
+			m_CommandBuffers[m_CurrentFrame]->Begin();
+			/*
+				First render pass: Offscreen rendering
+			*/
 			{
+				VkClearValue clearValues[2];
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				VkRenderPassBeginInfo renderPassBeginInfo{};
+				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassBeginInfo.renderPass = m_OffscreenRenderer->GetRenderPass();
+				renderPassBeginInfo.framebuffer = m_OffscreenRenderer->GetFramebuffer();
+				renderPassBeginInfo.renderArea.extent.width = m_OffscreenRenderer->GetWidth();
+				renderPassBeginInfo.renderArea.extent.height = m_OffscreenRenderer->GetHeight();
+				renderPassBeginInfo.clearValueCount = 2;
+				renderPassBeginInfo.pClearValues = clearValues;
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+				VkViewport viewport{};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = (float)m_OffscreenRenderer->GetWidth();
+				viewport.height = (float)m_OffscreenRenderer->GetHeight();
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+				vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
+
+				VkRect2D scissor{};
+				scissor.offset = { 0, 0 };
+				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
+				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
+
+				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer() };
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
+				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
+				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+			}
+			
+			ImVec2 currentOffscreenSize;
+			/*
+			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
+			*/
+			{
+				VkRenderPassBeginInfo renderPassInfo{};
+				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
+				renderPassInfo.framebuffer = m_Framebuffers->GetFramebuffers()[imageIndex];
+				renderPassInfo.renderArea.offset = { 0, 0 };
+				renderPassInfo.renderArea.extent = m_SurfaceSwapchain->GetExtent();
+
+				std::array<VkClearValue, 2> clearValues{};
+				clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+				renderPassInfo.pClearValues = clearValues.data();
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipeline());
 
 				VkViewport viewport{};
@@ -155,19 +228,40 @@ namespace Parfait
 				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
-				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+				// vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 
 				// Render ImGui
 				ImGui_ImplVulkan_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 
 				ImGui::NewFrame();
+
+				ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+
+				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
+					ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+						ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight()});
+						currentOffscreenSize = ImGui::GetWindowSize();
+					ImGui::EndChild();
+				ImGui::End();
+
 				ImGui::ShowDemoWindow();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+				
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
+
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
+			m_CommandBuffers[m_CurrentFrame]->End();
+			/*
 			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
+			*/
 
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -213,6 +307,12 @@ namespace Parfait
 				throw std::runtime_error("Failed to present swap chain image!");
 			}
 
+			if (m_OffscreenRenderer->UpdateScreenSize(currentOffscreenSize.x, currentOffscreenSize.y))
+			{
+				vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
+				m_OffscreenRenderer->ReCreateFrameBuffer(currentOffscreenSize.x, currentOffscreenSize.y);
+				m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
 			m_CurrentFrame = (m_CurrentFrame + 1) / MAX_FRAMES_IN_FLIGHT;
 		}
 		void VulkanWindowResources::UpdateUniform(uint32_t _currentFrame)
@@ -227,7 +327,8 @@ namespace Parfait
 			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.view = m_Camera.GetViewMatrix();
-			ubo.projection = glm::perspectiveRH_ZO(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
+			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 100.0f);
+			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
@@ -271,7 +372,6 @@ namespace Parfait
 
 						m_Textures.push_back(std::make_unique<VulkanTexture>(m_VkContextRef, *m_CommandPool));
 						m_Textures.back().get()->LoadTexture("Models/" + fullPath);
-						//m_Textures[0].get()->LoadTexture(fullPath);
 					}
 				}
 			}
@@ -424,19 +524,20 @@ namespace Parfait
 			VkDescriptorPoolCreateInfo pool_info = {};
 			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-			pool_info.maxSets = 1000;
-			pool_info.poolSizeCount = std::size(pool_sizes);
+			pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 			pool_info.pPoolSizes = pool_sizes;
 
 			vkCreateDescriptorPool(m_VkContextRef.GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiPool);
 
 			// 2: initialize imgui library
 			ImGui::CreateContext();
-			
-			ImGuiIO& io = ImGui::GetIO(); (void)io;
-			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 			ImGui::StyleColorsDark();
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
+			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable Docking
+			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enable Multi-Viewport / Platform Windows
 
 			ImGui_ImplGlfw_InitForVulkan(m_WindowRef, true);
 
@@ -506,6 +607,7 @@ namespace Parfait
 			glfwSetKeyCallback(m_WindowRef, Input::KeyCallBack);
 			glfwSetCursorPosCallback(m_WindowRef, Input::CursorCallBack);
 			glfwSetMouseButtonCallback(m_WindowRef, Input::MouseCallBack);
+			glfwSetScrollCallback(m_WindowRef, Input::ScrollCallback);
 		}
 		void VulkanWindowResources::FramebufferResizeCallback(GLFWwindow* window, int width, int height) 
 		{

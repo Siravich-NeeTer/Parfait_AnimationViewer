@@ -32,6 +32,8 @@
 #include "Renderer/VulkanCommandBuffer.h"
 #include "Renderer/VulkanDescriptor.h"
 
+#include "Renderer/OffScreenRenderer.h"
+
 #include "Renderer/Buffers/VulkanVertexBuffer.h"
 #include "Renderer/Buffers/VulkanIndexBuffer.h"
 #include "Renderer/Buffers/VulkanUniformBuffer.h"
@@ -93,6 +95,8 @@ namespace Parfait
 				std::vector<Vertex> m_Vertices;
 				std::vector<uint32_t> m_Indices;
 
+				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
+				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;
 
 				int m_CurrentFrame = 0;

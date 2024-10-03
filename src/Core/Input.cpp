@@ -4,6 +4,7 @@ namespace Input
 {
 	float mouseX;
 	float mouseY;
+	float scroll;
 	bool keyPressed[GLFW_KEY_LAST];
 	bool keyBeginPressed[GLFW_KEY_LAST];
 	bool keyEndPressed[GLFW_KEY_LAST];
@@ -30,6 +31,7 @@ namespace Input
 			keyBeginPressed[idx] = false;
 			keyEndPressed[idx] = false;
 		}
+		scroll = 0.0f;
 	}
 
 	void KeyCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -78,5 +80,9 @@ namespace Input
 			keyPressed[key] = false;
 			keyBeginPressed[key] = false;
 		}
+	}
+	void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		scroll = yoffset;
 	}
 }
