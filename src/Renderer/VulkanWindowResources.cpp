@@ -9,15 +9,13 @@ namespace Parfait
 			m_SurfaceSwapchain(std::make_unique<VulkanSurfaceSwapchain>(_vulkanContext, *_window)),
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
-			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
+			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
+			m_Model(_vulkanContext, *m_CommandPool, "Models/Alisa Mikhailovna (3D Model).fbx")
 		{
-			LoadModel("Models/Alisa Mikhailovna (3D Model).fbx");
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
 
-			// Init Vertex, Index & Uniform Buffer
-			m_VertexBuffer = std::make_unique<VulkanVertexBuffer<Vertex>>(_vulkanContext, *m_CommandPool, m_Vertices.data(), m_Vertices.size());
-			m_IndexBuffer = std::make_unique<VulkanIndexBuffer>(_vulkanContext, *m_CommandPool, m_Indices.data(), m_Indices.size());
+			// Uniform Buffer
 			m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
@@ -175,13 +173,10 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer() };
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
-				vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+				
+				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -206,29 +201,6 @@ namespace Parfait
 				renderPassInfo.pClearValues = clearValues.data();
 
 				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipeline());
-
-				VkViewport viewport{};
-				viewport.x = 0.0f;
-				viewport.y = 0.0f;
-				viewport.width = (float)m_SurfaceSwapchain->GetExtent().width;
-				viewport.height = (float)m_SurfaceSwapchain->GetExtent().height;
-				viewport.minDepth = 0.0f;
-				viewport.maxDepth = 1.0f;
-				vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
-
-				VkRect2D scissor{};
-				scissor.offset = { 0, 0 };
-				scissor.extent = m_SurfaceSwapchain->GetExtent();
-				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
-
-				VkBuffer vertexBuffers[] = { m_VertexBuffer.get()->GetBuffer()};
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_IndexBuffer.get()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.get()->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
-				// vkCmdDrawIndexed(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 
 				// Render ImGui
 				ImGui_ImplVulkan_NewFrame();
@@ -332,98 +304,6 @@ namespace Parfait
 			ubo.projection[1][1] *= -1;
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
-		}
-
-		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
-		{
-			Assimp::Importer importer;
-			const aiScene* scene = importer.ReadFile(_path.string(), 
-				aiProcess_Triangulate | 
-				aiProcess_FlipUVs | 
-				aiProcess_JoinIdenticalVertices |
-				aiProcess_PreTransformVertices |
-				aiProcess_TransformUVCoords
-			);
-
-			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-			{
-				throw std::runtime_error("ERROR::ASSIMP " + std::string(importer.GetErrorString()));
-			}
-
-			for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
-				aiMaterial* material = scene->mMaterials[i];
-
-				aiTextureType textureTypes[] = {
-					aiTextureType_DIFFUSE
-					// aiTextureType_SPECULAR,
-					// aiTextureType_NORMALS,
-					// aiTextureType_HEIGHT,
-					// Add other texture types you may need
-				};
-
-				for (auto type : textureTypes) {
-					if (material->GetTextureCount(type) > 0) {
-						aiString texturePath;
-						material->GetTexture(type, 0, &texturePath);
-						std::string fullPath = texturePath.C_Str();
-						// Load the texture into Vulkan
-
-						std::cout << fullPath << "\n";
-
-						m_Textures.push_back(std::make_unique<VulkanTexture>(m_VkContextRef, *m_CommandPool));
-						m_Textures.back().get()->LoadTexture("Models/" + fullPath);
-					}
-				}
-			}
-
-			ProcessNode(scene->mRootNode, scene);
-		}
-		void VulkanWindowResources::ProcessNode(aiNode* node, const aiScene* scene)
-		{
-			// process each mesh located at the current node
-			for (unsigned int i = 0; i < node->mNumMeshes; i++)
-			{
-				// the node object only contains indices to index the actual objects in the scene. 
-				// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-				aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(mesh, scene, node->mTransformation);
-			}
-			// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-			for (unsigned int i = 0; i < node->mNumChildren; i++)
-			{
-				ProcessNode(node->mChildren[i], scene);
-			}
-
-		}
-		void VulkanWindowResources::ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiMatrix4x4 _transform)
-		{
-			uint32_t startIdx = m_Vertices.size();
-			for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-			{
-				Vertex vertex;
-				vertex.pos = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-
-				if (mesh->mTextureCoords[0]) // Check for texture coordinates
-				{
-					glm::vec2 vec;
-					vec.x = mesh->mTextureCoords[0][i].x;
-					vec.y = mesh->mTextureCoords[0][i].y;
-					vertex.texCoord = vec;
-					vertex.texIndex = mesh->mMaterialIndex;
-				}
-				else
-				{
-					vertex.texCoord = glm::vec2(0.0f, 0.0f);
-				}
-
-				m_Vertices.push_back(vertex);
-			}
-			for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-			{
-				aiFace face = mesh->mFaces[i];
-				for (unsigned int j = 0; j < face.mNumIndices; j++)
-					m_Indices.push_back(startIdx + face.mIndices[j]);
-			}
 		}
 
 		void VulkanWindowResources::BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex)

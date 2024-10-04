@@ -22,6 +22,7 @@
 
 #include "Core/Input.h"
 #include "Core/Camera.h"
+#include "Core/Model.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -54,10 +55,6 @@ namespace Parfait
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
 
-				void LoadModel(const std::filesystem::path& _path);
-				void ProcessNode(aiNode* node, const aiScene* scene);
-				void ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiMatrix4x4 _transform);
-
 				void BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex);
 				void EndRenderPass(const VulkanCommandBuffer& _VkCommandBuffer);
 
@@ -80,8 +77,6 @@ namespace Parfait
 				std::vector<VkSemaphore> m_RenderSemaphores;
 				std::vector<VkFence> m_InflightFence;
 
-				std::unique_ptr<VulkanVertexBuffer<Vertex>> m_VertexBuffer;
-				std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
 				std::vector<std::unique_ptr<VulkanUniformBuffer<UniformBufferObject>>> m_UniformBuffers;
 				
 				std::vector<std::unique_ptr<VulkanTexture>> m_Textures;
@@ -92,8 +87,7 @@ namespace Parfait
 				VkDeviceMemory m_DepthImageMemory;
 				VkImageView m_DepthImageView;
 
-				std::vector<Vertex> m_Vertices;
-				std::vector<uint32_t> m_Indices;
+				Model m_Model;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;

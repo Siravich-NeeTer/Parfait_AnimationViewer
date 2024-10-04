@@ -126,6 +126,9 @@
     <ClCompile Include="src\Renderer\OffScreenRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Core\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui\imconfig.h">
@@ -163,9 +166,6 @@
     </ClInclude>
     <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h">
       <Filter>Header Files\imgui\ext</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Renderer\BufferObject.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="External Libraries\stb\stb_image.h">
       <Filter>Header Files</Filter>
@@ -234,6 +234,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\OffScreenRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
