@@ -73,6 +73,7 @@
     <ClInclude Include="External Libraries\stb\stb_image.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\Model.h" />
+    <ClInclude Include="src\Core\Object.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />

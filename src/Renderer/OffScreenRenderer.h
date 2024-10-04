@@ -11,7 +11,6 @@ namespace Parfait
 		class OffScreenRenderer
 		{
 			public:
-				OffScreenRenderer(const VulkanContext& _vulkanContext, const VulkanDescriptor& _vulkanDescriptor);
 				OffScreenRenderer(const VulkanContext& _vulkanContext, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts);
 				~OffScreenRenderer();
 

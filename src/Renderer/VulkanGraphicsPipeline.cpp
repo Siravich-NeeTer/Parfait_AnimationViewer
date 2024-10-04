@@ -4,21 +4,6 @@ namespace Parfait
 {
 	namespace Graphics
 	{
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const std::vector<std::filesystem::path>& _shaderPaths)
-			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
-		{
-		}
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
-			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
-		{
-			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor.GetDescriptorSetLayout());
-		}
-
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
-			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
-		{
-			CreateGraphicsPipeline(_vulkanRenderPass, _vulkanDescriptor.GetDescriptorSetLayout());
-		}
 		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts, const std::vector<std::filesystem::path>& _shaderPaths)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{

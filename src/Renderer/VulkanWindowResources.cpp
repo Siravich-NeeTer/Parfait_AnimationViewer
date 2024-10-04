@@ -276,9 +276,6 @@ namespace Parfait
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 			UniformBufferObject ubo{};
-			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-			//ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.25f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
-			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
 			ubo.view = m_Camera.GetViewMatrix();
 			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 100.0f);
 			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);

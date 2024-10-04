@@ -12,6 +12,8 @@
 #include <vector>
 #include <filesystem>
 
+#include "Core/Object.h"
+
 #include "Renderer/VulkanDescriptor.h"
 #include "Renderer/VulkanTexture.h"
 
@@ -27,7 +29,7 @@ namespace Parfait
 		class VulkanCommandPool;
 	}
 
-	class Model
+	class Model : public Object
 	{
 		public:
 			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path);
@@ -49,6 +51,10 @@ namespace Parfait
 			struct Mesh
 			{
 				std::vector<Primitive> primitives;
+			};
+			struct MeshPushConstants 
+			{
+				glm::mat4 model;
 			};
 			struct Node
 			{
