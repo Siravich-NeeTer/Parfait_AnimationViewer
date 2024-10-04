@@ -124,7 +124,6 @@ namespace Parfait
 			VkResult result = vkAcquireNextImageKHR(m_VkContextRef.GetLogicalDevice(), m_SurfaceSwapchain.get()->GetSwapchain(), UINT64_MAX, m_PresentSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 			if (result == VK_ERROR_OUT_OF_DATE_KHR)
 			{
-				m_IsFramebufferResize = false;
 				RecreateSwapchain();
 				return;
 			}
@@ -272,6 +271,7 @@ namespace Parfait
 			result = vkQueuePresentKHR(m_VkContextRef.GetPresentQueue(), &presentInfo);
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_IsFramebufferResize)
 			{
+				m_IsFramebufferResize = false;
 				RecreateSwapchain();
 			}
 			else if (result != VK_SUCCESS) 
