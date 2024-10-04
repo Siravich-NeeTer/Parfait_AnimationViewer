@@ -15,20 +15,42 @@ namespace Parfait
 		}
 		VulkanDescriptor::~VulkanDescriptor()
 		{
-			vkDestroyDescriptorPool(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorPool, nullptr);
-			vkDestroyDescriptorSetLayout(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
+			for(size_t i = 0; i < m_DescriptorPool.size(); i++)
+				vkDestroyDescriptorPool(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorPool[i], nullptr);
+			for (size_t i = 0; i < m_DescriptorSetLayout.size(); i++)
+				vkDestroyDescriptorSetLayout(m_VulkanContextRef.GetLogicalDevice(), m_DescriptorSetLayout[i], nullptr);
 		}
 
 		void VulkanDescriptor::AddLayoutBinding(VkDescriptorSetLayoutBinding layoutBinding)
 		{
-			m_DescriptorSetLayoutBinding.push_back(layoutBinding);
+			if (m_DescriptorSetLayoutBinding.empty())
+			{
+				m_DescriptorSetLayoutBinding.push_back({ layoutBinding });
+				m_CurrentDescriptorSetIndex = 0;
+			}
+			else
+			{
+				m_DescriptorSetLayoutBinding[m_CurrentDescriptorSetIndex].push_back(layoutBinding);
+			}
+		}
+		void VulkanDescriptor::AddDescriptorSets(std::vector<VkDescriptorSetLayoutBinding> layoutBindings)
+		{
+			m_DescriptorSetLayoutBinding.push_back(layoutBindings);
+			m_CurrentDescriptorSetIndex = m_DescriptorSetLayoutBinding.size() - 1;
 		}
 
 		void VulkanDescriptor::Init()
 		{
-			CreateDescriptorSetLayout();
-			CreateDescriptorPool();
-			CreateDescriptorSets();
+			for (size_t i = 0; i < m_DescriptorSetLayoutBinding.size(); i++)
+			{
+				VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout(m_DescriptorSetLayoutBinding[i]);
+				VkDescriptorPool descriptorPool = CreateDescriptorPool(m_DescriptorSetLayoutBinding[i]);
+				std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSet = CreateDescriptorSets(descriptorSetLayout, descriptorPool);
+
+				m_DescriptorSetLayout.push_back(descriptorSetLayout);
+				m_DescriptorPool.push_back(descriptorPool);
+				m_DescriptorSets.push_back(descriptorSet);
+			}
 		}
 
 		void VulkanDescriptor::WriteUniformBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex)
@@ -41,7 +63,7 @@ namespace Parfait
 
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_DescriptorSets[_frameIndex];
+			descriptorWrite.dstSet = m_DescriptorSets[m_CurrentDescriptorSetIndex][_frameIndex];
 			descriptorWrite.dstBinding = _binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -60,7 +82,7 @@ namespace Parfait
 
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_DescriptorSets[_frameIndex];
+			descriptorWrite.dstSet = m_DescriptorSets[m_CurrentDescriptorSetIndex][_frameIndex];
 			descriptorWrite.dstBinding = _binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -73,7 +95,7 @@ namespace Parfait
 		{
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_DescriptorSets[_frameIndex];
+			descriptorWrite.dstSet = m_DescriptorSets[m_CurrentDescriptorSetIndex][_frameIndex];
 			descriptorWrite.dstBinding = _binding;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -90,32 +112,26 @@ namespace Parfait
 			m_ImageInfos.clear();
 		}
 
-		void VulkanDescriptor::CreateDescriptorSetLayout()
+		VkDescriptorSetLayout VulkanDescriptor::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& _descriptorSetLayoutBinding)
 		{
-			/*
-			VkDescriptorSetLayoutBinding layoutBinding{};
-			layoutBinding.binding = 0;
-			layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			layoutBinding.descriptorCount = 1;
-			layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-			*/
-
 			VkDescriptorSetLayoutCreateInfo layoutInfo{};
 			layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			layoutInfo.bindingCount = static_cast<uint32_t>(m_DescriptorSetLayoutBinding.size());
-			layoutInfo.pBindings = m_DescriptorSetLayoutBinding.data();
+			layoutInfo.bindingCount = static_cast<uint32_t>(_descriptorSetLayoutBinding.size());
+			layoutInfo.pBindings = _descriptorSetLayoutBinding.data();
 
-			if (vkCreateDescriptorSetLayout(m_VulkanContextRef.GetLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) 
+			VkDescriptorSetLayout descriptorSetLayout;
+			if (vkCreateDescriptorSetLayout(m_VulkanContextRef.GetLogicalDevice(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create descriptor set layout!");
 			}
+			return descriptorSetLayout;
 		}
-		void VulkanDescriptor::CreateDescriptorPool()
+		VkDescriptorPool VulkanDescriptor::CreateDescriptorPool(const std::vector<VkDescriptorSetLayoutBinding>& _descriptorSetLayoutBinding)
 		{
-			std::vector<VkDescriptorPoolSize> poolSizes(m_DescriptorSetLayoutBinding.size());
-			for (size_t i = 0; i < m_DescriptorSetLayoutBinding.size(); i++)
+			std::vector<VkDescriptorPoolSize> poolSizes(_descriptorSetLayoutBinding.size());
+			for (size_t i = 0; i < _descriptorSetLayoutBinding.size(); i++)
 			{
-				poolSizes[i].type = m_DescriptorSetLayoutBinding[i].descriptorType;
+				poolSizes[i].type = _descriptorSetLayoutBinding[i].descriptorType;
 				poolSizes[i].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 			}
 
@@ -125,25 +141,28 @@ namespace Parfait
 			poolInfo.pPoolSizes = poolSizes.data();
 			poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-			if (vkCreateDescriptorPool(m_VulkanContextRef.GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) 
+			VkDescriptorPool descriptorPool;
+			if (vkCreateDescriptorPool(m_VulkanContextRef.GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create descriptor pool!");
 			}
+			return descriptorPool;
 		}
-		void VulkanDescriptor::CreateDescriptorSets()
+		std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> VulkanDescriptor::CreateDescriptorSets(VkDescriptorSetLayout _descriptorSetLayout, VkDescriptorPool _descriptorPool)
 		{
-			std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
+			std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, _descriptorSetLayout);
 			VkDescriptorSetAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			allocInfo.descriptorPool = m_DescriptorPool;
+			allocInfo.descriptorPool = _descriptorPool;
 			allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 			allocInfo.pSetLayouts = layouts.data();
 
-			m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-			if (vkAllocateDescriptorSets(m_VulkanContextRef.GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) 
+			std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+			if (vkAllocateDescriptorSets(m_VulkanContextRef.GetLogicalDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to allocate descriptor sets!");
 			}
+			return descriptorSets;
 		}
 	}
 }

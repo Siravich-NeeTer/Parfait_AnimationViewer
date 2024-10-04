@@ -244,9 +244,7 @@
     <Font Include="fonts\TMP.TTF" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\shader.frag" />
-    <None Include="Shaders\shader.vert" />
-    <None Include="Shaders\temp.frag" />
-    <None Include="Shaders\temp.vert" />
+    <None Include="Shaders\mesh.frag" />
+    <None Include="Shaders\mesh.vert" />
   </ItemGroup>
 </Project>

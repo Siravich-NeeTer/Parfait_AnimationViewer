@@ -12,6 +12,7 @@ namespace Parfait
 		{
 			public:
 				OffScreenRenderer(const VulkanContext& _vulkanContext, const VulkanDescriptor& _vulkanDescriptor);
+				OffScreenRenderer(const VulkanContext& _vulkanContext, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts);
 				~OffScreenRenderer();
 
 				bool UpdateScreenSize(int _sizeX, int _sizeY);

@@ -25,39 +25,20 @@ namespace Parfait
 
 			std::vector<VkDescriptorImageInfo> imageInfos;
 			m_DebugTexture = std::make_unique<VulkanTexture>(_vulkanContext, *m_CommandPool);
-			m_DebugTexture->LoadTexture("Models/null.png");
+			m_DebugTexture->LoadTexture("Models/null.jpg");
 
-			m_Descriptor.get()->AddLayoutBinding({ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr });
-			m_Descriptor.get()->AddLayoutBinding({ 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 20, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr });
+			m_Descriptor.get()->AddDescriptorSets({ 
+				{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
+			});
 			m_Descriptor.get()->Init();
 			// Write Uniform Buffer to Descriptor
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
 				m_Descriptor.get()->WriteUniformBuffer(0, m_UniformBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), i);
-				
-				for (size_t j = 0; j < 20; j++)
-				{
-					VkDescriptorImageInfo imageInfo{};
-					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-					if (j < m_Textures.size())
-					{
-						imageInfo.imageView = m_Textures[j]->GetImageView();
-						imageInfo.sampler = m_Textures[j]->GetSampler();
-					}
-					else
-					{
-						imageInfo.imageView = m_DebugTexture->GetImageView();
-						imageInfo.sampler = m_DebugTexture->GetSampler();
-					}
-					imageInfos.push_back(imageInfo);
-				}
-				m_Descriptor.get()->WriteImageArrayBuffer(1, imageInfos, i);
-
 				m_Descriptor.get()->UpdateDescriptorSet();
-				imageInfos.clear();
 			}
 
-			m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
+			// m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, *m_RenderPass, *m_Descriptor, std::vector<std::filesystem::path>{"Shaders/temp.vert", "Shaders/temp.frag"});
 
 			glfwSetWindowUserPointer(_window, this);
 			BindWindowEvents();
@@ -66,7 +47,7 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
-			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, *m_Descriptor);
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Model.GetDescriptor().GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
@@ -172,10 +153,10 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSet(m_CurrentFrame), 0, NULL);
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 				
-				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}

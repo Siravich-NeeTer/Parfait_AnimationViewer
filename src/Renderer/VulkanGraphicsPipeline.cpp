@@ -11,13 +11,18 @@ namespace Parfait
 		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
-			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor);
+			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor.GetDescriptorSetLayout());
 		}
 
 		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
-			CreateGraphicsPipeline(_vulkanRenderPass, _vulkanDescriptor);
+			CreateGraphicsPipeline(_vulkanRenderPass, _vulkanDescriptor.GetDescriptorSetLayout());
+		}
+		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts, const std::vector<std::filesystem::path>& _shaderPaths)
+			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
+		{
+			CreateGraphicsPipeline(_vulkanRenderPass, _descriptorSetLayouts);
 		}
 		VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 		{
@@ -30,7 +35,7 @@ namespace Parfait
 			}
 		}
 
-		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass, const VulkanDescriptor& _vulkanDescriptor)
+		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts)
 		{
 			CreateShaderModule();
 
@@ -105,8 +110,8 @@ namespace Parfait
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			pipelineLayoutInfo.setLayoutCount = 1;
-			pipelineLayoutInfo.pSetLayouts = &_vulkanDescriptor.GetDescriptorSetLayout();
+			pipelineLayoutInfo.setLayoutCount = _descriptorSetLayouts.size();
+			pipelineLayoutInfo.pSetLayouts = _descriptorSetLayouts.data();
 			pipelineLayoutInfo.pushConstantRangeCount = 0;
 
 			// TODO: Better Error Handler
