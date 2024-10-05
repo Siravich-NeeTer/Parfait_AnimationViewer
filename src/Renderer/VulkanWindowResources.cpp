@@ -10,7 +10,7 @@ namespace Parfait
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
-			m_Model(_vulkanContext, *m_CommandPool, "Models/Alisa Mikhailovna (3D Model).fbx")
+			m_Model(_vulkanContext, *m_CommandPool, "Models/scene.gltf")
 		{
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
@@ -121,7 +121,7 @@ namespace Parfait
 			*/
 			{
 				VkClearValue clearValues[2];
-				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+				clearValues[0].color = { { 0.25f, 0.25f, 0.25f, 1.0f } };
 				clearValues[1].depthStencil = { 1.0f, 0 };
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};

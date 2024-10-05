@@ -46,6 +46,7 @@ namespace Parfait
 		for (unsigned int i = 0; i < scene->mNumMaterials; i++) 
 		{
 			aiMaterial* material = scene->mMaterials[i];
+			bool isFoundSuitableTexture = false;
 
 			aiTextureType textureTypes[] = {
 				aiTextureType_DIFFUSE,
@@ -69,7 +70,16 @@ namespace Parfait
 					m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
 					m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
 					m_Textures.back().get()->LoadTexture("Models/" + fullPath);
+					isFoundSuitableTexture = true;
+					break;
 				}
+			}
+
+			if (!isFoundSuitableTexture)
+			{
+				m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
+				m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
+				m_Textures.back().get()->LoadTexture("Models/null.png");
 			}
 		}
 
@@ -133,7 +143,6 @@ namespace Parfait
 				vec.x = _mesh->mTextureCoords[0][i].x;
 				vec.y = _mesh->mTextureCoords[0][i].y;
 				vertex.uv = vec;
-				primitive.materialIndex = _mesh->mMaterialIndex;
 			}
 			else
 			{
@@ -142,6 +151,7 @@ namespace Parfait
 
 			m_Vertices.push_back(vertex);
 		}
+		primitive.materialIndex = _mesh->mMaterialIndex;
 
 		uint32_t indexCount = 0;
 		for (unsigned int i = 0; i < _mesh->mNumFaces; i++)
