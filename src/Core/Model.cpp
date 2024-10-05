@@ -96,6 +96,8 @@ namespace Parfait
 		}
 
 		ProcessNode(scene->mRootNode, scene, nullptr);
+
+		center = (1.0f / m_Vertices.size()) * center;
 	}
 	void Model::ProcessNode(aiNode * _node, const aiScene * _scene, Node* _parent)
 	{
@@ -136,6 +138,8 @@ namespace Parfait
 		{
 			Graphics::Vertex vertex;
 			vertex.position = Graphics::AssimpGLMHelpers::GetGLMVec(_mesh->mVertices[i]);
+
+			center += vertex.position;
 
 			if (_mesh->mTextureCoords[0]) // Check for texture coordinates
 			{
@@ -184,11 +188,12 @@ namespace Parfait
 			}
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model *= glm::scale(glm::mat4(1.0f), scale);
-			model *= glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-			model *= glm::rotate(glm::mat4(1.0f), rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-			model *= glm::rotate(glm::mat4(1.0f), rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 			model *= glm::translate(glm::mat4(1.0f), position);
+			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			model *= glm::scale(glm::mat4(1.0f), scale);
+			model *= glm::translate(glm::mat4(1.0f), -center);
 
 			// Pass the final matrix to the vertex shader using push constants
 			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);
