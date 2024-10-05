@@ -93,11 +93,17 @@ namespace Parfait
 			dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 			dynamicState.pDynamicStates = dynamicStates.data();
 
+			VkPushConstantRange pushConstantRange = {};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Specify the stage using the push constants
+			pushConstantRange.offset = 0; // Start from the beginning
+			pushConstantRange.size = sizeof(glm::mat4); // Size of the push constant block
+
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 			pipelineLayoutInfo.setLayoutCount = _descriptorSetLayouts.size();
 			pipelineLayoutInfo.pSetLayouts = _descriptorSetLayouts.data();
-			pipelineLayoutInfo.pushConstantRangeCount = 0;
+			pipelineLayoutInfo.pushConstantRangeCount = 1;
+			pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 			// TODO: Better Error Handler
 			if (vkCreatePipelineLayout(m_VulkanContextRef.GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) 
