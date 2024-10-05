@@ -4,20 +4,10 @@ namespace Parfait
 {
 	namespace Graphics
 	{
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const std::vector<std::filesystem::path>& _shaderPaths)
+		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts, const std::vector<std::filesystem::path>& _shaderPaths)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
-		}
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VulkanRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
-			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
-		{
-			CreateGraphicsPipeline(_vulkanRenderPass.GetRenderPass(), _vulkanDescriptor);
-		}
-
-		VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const VulkanDescriptor& _vulkanDescriptor, const std::vector<std::filesystem::path>& _shaderPaths)
-			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
-		{
-			CreateGraphicsPipeline(_vulkanRenderPass, _vulkanDescriptor);
+			CreateGraphicsPipeline(_vulkanRenderPass, _descriptorSetLayouts);
 		}
 		VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 		{
@@ -30,7 +20,7 @@ namespace Parfait
 			}
 		}
 
-		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass, const VulkanDescriptor& _vulkanDescriptor)
+		void VulkanGraphicsPipeline::CreateGraphicsPipeline(const VkRenderPass& _renderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts)
 		{
 			CreateShaderModule();
 
@@ -38,7 +28,7 @@ namespace Parfait
 			vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 			VkVertexInputBindingDescription bindingDescription = Vertex::getBindingDescription();
-			std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions = Vertex::getAttributeDescriptions();
+			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = Vertex::getAttributeDescriptions();
 
 			vertexInputInfo.vertexBindingDescriptionCount = 1;
 			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -103,11 +93,17 @@ namespace Parfait
 			dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 			dynamicState.pDynamicStates = dynamicStates.data();
 
+			VkPushConstantRange pushConstantRange = {};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Specify the stage using the push constants
+			pushConstantRange.offset = 0; // Start from the beginning
+			pushConstantRange.size = sizeof(glm::mat4); // Size of the push constant block
+
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			pipelineLayoutInfo.setLayoutCount = 1;
-			pipelineLayoutInfo.pSetLayouts = &_vulkanDescriptor.GetDescriptorSetLayout();
-			pipelineLayoutInfo.pushConstantRangeCount = 0;
+			pipelineLayoutInfo.setLayoutCount = _descriptorSetLayouts.size();
+			pipelineLayoutInfo.pSetLayouts = _descriptorSetLayouts.data();
+			pipelineLayoutInfo.pushConstantRangeCount = 1;
+			pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 			// TODO: Better Error Handler
 			if (vkCreatePipelineLayout(m_VulkanContextRef.GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) 
