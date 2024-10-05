@@ -64,6 +64,7 @@ namespace Parfait
 
 				bool isCameraMove = false;
 				Camera m_Camera;
+				bool m_IsViewportFocus = false;
 
 				std::unique_ptr<VulkanSurfaceSwapchain> m_SurfaceSwapchain;
 				std::unique_ptr<VulkanRenderPass> m_RenderPass;

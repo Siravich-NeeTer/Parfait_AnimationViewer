@@ -64,26 +64,32 @@ namespace Parfait
 		void VulkanWindowResources::Update(float dt)
 		{
 			glfwPollEvents();
-			if (Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_RIGHT))
-			{
-				m_Camera.ResetMousePosition();
-				isCameraMove = true;
-				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			}
-			else if (Input::IsKeyEndPressed(GLFW_MOUSE_BUTTON_RIGHT))
-			{
-				isCameraMove = false;
-				glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			}
 
-			if (Input::scroll > 0.0f || Input::scroll < 0.0f)
+			if (m_IsViewportFocus)
 			{
-				m_Camera.MoveAlongZ(Input::scroll);
-			}
+				if (Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_RIGHT))
+				{
+					m_Camera.ResetMousePosition();
+					isCameraMove = true;
+					glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				}
+				else if (Input::IsKeyEndPressed(GLFW_MOUSE_BUTTON_RIGHT))
+				{
+					isCameraMove = false;
+					glfwSetInputMode(m_WindowRef, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				}
 
-			if(isCameraMove)
-				m_Camera.ProcessMousesMovement();
-			m_Camera.Input(dt);
+				if (Input::scroll > 0.0f || Input::scroll < 0.0f)
+				{
+					m_Camera.MoveAlongZ(Input::scroll);
+				}
+
+				if (isCameraMove)
+				{
+					m_Camera.ProcessMousesMovement();
+					m_Camera.Input(dt);
+				}
+			}
 
 			Draw();
 
@@ -188,8 +194,11 @@ namespace Parfait
 
 				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
 					ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+						
 						ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight()});
 						currentOffscreenSize = ImGui::GetWindowSize();
+						m_IsViewportFocus = ImGui::IsWindowHovered() || isCameraMove;
+
 					ImGui::EndChild();
 				ImGui::End();
 
