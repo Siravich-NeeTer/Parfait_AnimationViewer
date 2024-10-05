@@ -23,10 +23,6 @@ namespace Parfait
 				vkMapMemory(_vulkanContext.GetLogicalDevice(), m_UniformBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), 0, &m_UniformBuffers[i]->GetMappedBuffer());
 			}
 
-			std::vector<VkDescriptorImageInfo> imageInfos;
-			m_DebugTexture = std::make_unique<VulkanTexture>(_vulkanContext, *m_CommandPool);
-			m_DebugTexture->LoadTexture("Models/null.jpg");
-
 			m_Descriptor.get()->AddDescriptorSets({ 
 				{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
 			});
@@ -201,12 +197,6 @@ namespace Parfait
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
-				
-				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-				{
-					ImGui::UpdatePlatformWindows();
-					ImGui::RenderPlatformWindowsDefault();
-				}
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -395,7 +385,6 @@ namespace Parfait
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable Docking
-			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enable Multi-Viewport / Platform Windows
 
 			ImGui_ImplGlfw_InitForVulkan(m_WindowRef, true);
 

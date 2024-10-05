@@ -80,7 +80,6 @@ namespace Parfait
 				std::vector<std::unique_ptr<VulkanUniformBuffer<UniformBufferObject>>> m_UniformBuffers;
 				
 				std::vector<std::unique_ptr<VulkanTexture>> m_Textures;
-				std::unique_ptr<VulkanTexture> m_DebugTexture;
 
 				// Depth Buffer
 				VkImage m_DepthImage;
