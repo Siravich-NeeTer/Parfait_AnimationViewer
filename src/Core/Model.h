@@ -15,6 +15,8 @@
 
 #include "Core/Object.h"
 
+#include "Math/AssimpGLMHelpers.h"
+
 #include "Renderer/VulkanDescriptor.h"
 #include "Renderer/VulkanTexture.h"
 

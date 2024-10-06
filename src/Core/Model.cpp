@@ -104,7 +104,7 @@ namespace Parfait
 	{
 		// Create Node & Add to list
 		Node* node = new Node();
-		node->matrix = Graphics::AssimpGLMHelpers::ConvertMatrixToGLMFormat(_node->mTransformation);
+		node->matrix = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_node->mTransformation);
 		node->parent = _parent;
 
 		if (_parent != nullptr)
@@ -141,8 +141,8 @@ namespace Parfait
 
 			SetVertexBoneDataToDefault(vertex);
 
-			vertex.position = Graphics::AssimpGLMHelpers::GetGLMVec(_mesh->mVertices[i]);
-			vertex.normal = Graphics::AssimpGLMHelpers::GetGLMVec(_mesh->mNormals[i]);
+			vertex.position = AssimpGLMHelpers::GetGLMVec(_mesh->mVertices[i]);
+			vertex.normal = AssimpGLMHelpers::GetGLMVec(_mesh->mNormals[i]);
 
 			center += vertex.position;
 
@@ -250,7 +250,7 @@ namespace Parfait
 			{
 				BoneInfo newBoneInfo;
 				newBoneInfo.id = m_BoneCounter;
-				newBoneInfo.offset = Graphics::AssimpGLMHelpers::ConvertMatrixToGLMFormat(_mesh->mBones[boneIndex]->mOffsetMatrix);
+				newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_mesh->mBones[boneIndex]->mOffsetMatrix);
 				m_BoneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
