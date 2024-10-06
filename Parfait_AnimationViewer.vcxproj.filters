@@ -242,6 +242,15 @@
     <ClInclude Include="src\Core\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\Bone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Animator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
@@ -249,5 +258,7 @@
   <ItemGroup>
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
+    <None Include="Shaders\anim.frag" />
+    <None Include="Shaders\anim.vert" />
   </ItemGroup>
 </Project>

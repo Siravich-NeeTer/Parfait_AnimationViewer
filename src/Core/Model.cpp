@@ -32,9 +32,10 @@ namespace Parfait
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(_path.string(),
 			aiProcess_Triangulate |
+			aiProcess_GenSmoothNormals |
+			aiProcess_CalcTangentSpace |
 			aiProcess_FlipUVs |
 			aiProcess_JoinIdenticalVertices |
-			aiProcess_PreTransformVertices |
 			aiProcess_TransformUVCoords
 		);
 
@@ -137,7 +138,11 @@ namespace Parfait
 		for (unsigned int i = 0; i < _mesh->mNumVertices; i++)
 		{
 			Graphics::Vertex vertex;
+
+			SetVertexBoneDataToDefault(vertex);
+
 			vertex.position = Graphics::AssimpGLMHelpers::GetGLMVec(_mesh->mVertices[i]);
+			vertex.normal = Graphics::AssimpGLMHelpers::GetGLMVec(_mesh->mNormals[i]);
 
 			center += vertex.position;
 
@@ -167,6 +172,7 @@ namespace Parfait
 				indexCount++;
 			}
 		}
+		ExtractBoneWeightForVertices(m_Vertices, _mesh, _scene);
 
 		primitive.indexCount = indexCount;
 
@@ -193,7 +199,7 @@ namespace Parfait
 			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			model *= glm::scale(glm::mat4(1.0f), scale);
-			model *= glm::translate(glm::mat4(1.0f), -center);
+			//model *= glm::translate(glm::mat4(1.0f), -center);
 
 			// Pass the final matrix to the vertex shader using push constants
 			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);
@@ -211,6 +217,59 @@ namespace Parfait
 		for (Node* child : _node->children) 
 		{
 			DrawNode(commandBuffer, child);
+		}
+	}
+
+	void Model::SetVertexBoneDataToDefault(Graphics::Vertex& _vertex)
+	{
+		for (int i = 0; i < Graphics::MAX_BONE_INFLUENCE; i++)
+		{
+			_vertex.boneIDs[i] = -1;
+			_vertex.weights[i] = 0.0f;
+		}
+	}
+	void Model::SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight)
+	{
+		for (int i = 0; i < Graphics::MAX_BONE_INFLUENCE; ++i)
+		{
+			if (_vertex.boneIDs[i] < 0)
+			{
+				_vertex.weights[i] = _weight;
+				_vertex.boneIDs[i] = _boneID;
+				break;
+			}
+		}
+	}
+	void Model::ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene)
+	{
+		for (int boneIndex = 0; boneIndex < _mesh->mNumBones; ++boneIndex)
+		{
+			int boneID = -1;
+			std::string boneName = _mesh->mBones[boneIndex]->mName.C_Str();
+			if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end())
+			{
+				BoneInfo newBoneInfo;
+				newBoneInfo.id = m_BoneCounter;
+				newBoneInfo.offset = Graphics::AssimpGLMHelpers::ConvertMatrixToGLMFormat(_mesh->mBones[boneIndex]->mOffsetMatrix);
+				m_BoneInfoMap[boneName] = newBoneInfo;
+				boneID = m_BoneCounter;
+				m_BoneCounter++;
+			}
+			else
+			{
+				boneID = m_BoneInfoMap[boneName].id;
+			}
+			assert(boneID != -1);
+			aiVertexWeight* weights = _mesh->mBones[boneIndex]->mWeights;
+			int numWeights = _mesh->mBones[boneIndex]->mNumWeights;
+
+			for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+			{
+				int vertexId = weights[weightIndex].mVertexId;
+				float weight = weights[weightIndex].mWeight;
+				assert(vertexId <= _vertices.size());
+				SetVertexBoneData(_vertices[vertexId], boneID, weight);
+			}
 		}
 	}
 }

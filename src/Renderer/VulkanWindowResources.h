@@ -1,5 +1,6 @@
 #pragma once
 
+#define NOMINMAX
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
@@ -23,6 +24,8 @@
 #include "Core/Input.h"
 #include "Core/Camera.h"
 #include "Core/Model.h"
+#include "Core/Animation.h"
+#include "Core/Animator.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -88,6 +91,8 @@ namespace Parfait
 				VkImageView m_DepthImageView;
 
 				Model m_Model;
+				Animation m_Animation;
+				Animator m_Animator;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;

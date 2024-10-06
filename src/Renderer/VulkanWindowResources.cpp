@@ -10,7 +10,9 @@ namespace Parfait
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
-			m_Model(_vulkanContext, *m_CommandPool, "Models/scene.gltf")
+			m_Model(_vulkanContext, *m_CommandPool, "Models/scene.gltf"),
+			m_Animation("Models/scene.gltf", &m_Model),
+			m_Animator(&m_Animation)
 		{
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
@@ -90,6 +92,8 @@ namespace Parfait
 					m_Camera.Input(dt);
 				}
 			}
+
+			m_Animator.UpdateAnimation(dt);
 
 			Draw();
 
@@ -276,9 +280,15 @@ namespace Parfait
 
 			UniformBufferObject ubo{};
 			ubo.view = m_Camera.GetViewMatrix();
-			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 100.0f);
+			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
 			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
+
+			auto transforms = m_Animator.GetFinalBoneMatrices();
+			for (int i = 0; i < transforms.size(); ++i)
+			{
+				ubo.finalBonesMatrices[i] = transforms[i];
+			}
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
 		}

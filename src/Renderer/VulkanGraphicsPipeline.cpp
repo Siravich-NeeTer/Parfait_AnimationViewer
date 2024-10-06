@@ -28,7 +28,7 @@ namespace Parfait
 			vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 			VkVertexInputBindingDescription bindingDescription = Vertex::getBindingDescription();
-			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = Vertex::getAttributeDescriptions();
+			auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
 			vertexInputInfo.vertexBindingDescriptionCount = 1;
 			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

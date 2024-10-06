@@ -8,7 +8,7 @@ namespace Parfait
 			: m_VkContextRef(_vulkanContext)
 		{
 			Initialize();
-			m_Pipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, m_RenderPass, _descriptorSetLayouts, std::vector<std::filesystem::path>{"Shaders/mesh.vert", "Shaders/mesh.frag"});
+			m_Pipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext, m_RenderPass, _descriptorSetLayouts, std::vector<std::filesystem::path>{"Shaders/anim.vert", "Shaders/anim.frag"});
 		}
 		OffScreenRenderer::~OffScreenRenderer()
 		{

@@ -71,6 +71,9 @@
     <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="External Libraries\stb\stb_image.h" />
+    <ClInclude Include="src\Core\Animation.h" />
+    <ClInclude Include="src\Core\Animator.h" />
+    <ClInclude Include="src\Core\Bone.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\Model.h" />
     <ClInclude Include="src\Core\Object.h" />
@@ -97,6 +100,8 @@
     <Font Include="fonts\TMP.TTF" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\anim.frag" />
+    <None Include="Shaders\anim.vert" />
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
   </ItemGroup>

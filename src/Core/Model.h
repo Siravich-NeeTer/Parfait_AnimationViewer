@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <map>
 
 #include "Core/Object.h"
 
@@ -29,11 +30,20 @@ namespace Parfait
 		class VulkanCommandPool;
 	}
 
+	struct BoneInfo
+	{
+		int id;
+		glm::mat4 offset;
+	};
+
 	class Model : public Object
 	{
 		public:
 			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+
+			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
+			int& GetBoneCount() { return m_BoneCounter; }
 
 			const Graphics::VulkanDescriptor& GetDescriptor() const { return *m_Descriptor; }
 
@@ -75,6 +85,8 @@ namespace Parfait
 			std::vector<Graphics::Vertex> m_Vertices;
 			std::vector<uint32_t> m_Indices;
 			std::vector<Node*> m_Nodes;
+			std::map<std::string, BoneInfo> m_BoneInfoMap;
+			int m_BoneCounter = 0;
 
 			std::string m_Directory;
 
@@ -90,5 +102,9 @@ namespace Parfait
 			void ProcessMesh(aiMesh* _mesh, const aiScene* _scene, Node* _currentNode);
 
 			void DrawNode(VkCommandBuffer commandBuffer, Node* _node);
+
+			void SetVertexBoneDataToDefault(Graphics::Vertex& _vertex);
+			void SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight);
+			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene);
 	};
 }
