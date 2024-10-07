@@ -18,22 +18,30 @@ namespace Parfait
 
 		static Quaternion Slerp(Quaternion q1, Quaternion q2, float t)
 		{
-			float dot = Dot(q1, q2);
-			// In Case: Dot product is NEGATIVE -> Flip q2
-			if (dot < 0.0f)
-			{
-				q2 = -1.0f * q2;
-				dot = -dot;
-			}
-			float alpha = acos(dot);
+            float dot = Dot(q1, q2);
 
-			// Avoid error sin(0) = 0
-			if (alpha <= 0.0f)
-				return q1;
-			else if (alpha >= 1.0f)
-				return q2;
+            // If the dot product is NEGATIVE, Invert one quaternion to take the shorter path
+            if (dot < 0.0f)
+            {
+                q2 = -1.0f * q2;
+                dot = -dot;
+            }
 
-			return (sin(alpha - t * alpha) / sin(alpha)) * q1 + (sin(t * alpha) / sin(alpha)) * q2;
+            // Clamp dot product to be in range [0, 1] to avoid out-of-range acos
+            dot = fmin(fmax(dot, 0.0f), 1.0f);
+
+            float alpha = acos(dot);
+            // If the angle is small, use linear interpolation to avoid division by zero
+            if (alpha < 1e-6)
+            {
+                return (1.0f - t) * q1 + t * q2;
+            }
+
+            float sinAlpha = sin(alpha);
+            float factor1 = sin((1.0f - t) * alpha) / sinAlpha;
+            float factor2 = sin(t * alpha) / sinAlpha;
+
+            return factor1 * q1 + factor2 * q2;
 		}
 	}
 }

@@ -38,7 +38,7 @@ namespace Parfait
 
 			if (!pixels) 
 			{
-				throw std::runtime_error("Failed to load texture image!");
+				throw std::runtime_error("Failed to load texture image! (" + _path.string() + ")");
 			}
 
 

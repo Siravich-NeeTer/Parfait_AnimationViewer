@@ -86,6 +86,7 @@ namespace Parfait
 
 			std::vector<Graphics::Vertex> m_Vertices;
 			std::vector<uint32_t> m_Indices;
+
 			std::vector<Node*> m_Nodes;
 			std::map<std::string, BoneInfo> m_BoneInfoMap;
 			int m_BoneCounter = 0;
@@ -108,5 +109,7 @@ namespace Parfait
 			void SetVertexBoneDataToDefault(Graphics::Vertex& _vertex);
 			void SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight);
 			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene);
+
+			std::string GetDirectory(const std::filesystem::path& _path);
 	};
 }

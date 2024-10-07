@@ -63,14 +63,10 @@ namespace Parfait
 				{
 					aiString texturePath;
 					material->GetTexture(type, 0, &texturePath);
-					std::string fullPath = texturePath.C_Str();
 					// Load the texture into Vulkan
-
-					std::cout << fullPath << "\n";
-
 					m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
 					m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
-					m_Textures.back().get()->LoadTexture("Models/" + fullPath);
+					m_Textures.back().get()->LoadTexture(GetDirectory(_path) + texturePath.C_Str());
 					isFoundSuitableTexture = true;
 					break;
 				}
@@ -271,5 +267,11 @@ namespace Parfait
 				SetVertexBoneData(_vertices[vertexId], boneID, weight);
 			}
 		}
+	}
+
+	std::string Model::GetDirectory(const std::filesystem::path& _path)
+	{
+		size_t pos = _path.string().find_last_of("\\/");
+		return (std::string::npos == pos ? "" : _path.string().substr(0, pos + 1));
 	}
 }
