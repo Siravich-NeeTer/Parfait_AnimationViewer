@@ -142,5 +142,14 @@ namespace Parfait
 		{
 			return q1.s * q2.s + glm::dot(q1.v, q2.v);
 		}
+		static Quaternion MatrixToQuaternion(const glm::mat4& transform)
+		{
+			float s = 0.5f * sqrt(transform[0][0] + transform[1][1] + transform[2][2] + 1);
+			float x = (transform[1][2] - transform[2][1]) / (4.0f * s);
+			float y = (transform[2][0] - transform[0][2]) / (4.0f * s);
+			float z = (transform[0][1] - transform[1][0]) / (4.0f * s);
+			
+			return Quaternion(s, x, y, z);
+		}
 	}
 }

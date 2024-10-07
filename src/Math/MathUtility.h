@@ -32,8 +32,7 @@ namespace Parfait
 			else if (alpha >= 1.0f)
 				return q2;
 
-			Quaternion ans = (sin(alpha - t * alpha) / sin(alpha)) * q1 + (sin(t * alpha) / sin(alpha)) * q2;
-			return ans;
+			return (sin(alpha - t * alpha) / sin(alpha)) * q1 + (sin(t * alpha) / sin(alpha)) * q2;
 		}
 	}
 }

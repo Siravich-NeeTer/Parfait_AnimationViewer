@@ -14,6 +14,8 @@
 
 #include "Math/AssimpGLMHelpers.h"
 #include "Math/MathUtility.h"
+#include "Math/Quaternion.h"
+#include "Math/VQS.h"
 
 #include "Renderer/Utilities/VulkanUtilities.h"
 
@@ -40,7 +42,7 @@ namespace Parfait
 		public:
             Bone(const std::string& _name, int _ID, const aiNodeAnim* _channel);
 
-            const glm::mat4& GetLocalTransform() const { return m_LocalTransform; }
+            const Math::VQS& GetLocalTransform() const { return m_LocalTransform; }
             const std::string& GetBoneName() const { return m_Name; }
             const int& GetBoneID() const { return m_ID; }
 
@@ -58,14 +60,14 @@ namespace Parfait
 			int m_NumRotations;
 			int m_NumScalings;
 
-			glm::mat4 m_LocalTransform;
+			Math::VQS m_LocalTransform;
 			std::string m_Name;
 			int m_ID;
 
 			float GetScaleFactor(float _lastTimeStamp, float _nextTimeStamp, float _animationTime);
 
-			glm::mat4 InterpolatePosition(float _animationTime);
-            glm::mat4 InterpolateRotation(float _animationTime);
-            glm::mat4 InterpolateScaling(float _animationTime);
+			glm::vec3 InterpolatePosition(float _animationTime);
+            Math::Quaternion InterpolateRotation(float _animationTime);
+            glm::vec3 InterpolateScaling(float _animationTime);
 	};
 }

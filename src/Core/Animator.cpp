@@ -40,7 +40,7 @@ namespace Parfait
         if (Bone)
         {
             Bone->Update(m_CurrentTime);
-            nodeTransform = Bone->GetLocalTransform();
+            nodeTransform = Bone->GetLocalTransform().Matrix();
         }
 
         glm::mat4 globalTransformation = _parentTransform * nodeTransform;
