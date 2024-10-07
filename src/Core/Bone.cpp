@@ -114,11 +114,6 @@ namespace Parfait
         Math::Quaternion finalRotation = Math::Slerp(m_Rotations[p0Index].orientation, m_Rotations[p1Index].orientation, scaleFactor);
         finalRotation = finalRotation.Normalize();
         return finalRotation.Matrix();
-        /*
-        glm::quat finalRotation = glm::slerp(m_Rotations[p0Index].orientation, m_Rotations[p1Index].orientation, scaleFactor);
-        finalRotation = glm::normalize(finalRotation);
-        return glm::toMat4(finalRotation);
-        */
     }
     glm::mat4 Bone::InterpolateScaling(float _animationTime)
     {

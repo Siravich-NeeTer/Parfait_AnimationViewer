@@ -19,6 +19,12 @@ namespace Parfait
 		static Quaternion Slerp(Quaternion q1, Quaternion q2, float t)
 		{
 			float dot = Dot(q1, q2);
+			// In Case: Dot product is NEGATIVE -> Flip q2
+			if (dot < 0.0f)
+			{
+				q2 = -1.0f * q2;
+				dot = -dot;
+			}
 			float alpha = acos(dot);
 
 			if (alpha <= 0.0f)
