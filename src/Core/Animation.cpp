@@ -62,7 +62,7 @@ namespace Parfait
         assert(_src);
 
         _dest.name = _src->mName.data;
-        _dest.transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_src->mTransformation);
+        _dest.transformation = Math::MatrixToVQS(AssimpGLMHelpers::ConvertMatrixToGLMFormat(_src->mTransformation));
         _dest.childrenCount = _src->mNumChildren;
 
         for (int i = 0; i < _src->mNumChildren; i++)

@@ -1,6 +1,6 @@
 #version 450
 
-const int MAX_BONES = 100;
+const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 
 layout(location = 0) in vec3 inPosition;

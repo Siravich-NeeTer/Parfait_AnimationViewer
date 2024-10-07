@@ -77,7 +77,7 @@ namespace Parfait
 		{
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 projection;
-			glm::mat4 finalBonesMatrices[100];
+			glm::mat4 finalBonesMatrices[500];
 		};
 
 		class VulkanBuffer

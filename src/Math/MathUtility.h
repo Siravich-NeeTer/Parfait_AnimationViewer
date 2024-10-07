@@ -27,6 +27,7 @@ namespace Parfait
 			}
 			float alpha = acos(dot);
 
+			// Avoid error sin(0) = 0
 			if (alpha <= 0.0f)
 				return q1;
 			else if (alpha >= 1.0f)

@@ -22,6 +22,7 @@ namespace Parfait
 				{
 				}
 
+				// Quaternion-Quaternion Operations
 				Quaternion operator+(const Quaternion& rhs)
 				{
 					Quaternion q;
@@ -43,19 +44,13 @@ namespace Parfait
 					q.v = (this->s * rhs.v) + (rhs.s * this->v) + glm::cross(this->v, rhs.v);
 					return q;
 				}
+				// Quaternion-Constant Operations
 				Quaternion operator*(const float& scale)
 				{
 					Quaternion q;
 					q.s = this->s * scale;
 					q.v = this->v * scale;
 					return q;
-				}
-				glm::vec3 operator*(const glm::vec3& pos)
-				{
-					Quaternion qPos(0.0f, pos);
-
-					Quaternion finalPos = (*this) * qPos * this->Inverse();
-					return { finalPos.v.x, finalPos.v.y, finalPos.v.z };
 				}
 				Quaternion operator/(const float& rhs)
 				{
@@ -64,13 +59,16 @@ namespace Parfait
 					q.v = this->v / rhs;
 					return q;
 				}
-
-				friend std::ostream& operator<< (std::ostream& os, const Quaternion& quaternion)
+				// Quaternion-Point/Vector Operation
+				glm::vec3 operator*(const glm::vec3& pos)
 				{
-					os << "[" << quaternion.s << ", (" << quaternion.v.x << ", " << quaternion.v.y << ", " << quaternion.v.z << ")]";
-					return os;
+					Quaternion qPos(0.0f, pos);
+
+					Quaternion finalPos = (*this) * qPos * this->Inverse();
+					return { finalPos.v.x, finalPos.v.y, finalPos.v.z };
 				}
 
+				// General Informations
 				float Length() const 
 				{
 					return sqrt(s * s + v.x * v.x + v.y * v.y + v.z * v.z);
@@ -122,13 +120,11 @@ namespace Parfait
 					return qMat;
 				}
 
+				// Identity = [1, (0, 0, 0)]
 				static Quaternion Identity()
 				{
 					return Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
 				}
-
-			private:
-
 		};
 
 		static Quaternion operator*(const float& lhs, const Quaternion& rhs)
@@ -138,6 +134,14 @@ namespace Parfait
 			q.v = rhs.v * lhs;
 			return q;
 		}
+		static Quaternion operator/(const float& lhs, const Quaternion& rhs)
+		{
+			Quaternion q;
+			q.s = rhs.s / lhs;
+			q.v = rhs.v / lhs;
+			return q;
+		}
+
 		static float Dot(const Quaternion& q1, const Quaternion& q2)
 		{
 			return q1.s * q2.s + glm::dot(q1.v, q2.v);

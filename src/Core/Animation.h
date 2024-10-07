@@ -11,7 +11,7 @@ namespace Parfait
 {
     struct AssimpNodeData
     {
-        glm::mat4 transformation;
+        Math::VQS transformation;
         std::string name;
         int childrenCount;
         std::vector<AssimpNodeData> children;
