@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "Math/AssimpGLMHelpers.h"
+#include "Math/MathUtility.h"
 
 #include "Renderer/Utilities/VulkanUtilities.h"
 
@@ -25,7 +26,7 @@ namespace Parfait
 	};
 	struct KeyRotation
 	{
-		glm::quat orientation;
+		Math::Quaternion orientation;
 		float timeStamp;
 	};
 	struct KeyScale
