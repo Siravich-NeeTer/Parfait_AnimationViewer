@@ -64,10 +64,6 @@ namespace Parfait
 			{
 				std::vector<Primitive> primitives;
 			};
-			struct MeshPushConstants 
-			{
-				glm::mat4 model;
-			};
 			struct Node
 			{
 				Node* parent;

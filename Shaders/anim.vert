@@ -1,6 +1,5 @@
-#version 450
+#version 460
 
-const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 
 layout(location = 0) in vec3 inPosition;
@@ -14,12 +13,17 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
 {
     mat4 view;
     mat4 projection;
-    mat4 finalBonesMatrices[MAX_BONES];
 } ubo;
+layout(std140, set = 2, binding = 0) readonly buffer BoneTransform
+{
+    mat4 bone[];
+} boneTransform;
 
 layout(push_constant) uniform PushConsts 
 {
 	mat4 model;
+    int numBones;
+
 } primitive;
 
 layout(location = 0) out vec3 fragColor;
@@ -32,15 +36,15 @@ void main()
     {
         if(inBoneIDs[i] == -1)
             continue;
-        if(inBoneIDs[i] >= MAX_BONES)
+        if(inBoneIDs[i] >= primitive.numBones)
         {
             totalPosition += vec4(inPosition, 1.0f);
             break;
         }
 
-        vec4 localPosition = ubo.finalBonesMatrices[inBoneIDs[i]] * vec4(inPosition, 1.0f);
+        vec4 localPosition = boneTransform.bone[inBoneIDs[i]] * vec4(inPosition, 1.0f);
         totalPosition += localPosition * inWeights[i];
-        vec3 localNormal = mat3(ubo.finalBonesMatrices[inBoneIDs[i]]) * inNormal;
+        vec3 localNormal = mat3(boneTransform.bone[inBoneIDs[i]]) * inNormal;
     }
 
     gl_Position = ubo.projection * ubo.view * primitive.model * totalPosition;

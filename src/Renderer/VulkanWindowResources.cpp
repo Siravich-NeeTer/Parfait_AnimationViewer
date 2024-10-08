@@ -25,9 +25,9 @@ namespace Parfait
 				vkMapMemory(_vulkanContext.GetLogicalDevice(), m_UniformBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), 0, &m_UniformBuffers[i]->GetMappedBuffer());
 			}
 
-			m_Descriptor.get()->AddDescriptorSets({ 
+			m_Descriptor.get()->AddDescriptorSets({
 				{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
-			});
+				});
 			m_Descriptor.get()->Init();
 			// Write Uniform Buffer to Descriptor
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -45,7 +45,24 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
-			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Model.GetDescriptor().GetDescriptorSetLayout(0)});
+			// TEMP:
+			// -------------------------------------------------
+			m_FrameDescriptor = std::make_unique<VulkanDescriptor>(m_VkContextRef);
+			m_FrameDescriptor->AddDescriptorSets({
+				{ 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
+				});
+			m_FrameDescriptor->Init();
+			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				m_FrameData[i].boneTransformBuffer = std::make_unique<VulkanBuffer>(_vulkanContext, *m_CommandPool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(BoneTransform) * MAX_BONE_TRANSFORM);
+				m_FrameDescriptor->WriteStorageBuffer(0, m_FrameData[i].boneTransformBuffer->GetBuffer(), static_cast<VkDeviceSize>(sizeof(BoneTransform) * MAX_BONE_TRANSFORM), i);
+				m_FrameDescriptor->UpdateDescriptorSet();
+
+				vkMapMemory(m_VkContextRef.GetLogicalDevice(), m_FrameData[i].boneTransformBuffer->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(BoneTransform) * MAX_BONE_TRANSFORM), 0, &m_FrameData[i].transformData);
+			}
+			// -------------------------------------------------
+
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Model.GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
@@ -160,6 +177,7 @@ namespace Parfait
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 2, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 				
 				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
@@ -283,11 +301,12 @@ namespace Parfait
 			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
 			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
-
+			
+			BoneTransform* boneTransform = (BoneTransform*)m_FrameData[_currentFrame].transformData;
 			auto transforms = m_Animator.GetFinalBoneMatrices();
 			for (int i = 0; i < transforms.size(); ++i)
 			{
-				ubo.finalBonesMatrices[i] = transforms[i];
+				boneTransform[i].bone = transforms[i];
 			}
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));

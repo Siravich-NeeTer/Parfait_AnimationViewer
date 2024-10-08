@@ -77,7 +77,15 @@ namespace Parfait
 		{
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 projection;
-			glm::mat4 finalBonesMatrices[500];
+		};
+		struct BoneTransform
+		{
+			glm::mat4 bone;
+		};
+		struct MeshPushConstants
+		{
+			glm::mat4 model;
+			int numBones;
 		};
 
 		class VulkanBuffer

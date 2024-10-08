@@ -7,9 +7,9 @@ namespace Parfait
         m_CurrentTime = 0.0;
         m_CurrentAnimation = _animation;
 
-        m_FinalBoneMatrices.reserve(500);
+        m_FinalBoneMatrices.reserve(_animation->GetBoneIDMap().size());
 
-        for (int i = 0; i < 500; i++)
+        for (int i = 0; i < _animation->GetBoneIDMap().size(); i++)
             m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
     }
 

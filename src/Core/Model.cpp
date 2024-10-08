@@ -189,6 +189,7 @@ namespace Parfait
 				currentParent = currentParent->parent;
 			}
 
+
 			glm::mat4 model = glm::mat4(1.0f);
 			model *= glm::translate(glm::mat4(1.0f), position);
 			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -197,6 +198,10 @@ namespace Parfait
 			model *= glm::scale(glm::mat4(1.0f), scale);
 			//model *= glm::translate(glm::mat4(1.0f), -center);
 
+			Graphics::MeshPushConstants meshConstants;
+			meshConstants.model = model;
+			meshConstants.numBones = m_BoneCounter;
+
 			// Pass the final matrix to the vertex shader using push constants
 			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);
 			for (Primitive primitive : _node->mesh.primitives)
@@ -204,7 +209,7 @@ namespace Parfait
 				if (primitive.indexCount > 0) 
 				{
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
-					vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &model);
+					vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
 
 					vkCmdDrawIndexed(commandBuffer, primitive.indexCount, 1, primitive.firstIndex, 0, 0);
 				}

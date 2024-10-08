@@ -96,7 +96,7 @@ namespace Parfait
 			VkPushConstantRange pushConstantRange = {};
 			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Specify the stage using the push constants
 			pushConstantRange.offset = 0; // Start from the beginning
-			pushConstantRange.size = sizeof(glm::mat4); // Size of the push constant block
+			pushConstantRange.size = sizeof(MeshPushConstants); // Size of the push constant block
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

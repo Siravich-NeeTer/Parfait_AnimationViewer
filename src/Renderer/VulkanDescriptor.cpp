@@ -72,6 +72,25 @@ namespace Parfait
 
 			m_WriteDescriptorSets.push_back(descriptorWrite);
 		}
+		void VulkanDescriptor::WriteStorageBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _size, uint32_t _frameIndex)
+		{
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = _buffer;
+			bufferInfo.offset = 0;
+			bufferInfo.range = _size;
+			m_BufferInfos.push_back(bufferInfo);
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_DescriptorSets[m_CurrentDescriptorSetIndex][_frameIndex];
+			descriptorWrite.dstBinding = _binding;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &m_BufferInfos.back();
+
+			m_WriteDescriptorSets.push_back(descriptorWrite);
+		}
 		void VulkanDescriptor::WriteImageBuffer(uint32_t _binding, VkImageView _imageView, VkSampler _sampler, uint32_t _frameIndex)
 		{
 			VkDescriptorImageInfo imageInfo{};
