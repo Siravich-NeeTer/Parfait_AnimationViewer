@@ -17,6 +17,37 @@ namespace Parfait
 	{
 		const int MAX_BONE_INFLUENCE = 4;
 
+		struct BoneVertex
+		{
+			glm::vec3 position;
+			glm::vec3 color;
+
+			static VkVertexInputBindingDescription getBindingDescription()
+			{
+				VkVertexInputBindingDescription bindingDescription{};
+				bindingDescription.binding = 0;
+				bindingDescription.stride = sizeof(BoneVertex);
+				bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				return bindingDescription;
+			}
+
+			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions()
+			{
+				std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+
+				attributeDescriptions[0].binding = 0;
+				attributeDescriptions[0].location = 0;
+				attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+				attributeDescriptions[0].offset = offsetof(BoneVertex, position);
+
+				attributeDescriptions[1].binding = 0;
+				attributeDescriptions[1].location = 1;
+				attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+				attributeDescriptions[1].offset = offsetof(BoneVertex, color);
+
+				return attributeDescriptions;
+			}
+		};
 		struct Vertex
 		{
 			glm::vec3 position;

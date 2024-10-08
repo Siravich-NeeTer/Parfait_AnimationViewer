@@ -43,6 +43,7 @@ namespace Parfait
 		public:
 			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
 			int& GetBoneCount() { return m_BoneCounter; }
@@ -83,6 +84,9 @@ namespace Parfait
 			std::vector<Graphics::Vertex> m_Vertices;
 			std::vector<uint32_t> m_Indices;
 
+			std::vector<Graphics::BoneVertex> m_BoneVertices;
+			std::vector<uint32_t> m_BoneIndices;
+
 			std::vector<Node*> m_Nodes;
 			std::map<std::string, BoneInfo> m_BoneInfoMap;
 			int m_BoneCounter = 0;
@@ -94,6 +98,9 @@ namespace Parfait
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::Vertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanIndexBuffer> m_IndexBuffer;
 			std::vector<std::unique_ptr<Graphics::VulkanTexture>> m_Textures;
+
+			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>> m_BoneVertexBuffer;
+			std::unique_ptr<Graphics::VulkanIndexBuffer> m_BoneIndexBuffer;
 
 
 			void LoadModel(const std::filesystem::path& _path);

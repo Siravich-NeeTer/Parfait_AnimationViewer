@@ -104,6 +104,9 @@ namespace Parfait
 				std::unique_ptr<VulkanDescriptor> m_FrameDescriptor;
 				const int MAX_BONE_TRANSFORM = 10000;
 
+				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;
+
+
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;

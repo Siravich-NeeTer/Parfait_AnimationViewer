@@ -66,6 +66,16 @@ namespace Parfait
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
+
+			m_BonePipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/bone.vert", "Shaders/bone.frag" },
+				BoneVertex::getBindingDescription(),
+				BoneVertex::getAttributeDescriptions(),
+				sizeof(MeshPushConstants),
+				VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+				VK_POLYGON_MODE_FILL);
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
@@ -179,8 +189,10 @@ namespace Parfait
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 2, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
-				
 				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
+
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
+				m_Model.DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}

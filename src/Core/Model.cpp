@@ -12,6 +12,20 @@ namespace Parfait
 
 		m_VertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::Vertex>>(_vulkanContext, _vulkanCommandPool, m_Vertices.data(), m_Vertices.size());
 		m_IndexBuffer = std::make_unique<Graphics::VulkanIndexBuffer>(_vulkanContext, _vulkanCommandPool, m_Indices.data(), m_Indices.size());
+
+		if (m_BoneVertices.size() > 0)
+		{
+			for (size_t i = 0; i < m_BoneVertices.size(); i++)
+			{
+				if (i < m_BoneVertices.size() - 1)
+				{
+					m_BoneIndices.push_back(i);
+					m_BoneIndices.push_back(i + 1);
+				}
+			}
+			m_BoneVertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>>(_vulkanContext, _vulkanCommandPool, m_BoneVertices.data(), m_BoneVertices.size());
+			m_BoneIndexBuffer = std::make_unique<Graphics::VulkanIndexBuffer>(_vulkanContext, _vulkanCommandPool, m_BoneIndices.data(), m_BoneIndices.size());
+		}
 	}
 	void Model::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
 	{
@@ -25,6 +39,61 @@ namespace Parfait
 		{
 			DrawNode(commandBuffer, node);
 		}
+	}
+	void Model::DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
+	{
+		/*
+		for (unsigned int i = 0; i < scene->mNumMeshes; i++) 
+		{
+			const aiMesh* mesh = scene->mMeshes[i];
+
+			for (unsigned int j = 0; j < mesh->mNumBones; j++) 
+			{
+				const aiBone* bone = mesh->mBones[j];
+
+				// Transform for the current bone
+				aiMatrix4x4 boneTransform = bone->mOffsetMatrix;
+
+				// Get the bone position (assuming it’s at the origin of the bone)
+				aiVector3D bonePosition(boneTransform.a4, boneTransform.b4, boneTransform.c4);
+
+				// If you want to draw to the child bones (if available)
+				for (unsigned int k = 0; k < bone->mNumWeights; k++) {
+					// Here you can assume some logic to get a child bone's position
+					// Example: aiVector3D childBonePosition = ...; // get from bone data or a defined structure
+					aiVector3D childBonePosition = /* Logic to find child position ;
+
+					// Draw a line from bonePosition to childBonePosition
+					DrawLine(bonePosition, childBonePosition);
+				}
+			}
+		}
+		*/
+
+		/*
+		m_PipelineLayoutRef = _pipelineLayout;
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model *= glm::translate(glm::mat4(1.0f), position);
+		model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		model *= glm::scale(glm::mat4(1.0f), scale);
+		//model *= glm::translate(glm::mat4(1.0f), -center);
+
+		Graphics::MeshPushConstants meshConstants;
+		meshConstants.model = model;
+		meshConstants.numBones = m_BoneCounter;
+
+		const VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_BoneVertexBuffer->GetBuffer(), offsets);
+		vkCmdBindIndexBuffer(commandBuffer, m_BoneIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+		// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
+		vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
+
+		vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+		*/
 	}
 
 	void Model::LoadModel(const std::filesystem::path& _path)
@@ -54,6 +123,14 @@ namespace Parfait
 				aiTextureType_SPECULAR,
 				aiTextureType_NORMALS,
 				aiTextureType_HEIGHT,
+				aiTextureType_EMISSIVE,
+
+				aiTextureType_BASE_COLOR,
+				aiTextureType_NORMAL_CAMERA,
+				aiTextureType_EMISSION_COLOR,
+				aiTextureType_METALNESS,
+				aiTextureType_DIFFUSE_ROUGHNESS,
+				aiTextureType_AMBIENT_OCCLUSION,
 				// Add other texture types you may need
 			};
 
@@ -67,6 +144,9 @@ namespace Parfait
 					m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
 					m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
 					m_Textures.back().get()->LoadTexture(GetDirectory(_path) + texturePath.C_Str());
+
+					std::cout << "LOAD: " << GetDirectory(_path) + texturePath.C_Str() << "\n";
+
 					isFoundSuitableTexture = true;
 					break;
 				}
@@ -255,6 +335,8 @@ namespace Parfait
 				m_BoneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
+
+				m_BoneVertices.push_back({ glm::vec3(_mesh->mBones[boneIndex]->mOffsetMatrix.a4, _mesh->mBones[boneIndex]->mOffsetMatrix.b4, _mesh->mBones[boneIndex]->mOffsetMatrix.c4), {1.0f, 0.0f, 0.0f} });
 			}
 			else
 			{
