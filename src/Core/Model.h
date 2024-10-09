@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include <iostream>
 #include <string>
@@ -111,7 +112,7 @@ namespace Parfait
 
 			void SetVertexBoneDataToDefault(Graphics::Vertex& _vertex);
 			void SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight);
-			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene);
+			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, uint32_t _startIdx, aiMesh* _mesh, const aiScene* _scene);
 
 			std::string GetDirectory(const std::filesystem::path& _path);
 	};

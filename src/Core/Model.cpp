@@ -88,11 +88,10 @@ namespace Parfait
 		const VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_BoneVertexBuffer->GetBuffer(), offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_BoneIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
+		
 		// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
 		vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
-
-		vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, m_BoneIndices.size(), 1, 0, 0, 0);
 		*/
 	}
 
@@ -172,9 +171,13 @@ namespace Parfait
 			}
 		}
 
-		ProcessNode(scene->mRootNode, scene, nullptr);
+		glm::quat q;
+		glm::vec3 skew;
+		glm::vec4 perspective;
+		glm::decompose(AssimpGLMHelpers::ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation), scale, q, position, skew, perspective);
+		scene->mRootNode->mTransformation = aiMatrix4x4();
 
-		center = (1.0f / m_Vertices.size()) * center;
+		ProcessNode(scene->mRootNode, scene, nullptr);
 	}
 	void Model::ProcessNode(aiNode * _node, const aiScene * _scene, Node* _parent)
 	{
@@ -220,9 +223,7 @@ namespace Parfait
 			vertex.position = AssimpGLMHelpers::GetGLMVec(_mesh->mVertices[i]);
 			vertex.normal = AssimpGLMHelpers::GetGLMVec(_mesh->mNormals[i]);
 
-			center += vertex.position;
-
-			if (_mesh->mTextureCoords[0]) // Check for texture coordinates
+			if (_mesh->HasTextureCoords(0)) // Check for texture coordinates
 			{
 				glm::vec2 vec;
 				vec.x = _mesh->mTextureCoords[0][i].x;
@@ -248,7 +249,7 @@ namespace Parfait
 				indexCount++;
 			}
 		}
-		ExtractBoneWeightForVertices(m_Vertices, _mesh, _scene);
+		ExtractBoneWeightForVertices(m_Vertices, startIdx, _mesh, _scene);
 
 		primitive.indexCount = indexCount;
 
@@ -276,10 +277,9 @@ namespace Parfait
 			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			model *= glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			model *= glm::scale(glm::mat4(1.0f), scale);
-			//model *= glm::translate(glm::mat4(1.0f), -center);
 
 			Graphics::MeshPushConstants meshConstants;
-			meshConstants.model = model;
+			meshConstants.model = model * nodeMatrix;
 			meshConstants.numBones = m_BoneCounter;
 
 			// Pass the final matrix to the vertex shader using push constants
@@ -317,11 +317,12 @@ namespace Parfait
 			{
 				_vertex.weights[i] = _weight;
 				_vertex.boneIDs[i] = _boneID;
-				break;
+				return;
 			}
 		}
+		assert(0);
 	}
-	void Model::ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene)
+	void Model::ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, uint32_t _startIdx, aiMesh* _mesh, const aiScene* _scene)
 	{
 		for (int boneIndex = 0; boneIndex < _mesh->mNumBones; ++boneIndex)
 		{
@@ -351,7 +352,7 @@ namespace Parfait
 				int vertexId = weights[weightIndex].mVertexId;
 				float weight = weights[weightIndex].mWeight;
 				assert(vertexId <= _vertices.size());
-				SetVertexBoneData(_vertices[vertexId], boneID, weight);
+				SetVertexBoneData(_vertices[_startIdx + vertexId], boneID, weight);
 			}
 		}
 	}

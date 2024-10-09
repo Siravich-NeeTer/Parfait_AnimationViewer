@@ -10,8 +10,8 @@ namespace Parfait
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
-			m_Model(_vulkanContext, *m_CommandPool, "Models/scene.gltf"),
-			m_Animation("Models/scene.gltf", &m_Model),
+			m_Model(_vulkanContext, *m_CommandPool, "Models/Joyful Jump.dae"),
+			m_Animation("Models/Joyful Jump.dae", &m_Model),
 			m_Animator(&m_Animation)
 		{
 			CreateDepthResources();
@@ -234,6 +234,10 @@ namespace Parfait
 						m_IsViewportFocus = ImGui::IsWindowHovered() || isCameraMove;
 
 					ImGui::EndChild();
+				ImGui::End();
+
+				ImGui::Begin("Model");
+				ImGui::DragFloat3("Scale", &m_Model.scale[0], 0.01f, 0.0f, 100.0f);
 				ImGui::End();
 
 				ImGui::ShowDemoWindow();
