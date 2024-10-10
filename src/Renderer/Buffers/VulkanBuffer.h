@@ -21,6 +21,7 @@ namespace Parfait
 		{
 			glm::vec3 position;
 			glm::vec3 color;
+			int boneIndex;
 
 			static VkVertexInputBindingDescription getBindingDescription()
 			{
@@ -33,7 +34,7 @@ namespace Parfait
 
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions()
 			{
-				std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+				std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
 
 				attributeDescriptions[0].binding = 0;
 				attributeDescriptions[0].location = 0;
@@ -44,6 +45,11 @@ namespace Parfait
 				attributeDescriptions[1].location = 1;
 				attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 				attributeDescriptions[1].offset = offsetof(BoneVertex, color);
+
+				attributeDescriptions[2].binding = 0;
+				attributeDescriptions[2].location = 2;
+				attributeDescriptions[2].format = VK_FORMAT_R32_SINT;
+				attributeDescriptions[2].offset = offsetof(BoneVertex, boneIndex);
 
 				return attributeDescriptions;
 			}

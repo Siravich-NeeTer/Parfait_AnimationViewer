@@ -74,7 +74,7 @@ namespace Parfait
 				BoneVertex::getBindingDescription(),
 				BoneVertex::getAttributeDescriptions(),
 				sizeof(MeshPushConstants),
-				VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+				VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
 				VK_POLYGON_MODE_FILL);
 		}
 		VulkanWindowResources::~VulkanWindowResources()

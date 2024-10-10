@@ -330,7 +330,12 @@ namespace Parfait
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
 				
-				m_BoneVertices.push_back({ glm::vec3(curMat * glm::inverse(newBoneInfo.offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f} });
+				aiNode* node = _mesh->mBones[boneIndex]->mNode;
+				if (m_BoneInfoMap.find(node->mParent->mName.C_Str()) != m_BoneInfoMap.end())
+				{
+					m_BoneVertices.push_back({ glm::vec3(glm::inverse(m_BoneInfoMap[node->mParent->mName.C_Str()].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f}, m_BoneInfoMap[node->mParent->mName.C_Str()].id });
+					m_BoneVertices.push_back({ glm::vec3(glm::inverse(newBoneInfo.offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f}, newBoneInfo.id });
+				}
 			}
 			else
 			{
