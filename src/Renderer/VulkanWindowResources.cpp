@@ -10,8 +10,8 @@ namespace Parfait
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
 			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
-			m_Model(_vulkanContext, *m_CommandPool, "Models/Joyful Jump.dae"),
-			m_Animation("Models/Joyful Jump.dae", &m_Model),
+			m_Model(_vulkanContext, *m_CommandPool, "Models/Zombie_T.dae"),
+			m_Animation("Models/Zombie_T.dae", &m_Model),
 			m_Animator(&m_Animation)
 		{
 			CreateDepthResources();
@@ -69,12 +69,12 @@ namespace Parfait
 
 			m_BonePipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext,
 				m_OffscreenRenderer->GetRenderPass(),
-				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0) },
 				std::vector<std::filesystem::path>{ "Shaders/bone.vert", "Shaders/bone.frag" },
 				BoneVertex::getBindingDescription(),
 				BoneVertex::getAttributeDescriptions(),
 				sizeof(MeshPushConstants),
-				VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+				VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
 				VK_POLYGON_MODE_FILL);
 		}
 		VulkanWindowResources::~VulkanWindowResources()
@@ -191,6 +191,8 @@ namespace Parfait
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
 
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
 				m_Model.DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
 

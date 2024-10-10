@@ -15,10 +15,16 @@ layout(push_constant) uniform PushConsts
     int numBones;
 } primitive;
 
+layout(std140, set = 1, binding = 0) readonly buffer BoneTransform
+{
+    mat4 bone[];
+} boneTransform;
+
 layout(location = 0) out vec3 fragColor;
 
 void main() 
 {
-    gl_Position = ubo.projection * ubo.view * primitive.model * vec4(inPosition, 1.0);
+    gl_PointSize = 15.0f;
+    gl_Position = ubo.projection * ubo.view * primitive.model * boneTransform.bone[gl_VertexIndex] * vec4(inPosition, 1.0);
     fragColor = inColor;
 }

@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include <iostream>
@@ -95,6 +96,7 @@ namespace Parfait
 			std::string m_Directory;
 
 			std::unique_ptr<Graphics::VulkanDescriptor> m_Descriptor;
+			glm::mat4 curMat;
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::Vertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanIndexBuffer> m_IndexBuffer;
