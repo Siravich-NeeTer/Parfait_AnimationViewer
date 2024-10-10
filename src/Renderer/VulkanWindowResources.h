@@ -94,6 +94,20 @@ namespace Parfait
 				Animation m_Animation;
 				Animator m_Animator;
 
+				// TEMP:
+				struct FrameData
+				{
+					std::unique_ptr<VulkanBuffer> boneTransformBuffer;
+					void* transformData;
+				};
+				FrameData m_FrameData[MAX_FRAMES_IN_FLIGHT];
+				std::unique_ptr<VulkanDescriptor> m_FrameDescriptor;
+				const int MAX_BONE_TRANSFORM = 10000;
+
+				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;
+
+
+
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;

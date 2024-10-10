@@ -7,11 +7,16 @@ namespace Parfait
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(_animationPath, aiProcess_Triangulate);
         assert(scene && scene->mRootNode);
-        aiAnimation* animation = scene->mAnimations[0];
-        m_Duration = animation->mDuration;
-        m_TicksPerSecond = animation->mTicksPerSecond;
-        ReadHeirarchyData(m_RootNode, scene->mRootNode);
-        ReadMissingBones(animation, *_model);
+
+        m_IsAnimationValid = scene->HasAnimations();
+        if (scene->HasAnimations())
+        {
+            aiAnimation* animation = scene->mAnimations[0];
+            m_Duration = animation->mDuration;
+            m_TicksPerSecond = animation->mTicksPerSecond;
+            ReadHeirarchyData(m_RootNode, scene->mRootNode);
+            ReadMissingBones(animation, *_model);
+        }
     }
 
     Animation::~Animation()
@@ -62,7 +67,7 @@ namespace Parfait
         assert(_src);
 
         _dest.name = _src->mName.data;
-        _dest.transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_src->mTransformation);
+        _dest.transformation = Math::MatrixToVQS(AssimpGLMHelpers::ConvertMatrixToGLMFormat(_src->mTransformation));
         _dest.childrenCount = _src->mNumChildren;
 
         for (int i = 0; i < _src->mNumChildren; i++)

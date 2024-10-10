@@ -19,6 +19,12 @@ namespace Parfait
 		{
 			public:
 				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts, const std::vector<std::filesystem::path>& _shaderPaths);
+				VulkanGraphicsPipeline(const VulkanContext& _vulkanContext, const VkRenderPass& _vulkanRenderPass, std::vector<VkDescriptorSetLayout> _descriptorSetLayouts, std::vector<std::filesystem::path> _shaderPaths,
+					VkVertexInputBindingDescription _inputBinding,
+					std::vector<VkVertexInputAttributeDescription> _inputAttribute,
+					uint32_t _pushConstantSize,
+					VkPrimitiveTopology _topology,
+					VkPolygonMode _polygonMode);
 				~VulkanGraphicsPipeline();
 
 				const VkPipeline GetPipeline() const { return m_GraphicsPipeline; }
@@ -36,6 +42,12 @@ namespace Parfait
 				const VulkanContext& m_VulkanContextRef;
 
 				void CreateGraphicsPipeline(const VkRenderPass& _renderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts);
+				void CreateGraphicsPipeline(const VkRenderPass& _renderPass, const std::vector<VkDescriptorSetLayout>& _descriptorSetLayouts, 
+					const VkVertexInputBindingDescription& _inputBinding,
+					std::vector<VkVertexInputAttributeDescription> _inputAttribute,
+					uint32_t _pushConstantSize,
+					const VkPrimitiveTopology& _topology,
+					const VkPolygonMode& _polygonMode);
 				void CreateShaderModule();
 		};
 	}

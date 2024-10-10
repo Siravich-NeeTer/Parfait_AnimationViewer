@@ -7,20 +7,25 @@ namespace Parfait
         m_CurrentTime = 0.0;
         m_CurrentAnimation = _animation;
 
-        m_FinalBoneMatrices.reserve(100);
+        m_FinalBoneMatrices.reserve(_animation->GetBoneIDMap().size());
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < _animation->GetBoneIDMap().size(); i++)
             m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
     }
 
     void Animator::UpdateAnimation(float _dt)
     {
+        if (!m_CurrentAnimation->IsValid())
+        {
+            return;
+        }
+
         m_DeltaTime = _dt;
         if (m_CurrentAnimation)
         {
             m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * _dt;
             m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-            CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+            CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), Math::VQS::Identity());
         }
     }
 
@@ -30,10 +35,10 @@ namespace Parfait
         m_CurrentTime = 0.0f;
     }
 
-    void Animator::CalculateBoneTransform(const AssimpNodeData* _node, glm::mat4 _parentTransform)
+    void Animator::CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform)
     {
         std::string nodeName = _node->name;
-        glm::mat4 nodeTransform = _node->transformation;
+        Math::VQS nodeTransform = _node->transformation;
 
         Bone* Bone = m_CurrentAnimation->FindBone(nodeName);
 
@@ -43,14 +48,14 @@ namespace Parfait
             nodeTransform = Bone->GetLocalTransform();
         }
 
-        glm::mat4 globalTransformation = _parentTransform * nodeTransform;
+        Math::VQS globalTransformation = _parentTransform * nodeTransform;
 
         auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
         if (boneInfoMap.find(nodeName) != boneInfoMap.end())
         {
             int index = boneInfoMap[nodeName].id;
             glm::mat4 offset = boneInfoMap[nodeName].offset;
-            m_FinalBoneMatrices[index] = globalTransformation * offset;
+            m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
         }
 
         for (int i = 0; i < _node->childrenCount; i++)

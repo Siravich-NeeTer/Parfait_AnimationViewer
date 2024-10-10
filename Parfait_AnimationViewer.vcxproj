@@ -82,6 +82,9 @@
     <ClInclude Include="src\Core\Object.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
     <ClInclude Include="src\Math\AssimpGLMHelpers.h" />
+    <ClInclude Include="src\Math\MathUtility.h" />
+    <ClInclude Include="src\Math\Quaternion.h" />
+    <ClInclude Include="src\Math\VQS.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
@@ -106,6 +109,8 @@
   <ItemGroup>
     <None Include="Shaders\anim.frag" />
     <None Include="Shaders\anim.vert" />
+    <None Include="Shaders\bone.frag" />
+    <None Include="Shaders\bone.vert" />
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
   </ItemGroup>

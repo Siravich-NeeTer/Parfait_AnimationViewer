@@ -12,7 +12,7 @@ namespace Parfait
             void UpdateAnimation(float _dt);
             void PlayAnimation(Animation* _pAnimation);
 
-            void CalculateBoneTransform(const AssimpNodeData* _node, glm::mat4 _parentTransform);
+            void CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform);
 
             const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices;  }
 
