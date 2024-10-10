@@ -281,5 +281,7 @@
     <None Include="Shaders\mesh.vert" />
     <None Include="Shaders\anim.frag" />
     <None Include="Shaders\anim.vert" />
+    <None Include="Shaders\bone.frag" />
+    <None Include="Shaders\bone.vert" />
   </ItemGroup>
 </Project>

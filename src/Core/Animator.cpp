@@ -15,6 +15,11 @@ namespace Parfait
 
     void Animator::UpdateAnimation(float _dt)
     {
+        if (!m_CurrentAnimation->IsValid())
+        {
+            return;
+        }
+
         m_DeltaTime = _dt;
         if (m_CurrentAnimation)
         {

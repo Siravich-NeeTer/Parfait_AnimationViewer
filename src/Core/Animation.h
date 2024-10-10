@@ -31,6 +31,7 @@ namespace Parfait
             float GetDuration() const { return m_Duration; }
             const AssimpNodeData& GetRootNode() const { return m_RootNode; }
             const std::map<std::string, BoneInfo>& GetBoneIDMap() const { return m_BoneInfoMap; }
+            bool IsValid() const { return m_IsAnimationValid; }
 
         private:
             float m_Duration;
@@ -38,6 +39,7 @@ namespace Parfait
             std::vector<Bone> m_Bones;
             AssimpNodeData m_RootNode;
             std::map<std::string, BoneInfo> m_BoneInfoMap;
+            bool m_IsAnimationValid = false;
 
             void ReadMissingBones(const aiAnimation* _animation, Model& _model);
             void ReadHeirarchyData(AssimpNodeData& _dest, const aiNode* _src);

@@ -6,6 +6,8 @@
 #include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include <iostream>
 #include <string>
@@ -43,6 +45,7 @@ namespace Parfait
 		public:
 			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
 			int& GetBoneCount() { return m_BoneCounter; }
@@ -83,6 +86,9 @@ namespace Parfait
 			std::vector<Graphics::Vertex> m_Vertices;
 			std::vector<uint32_t> m_Indices;
 
+			std::vector<Graphics::BoneVertex> m_BoneVertices;
+			std::vector<uint32_t> m_BoneIndices;
+
 			std::vector<Node*> m_Nodes;
 			std::map<std::string, BoneInfo> m_BoneInfoMap;
 			int m_BoneCounter = 0;
@@ -90,10 +96,14 @@ namespace Parfait
 			std::string m_Directory;
 
 			std::unique_ptr<Graphics::VulkanDescriptor> m_Descriptor;
+			glm::mat4 curMat;
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::Vertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanIndexBuffer> m_IndexBuffer;
 			std::vector<std::unique_ptr<Graphics::VulkanTexture>> m_Textures;
+
+			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>> m_BoneVertexBuffer;
+			std::unique_ptr<Graphics::VulkanIndexBuffer> m_BoneIndexBuffer;
 
 
 			void LoadModel(const std::filesystem::path& _path);
@@ -104,7 +114,7 @@ namespace Parfait
 
 			void SetVertexBoneDataToDefault(Graphics::Vertex& _vertex);
 			void SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight);
-			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, aiMesh* _mesh, const aiScene* _scene);
+			void ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, uint32_t _startIdx, aiMesh* _mesh, const aiScene* _scene);
 
 			std::string GetDirectory(const std::filesystem::path& _path);
 	};
