@@ -91,9 +91,11 @@ namespace Parfait
 				VkDeviceMemory m_DepthImageMemory;
 				VkImageView m_DepthImageView;
 
+				// Models - Animations
 				std::vector<std::unique_ptr<Model>> m_Models;
 				std::vector<std::unique_ptr<Animation>> m_Animations;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
+				bool m_IsDrawBone = false;
 
 				// TEMP:
 				struct FrameData

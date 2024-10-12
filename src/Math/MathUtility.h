@@ -7,6 +7,7 @@ namespace Parfait
 {
 	namespace Math
 	{
+        // Linear Interpolation
 		static glm::vec3 Lerp(const glm::vec3& a, const glm::vec3& b, float t)
 		{
 			return (1.0f - t) * a + t * b;
@@ -16,6 +17,7 @@ namespace Parfait
 			return (1.0f - t) * q1 + t * q2;
 		}
 
+        // Spherical Interpolation
 		static Quaternion Slerp(Quaternion q1, Quaternion q2, float t)
 		{
             float dot = Dot(q1, q2);
@@ -43,5 +45,14 @@ namespace Parfait
 
             return factor1 * q1 + factor2 * q2;
 		}
+
+        // Exponential Interpolation
+        static glm::vec3 Elerp(const glm::vec3& a, const glm::vec3& b, float t) 
+        {
+            // Clamp t to the range [0, 1]
+            t = glm::clamp(t, 0.0f, 1.0f);
+
+            return a + (b - a) * (1 - std::exp(-t));
+        }
 	}
 }

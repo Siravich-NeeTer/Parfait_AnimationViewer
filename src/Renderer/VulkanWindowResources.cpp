@@ -42,12 +42,11 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
-			// TEMP:
+			// Model Loading
 			// -------------------------------------------------
-			//LoadAnimation("Models/scene.gltf");
-			//LoadAnimation("Models/Soldier.dae");
-			//LoadAnimation("Models/CesiumMan.gltf");
+			LoadModel("Models/Plane.fbx");
 			LoadAnimation("Models/Zombie.dae");
+			// -------------------------------------------------
 
 			m_FrameDescriptor = std::make_unique<VulkanDescriptor>(m_VkContextRef);
 			m_FrameDescriptor->AddDescriptorSets({
@@ -67,7 +66,7 @@ namespace Parfait
 			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Models.back()->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
+			m_Camera = Camera({ 0.0f, 1.0f, 5.0f });
 
 			m_BonePipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext,
 				m_OffscreenRenderer->GetRenderPass(),
@@ -204,10 +203,13 @@ namespace Parfait
 					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 					model->Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
 
-					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
-					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
-					model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
+					if (m_IsDrawBone)
+					{
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
+						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
+						model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
+					}
 				}
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
@@ -254,6 +256,8 @@ namespace Parfait
 
 				int cnt = 0;
 				ImGui::Begin("Model");
+				ImGui::Checkbox("Render Bone", &m_IsDrawBone);
+				ImGui::NewLine();
 				for (auto& model : m_Models)
 				{
 					ImGui::DragFloat3(std::string("Position" + std::to_string(cnt)).c_str(), &model->position[0], 0.01f, -100.0f, 100.0f);
@@ -262,9 +266,29 @@ namespace Parfait
 					ImGui::NewLine();
 					cnt++;
 				}
-				ImGui::End();
+				
+				ImGui::Text("Animations ");
+				const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
+				static const char* current_item = NULL;
+				if (ImGui::BeginCombo("##combo", current_item))
+				{
+					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					{
+						bool is_selected = (current_item == items[n]);
+						if (ImGui::Selectable(items[n], is_selected))
+						{
+							current_item = items[n];
 
-				ImGui::ShowDemoWindow();
+							m_Animations[0] = std::make_unique<Animation>("Models/" + std::string(current_item), m_Models.back().get());
+							m_Animators[0] = std::make_unique<Animator>(m_Animations.back().get());
+						}
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::End();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());

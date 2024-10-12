@@ -74,7 +74,7 @@ namespace Parfait
 				sqrt(transform[0][2] * transform[0][2] + transform[1][2] * transform[1][2] + transform[2][2] * transform[2][2])
 			};
 
-			// Calculate new transform that remove scaling
+			// Calculate new transform that scaling has been removed
 			glm::mat4 removedScaleTransform = transform;
 			for (int i = 0; i < 3; ++i) 
 			{
