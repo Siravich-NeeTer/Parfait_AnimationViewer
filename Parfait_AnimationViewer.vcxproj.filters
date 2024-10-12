@@ -42,9 +42,6 @@
     <ClCompile Include="External Libraries\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -150,12 +147,6 @@
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="External Libraries\imgui\imgui_internal.h">
