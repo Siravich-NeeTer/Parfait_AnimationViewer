@@ -32,6 +32,7 @@ layout(location = 1) out vec2 fragTexCoord;
 void main() 
 {
     vec4 totalPosition = vec4(0.0f);
+    bool isBoneValid = false;
     for(int i = 0; i < MAX_BONE_INFLUENCE; i++)
     {
         if(inBoneIDs[i] == -1)
@@ -45,7 +46,10 @@ void main()
         vec4 localPosition = boneTransform.bone[inBoneIDs[i]] * vec4(inPosition, 1.0f);
         totalPosition += localPosition * inWeights[i];
         vec3 localNormal = mat3(boneTransform.bone[inBoneIDs[i]]) * inNormal;
+        isBoneValid = true;
     }
+    if(!isBoneValid)
+        totalPosition = vec4(inPosition, 1.0f);
 
     gl_Position = ubo.projection * ubo.view * primitive.model * totalPosition;
     fragColor = inColor;

@@ -14,10 +14,11 @@ namespace Parfait
 					std::vector<VkVertexInputAttributeDescription> _inputAttribute,
 					uint32_t _pushConstantSize,
 					VkPrimitiveTopology _topology,
-					VkPolygonMode _polygonMode)
+					VkPolygonMode _polygonMode,
+					bool _depthTestEnable)
 			: m_VulkanContextRef(_vulkanContext), m_ShaderPaths(_shaderPaths)
 		{
-			CreateGraphicsPipeline(_vulkanRenderPass, _descriptorSetLayouts, _inputBinding, _inputAttribute, _pushConstantSize, _topology, _polygonMode);
+			CreateGraphicsPipeline(_vulkanRenderPass, _descriptorSetLayouts, _inputBinding, _inputAttribute, _pushConstantSize, _topology, _polygonMode, _depthTestEnable);
 		}
 		VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 		{
@@ -149,7 +150,8 @@ namespace Parfait
 			std::vector<VkVertexInputAttributeDescription> _inputAttribute,
 			uint32_t _pushConstantSize,
 			const VkPrimitiveTopology& _topology,
-			const VkPolygonMode& _polygonMode)
+			const VkPolygonMode& _polygonMode,
+			bool depthTestEnable)
 		{
 			CreateShaderModule();
 
@@ -188,11 +190,19 @@ namespace Parfait
 
 			VkPipelineDepthStencilStateCreateInfo depthStencil{};
 			depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-			depthStencil.depthTestEnable = VK_TRUE;
-			depthStencil.depthWriteEnable = VK_TRUE;
-			depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-			depthStencil.depthBoundsTestEnable = VK_FALSE;
-			depthStencil.stencilTestEnable = VK_FALSE;
+			if (depthTestEnable)
+			{
+				depthStencil.depthTestEnable = VK_TRUE;
+				depthStencil.depthWriteEnable = VK_TRUE;
+				depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+				depthStencil.depthBoundsTestEnable = VK_FALSE;
+				depthStencil.stencilTestEnable = VK_FALSE;
+			}
+			else
+			{
+				depthStencil.depthTestEnable = VK_FALSE;
+				depthStencil.depthWriteEnable = VK_FALSE;
+			}
 
 			VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 			colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;

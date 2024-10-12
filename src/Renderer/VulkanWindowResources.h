@@ -57,6 +57,7 @@ namespace Parfait
 				void Update(float dt);
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
+				void UpdateAnimation(uint32_t _currentFrame, uint32_t _currentAnimationIndex);
 
 				void BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex);
 				void EndRenderPass(const VulkanCommandBuffer& _VkCommandBuffer);
@@ -90,9 +91,9 @@ namespace Parfait
 				VkDeviceMemory m_DepthImageMemory;
 				VkImageView m_DepthImageView;
 
-				Model m_Model;
-				Animation m_Animation;
-				Animator m_Animator;
+				std::vector<std::unique_ptr<Model>> m_Models;
+				std::vector<std::unique_ptr<Animation>> m_Animations;
+				std::vector<std::unique_ptr<Animator>> m_Animators;
 
 				// TEMP:
 				struct FrameData
@@ -128,6 +129,9 @@ namespace Parfait
 				// Window Events
 				void BindWindowEvents();
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
+
+				void LoadModel(const std::filesystem::path& _path);
+				void LoadAnimation(const std::filesystem::path& _path);
 		};
 	}
 }

@@ -24,7 +24,8 @@ namespace Parfait
 					std::vector<VkVertexInputAttributeDescription> _inputAttribute,
 					uint32_t _pushConstantSize,
 					VkPrimitiveTopology _topology,
-					VkPolygonMode _polygonMode);
+					VkPolygonMode _polygonMode,
+					bool _depthTestEnable = true);
 				~VulkanGraphicsPipeline();
 
 				const VkPipeline GetPipeline() const { return m_GraphicsPipeline; }
@@ -47,7 +48,8 @@ namespace Parfait
 					std::vector<VkVertexInputAttributeDescription> _inputAttribute,
 					uint32_t _pushConstantSize,
 					const VkPrimitiveTopology& _topology,
-					const VkPolygonMode& _polygonMode);
+					const VkPolygonMode& _polygonMode,
+					bool _depthTestEnable);
 				void CreateShaderModule();
 		};
 	}

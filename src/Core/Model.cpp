@@ -2,10 +2,11 @@
 
 namespace Parfait
 {
-	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path)
+	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, bool _isAnimation)
 		: m_VulkanContextRef(_vulkanContext),
 		m_VulkanCommandPool(_vulkanCommandPool),
-		m_Descriptor(std::make_unique<Graphics::VulkanDescriptor>(_vulkanContext))
+		m_Descriptor(std::make_unique<Graphics::VulkanDescriptor>(_vulkanContext)),
+		m_IsAnimation(_isAnimation)
 	{
 		m_Directory = _path.root_directory().string();
 		LoadModel(_path);
@@ -39,40 +40,15 @@ namespace Parfait
 	}
 	void Model::DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
 	{
-		/*
-		for (unsigned int i = 0; i < scene->mNumMeshes; i++) 
-		{
-			const aiMesh* mesh = scene->mMeshes[i];
-
-			for (unsigned int j = 0; j < mesh->mNumBones; j++) 
-			{
-				const aiBone* bone = mesh->mBones[j];
-
-				// Transform for the current bone
-				aiMatrix4x4 boneTransform = bone->mOffsetMatrix;
-
-				// Get the bone position (assuming it’s at the origin of the bone)
-				aiVector3D bonePosition(boneTransform.a4, boneTransform.b4, boneTransform.c4);
-
-				// If you want to draw to the child bones (if available)
-				for (unsigned int k = 0; k < bone->mNumWeights; k++) {
-					// Here you can assume some logic to get a child bone's position
-					// Example: aiVector3D childBonePosition = ...; // get from bone data or a defined structure
-					aiVector3D childBonePosition = /* Logic to find child position ;
-
-					// Draw a line from bonePosition to childBonePosition
-					DrawLine(bonePosition, childBonePosition);
-				}
-			}
-		}
-		*/
+		if (m_BoneVertices.empty())
+			return;
 
 		m_PipelineLayoutRef = _pipelineLayout;
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model *= glm::translate(glm::mat4(1.0f), position);
 		model *= glm::scale(glm::mat4(1.0f), scale);
-		model *= glm::toMat4(rotation);
+		model *= glm::toMat4(glm::quat(glm::radians(rotation)));
 		//model *= glm::translate(glm::mat4(1.0f), -center);
 
 		Graphics::MeshPushConstants meshConstants;
@@ -167,9 +143,12 @@ namespace Parfait
 
 		glm::vec3 skew;
 		glm::vec4 perspective;
-		glm::decompose(AssimpGLMHelpers::ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation), scale, rotation, position, skew, perspective);
-		//scene->mRootNode->mTransformation = aiMatrix4x4();
-		scale = glm::vec3(1.0f);
+		glm::quat quaternion;
+		glm::decompose(AssimpGLMHelpers::ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation), scale, quaternion, position, skew, perspective);
+		scene->mRootNode->mTransformation = aiMatrix4x4();
+
+		rotation = glm::degrees(glm::eulerAngles(quaternion));
+		//scale = glm::vec3(1.0f);
 
 		ProcessNode(scene->mRootNode, scene, nullptr);
 	}
@@ -206,7 +185,6 @@ namespace Parfait
 
 		Primitive primitive;
 		primitive.firstIndex = m_Indices.size();
-		curMat = _currentNode->matrix;
 
 		uint32_t startIdx = m_Vertices.size();
 		for (unsigned int i = 0; i < _mesh->mNumVertices; i++)
@@ -269,10 +247,10 @@ namespace Parfait
 			glm::mat4 model = glm::mat4(1.0f);
 			model *= glm::translate(glm::mat4(1.0f), position);
 			model *= glm::scale(glm::mat4(1.0f), scale);
-			model *= glm::toMat4(rotation);
+			model *= glm::toMat4(glm::quat(glm::radians(rotation)));
 
 			Graphics::MeshPushConstants meshConstants;
-			meshConstants.model = model;
+			meshConstants.model = model * nodeMatrix;
 			meshConstants.numBones = m_BoneCounter;
 
 			// Pass the final matrix to the vertex shader using push constants

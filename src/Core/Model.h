@@ -43,7 +43,7 @@ namespace Parfait
 	class Model : public Object
 	{
 		public:
-			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path);
+			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, bool _isAnimation = false);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
@@ -51,6 +51,8 @@ namespace Parfait
 			int& GetBoneCount() { return m_BoneCounter; }
 
 			const Graphics::VulkanDescriptor& GetDescriptor() const { return *m_Descriptor; }
+
+			bool IsAnimation() const { return m_IsAnimation; }
 
 		private:
 			const Graphics::VulkanContext& m_VulkanContextRef;
@@ -96,7 +98,7 @@ namespace Parfait
 			std::string m_Directory;
 
 			std::unique_ptr<Graphics::VulkanDescriptor> m_Descriptor;
-			glm::mat4 curMat;
+			bool m_IsAnimation = false;
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::Vertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanIndexBuffer> m_IndexBuffer;

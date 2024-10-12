@@ -11,6 +11,8 @@ namespace Parfait
         m_IsAnimationValid = scene->HasAnimations();
         if (scene->HasAnimations())
         {
+            scene->mRootNode->mTransformation = aiMatrix4x4();
+
             aiAnimation* animation = scene->mAnimations[0];
             m_Duration = animation->mDuration;
             m_TicksPerSecond = animation->mTicksPerSecond;
