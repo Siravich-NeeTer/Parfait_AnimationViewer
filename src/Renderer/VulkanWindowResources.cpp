@@ -94,6 +94,14 @@ namespace Parfait
 
 		void VulkanWindowResources::Update(float dt)
 		{
+			m_Time += dt;
+			if (m_Time >= 1.0f)
+			{
+				m_FPS = m_FrameCounter;
+				m_Time = 0.0f;
+				m_FrameCounter = 0;
+			}
+
 			glfwPollEvents();
 
 			if (m_IsViewportFocus)
@@ -132,6 +140,7 @@ namespace Parfait
 				glfwDestroyWindow(m_WindowRef);  // Destroy the GLFW window safely
 				//delete this;
 			}
+			m_FrameCounter++;
 		}
 		void VulkanWindowResources::Draw()
 		{
@@ -256,6 +265,7 @@ namespace Parfait
 
 				int cnt = 0;
 				ImGui::Begin("Model");
+				ImGui::Text(std::string("FPS : " + std::to_string(m_FPS)).c_str());
 				ImGui::Checkbox("Render Bone", &m_IsDrawBone);
 				ImGui::NewLine();
 				for (auto& model : m_Models)

@@ -96,6 +96,11 @@ namespace Parfait
 				std::vector<std::unique_ptr<Animation>> m_Animations;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
+				
+				// Time Counter
+				float m_Time;
+				uint32_t m_FPS;
+				uint32_t m_FrameCounter = 0;
 
 				// TEMP:
 				struct FrameData

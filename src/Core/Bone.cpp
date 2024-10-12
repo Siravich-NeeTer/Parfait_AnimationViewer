@@ -123,7 +123,7 @@ namespace Parfait
         int p0Index = GetScaleIndex(_animationTime);
         int p1Index = p0Index + 1;
         float scaleFactor = GetScaleFactor(m_Scales[p0Index].timeStamp, m_Scales[p1Index].timeStamp, _animationTime);
-        glm::vec3 finalScale = Math::Lerp(m_Scales[p0Index].scale, m_Scales[p1Index].scale, scaleFactor);
+        glm::vec3 finalScale = Math::Elerp(m_Scales[p0Index].scale, m_Scales[p1Index].scale, scaleFactor);
         return finalScale;
     }
 }

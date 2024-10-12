@@ -52,7 +52,11 @@ namespace Parfait
             // Clamp t to the range [0, 1]
             t = glm::clamp(t, 0.0f, 1.0f);
 
-            return a + (b - a) * (1 - std::exp(-t));
+            glm::vec3 ret;
+            ret.x = a.x * std::pow(b.x / a.x, t);
+            ret.y = a.y * std::pow(b.y / a.y, t);
+            ret.z = a.z * std::pow(b.z / a.z, t);
+            return ret;
         }
 	}
 }
