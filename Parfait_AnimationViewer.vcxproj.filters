@@ -27,85 +27,252 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\RaffleEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="External Libraries\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_demo.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_demo.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_draw.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_draw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_impl_win32.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_tables.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_tables.cpp">
+    <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\imgui_widgets.cpp">
-      <Filter>Source Files\imgui</Filter>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.cpp">
-      <Filter>Source Files\imgui\ext</Filter>
+    <ClCompile Include="External Libraries\stb\stb_image.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.cpp">
-      <Filter>Source Files\imgui\ext</Filter>
+    <ClCompile Include="src\Renderer\VulkanContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanSurfaceSwapchain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanGraphicsPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanFramebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanCommandPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\ParfaitEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanWindowResources.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Buffers\VulkanVertexBuffer.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanDescriptor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui\imgui_impl_vulkan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External Libraries\imgui\extensions\imgui_combo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\VulkanTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Utilities\VulkanUtilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\OffScreenRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Bone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Animator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Animation.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imconfig.h">
+    <ClInclude Include="External Libraries\imgui\imconfig.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui.h">
+    <ClInclude Include="External Libraries\imgui\imgui.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_extension.h">
+    <ClInclude Include="External Libraries\imgui\imgui_extension.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_glfw.h">
+    <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3.h">
+    <ClInclude Include="External Libraries\imgui\imgui_internal.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_impl_opengl3_loader.h">
+    <ClInclude Include="External Libraries\imgui\imstb_rectpack.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imgui_internal.h">
+    <ClInclude Include="External Libraries\imgui\imstb_textedit.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_rectpack.h">
+    <ClInclude Include="External Libraries\imgui\imstb_truetype.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_textedit.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\imstb_truetype.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_combo.h">
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_curve.h">
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h">
       <Filter>Header Files\imgui\ext</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_knob.h">
-      <Filter>Header Files\imgui\ext</Filter>
+    <ClInclude Include="External Libraries\stb\stb_image.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="External Libraries\imgui-1.90.6\extensions\imgui_pie_menu.h">
-      <Filter>Header Files\imgui\ext</Filter>
+    <ClInclude Include="src\Renderer\VulkanContext.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanSurfaceSwapchain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanRenderPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanFramebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanCommandPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\ParfaitEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanCommandBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanWindowResources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanDescriptor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External Libraries\imgui\extensions\imgui_combo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\VulkanTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Utilities\VulkanValidation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\OffScreenRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Bone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Animator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\AssimpGLMHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\VQS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\Quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\MathUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="fonts\TMP.TTF" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\mesh.frag" />
+    <None Include="Shaders\mesh.vert" />
+    <None Include="Shaders\anim.frag" />
+    <None Include="Shaders\anim.vert" />
+    <None Include="Shaders\bone.frag" />
+    <None Include="Shaders\bone.vert" />
   </ItemGroup>
 </Project>
