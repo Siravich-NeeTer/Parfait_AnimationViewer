@@ -9,8 +9,7 @@ namespace Parfait
 			m_SurfaceSwapchain(std::make_unique<VulkanSurfaceSwapchain>(_vulkanContext, *_window)),
 			m_RenderPass(std::make_unique<VulkanRenderPass>(_vulkanContext, *m_SurfaceSwapchain)),
 			m_Descriptor(std::make_unique<VulkanDescriptor>(_vulkanContext)),
-			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext)),
-			m_Model(_vulkanContext, *m_CommandPool, "Models/scene.gltf")
+			m_CommandPool(std::make_unique<VulkanCommandPool>(_vulkanContext))
 		{
 			CreateDepthResources();
 			m_Framebuffers = std::make_unique<VulkanFramebuffer>(_vulkanContext, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
@@ -23,9 +22,9 @@ namespace Parfait
 				vkMapMemory(_vulkanContext.GetLogicalDevice(), m_UniformBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(UniformBufferObject)), 0, &m_UniformBuffers[i]->GetMappedBuffer());
 			}
 
-			m_Descriptor.get()->AddDescriptorSets({ 
+			m_Descriptor.get()->AddDescriptorSets({
 				{ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
-			});
+				});
 			m_Descriptor.get()->Init();
 			// Write Uniform Buffer to Descriptor
 			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -43,10 +42,42 @@ namespace Parfait
 			CreateSyncObject(MAX_FRAMES_IN_FLIGHT);
 			CreateImGui();
 
-			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Model.GetDescriptor().GetDescriptorSetLayout(0)});
+			// Model Loading
+			// -------------------------------------------------
+			LoadModel("Models/Plane.fbx");
+			LoadAnimation("Models/Zombie.dae");
+			// -------------------------------------------------
+
+			m_FrameDescriptor = std::make_unique<VulkanDescriptor>(m_VkContextRef);
+			m_FrameDescriptor->AddDescriptorSets({
+				{ 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr }
+				});
+			m_FrameDescriptor->Init();
+			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				m_FrameData[i].boneTransformBuffer = std::make_unique<VulkanBuffer>(_vulkanContext, *m_CommandPool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(BoneTransform) * MAX_BONE_TRANSFORM);
+				m_FrameDescriptor->WriteStorageBuffer(0, m_FrameData[i].boneTransformBuffer->GetBuffer(), static_cast<VkDeviceSize>(sizeof(BoneTransform) * MAX_BONE_TRANSFORM), i);
+				m_FrameDescriptor->UpdateDescriptorSet();
+
+				vkMapMemory(m_VkContextRef.GetLogicalDevice(), m_FrameData[i].boneTransformBuffer->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(BoneTransform) * MAX_BONE_TRANSFORM), 0, &m_FrameData[i].transformData);
+			}
+			// -------------------------------------------------
+
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(_vulkanContext, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Models.back()->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-			m_Camera = Camera({ 0.0f, 0.0f, 5.0f });
+			m_Camera = Camera({ 0.0f, 1.0f, 5.0f });
+
+			m_BonePipeline = std::make_unique<VulkanGraphicsPipeline>(_vulkanContext,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/bone.vert", "Shaders/bone.frag" },
+				BoneVertex::getBindingDescription(),
+				BoneVertex::getAttributeDescriptions(),
+				sizeof(MeshPushConstants),
+				VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+				VK_POLYGON_MODE_FILL,
+				false);
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
@@ -63,6 +94,14 @@ namespace Parfait
 
 		void VulkanWindowResources::Update(float dt)
 		{
+			m_Time += dt;
+			if (m_Time >= 1.0f)
+			{
+				m_FPS = m_FrameCounter;
+				m_Time = 0.0f;
+				m_FrameCounter = 0;
+			}
+
 			glfwPollEvents();
 
 			if (m_IsViewportFocus)
@@ -91,6 +130,9 @@ namespace Parfait
 				}
 			}
 
+			for(auto& animator : m_Animators)
+				animator->UpdateAnimation(dt);
+
 			Draw();
 
 			if (glfwWindowShouldClose(m_WindowRef))
@@ -98,6 +140,7 @@ namespace Parfait
 				glfwDestroyWindow(m_WindowRef);  // Destroy the GLFW window safely
 				//delete this;
 			}
+			m_FrameCounter++;
 		}
 		void VulkanWindowResources::Draw()
 		{
@@ -127,7 +170,7 @@ namespace Parfait
 			*/
 			{
 				VkClearValue clearValues[2];
-				clearValues[0].color = { { 0.25f, 0.25f, 0.25f, 1.0f } };
+				clearValues[0].color = { { 0.5f, 0.5f, 0.5f, 1.0f } };
 				clearValues[1].depthStencil = { 1.0f, 0 };
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -155,10 +198,28 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
-				
-				m_Model.Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
+				int cnt = 0;
+				for (auto& model : m_Models)
+				{
+					if (model->IsAnimation())
+					{
+						UpdateAnimation(m_CurrentFrame, cnt);
+						cnt++;
+					}
+
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 2, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
+					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
+					model->Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
+
+					if (m_IsDrawBone)
+					{
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor.get()->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
+						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
+						model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
+					}
+				}
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -202,7 +263,42 @@ namespace Parfait
 					ImGui::EndChild();
 				ImGui::End();
 
-				ImGui::ShowDemoWindow();
+				int cnt = 0;
+				ImGui::Begin("Model");
+				ImGui::Text(std::string("FPS : " + std::to_string(m_FPS)).c_str());
+				ImGui::Checkbox("Render Bone", &m_IsDrawBone);
+				ImGui::NewLine();
+				for (auto& model : m_Models)
+				{
+					ImGui::DragFloat3(std::string("Position" + std::to_string(cnt)).c_str(), &model->position[0], 0.01f, -100.0f, 100.0f);
+					ImGui::DragFloat3(std::string("Rotation" + std::to_string(cnt)).c_str(), &model->rotation[0], 0.1f, -360.0f, 360.0f);
+					ImGui::DragFloat3(std::string("Scale" + std::to_string(cnt)).c_str(), &model->scale[0], 0.01f, 0.0f, 100.0f);
+					ImGui::NewLine();
+					cnt++;
+				}
+				
+				ImGui::Text("Animations ");
+				const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
+				static const char* current_item = NULL;
+				if (ImGui::BeginCombo("##combo", current_item))
+				{
+					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					{
+						bool is_selected = (current_item == items[n]);
+						if (ImGui::Selectable(items[n], is_selected))
+						{
+							current_item = items[n];
+
+							m_Animations[0] = std::make_unique<Animation>("Models/" + std::string(current_item), m_Models.back().get());
+							m_Animators[0] = std::make_unique<Animator>(m_Animations.back().get());
+						}
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::End();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
@@ -276,11 +372,20 @@ namespace Parfait
 
 			UniformBufferObject ubo{};
 			ubo.view = m_Camera.GetViewMatrix();
-			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 100.0f);
+			ubo.projection = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
 			// ubo.projection = glm::perspective(glm::radians(45.0f), m_SurfaceSwapchain.get()->GetExtent().width / (float)m_SurfaceSwapchain.get()->GetExtent().height, 0.1f, 100.0f);
 			ubo.projection[1][1] *= -1;
 
 			memcpy(m_UniformBuffers[_currentFrame]->GetMappedBuffer(), &ubo, sizeof(ubo));
+		}
+		void VulkanWindowResources::UpdateAnimation(uint32_t _currentFrame, uint32_t _currentAnimationIndex)
+		{
+			BoneTransform* boneTransform = (BoneTransform*)m_FrameData[_currentFrame].transformData;
+			auto transforms = m_Animators[_currentAnimationIndex]->GetFinalBoneMatrices();
+			for (int i = 0; i < transforms.size(); ++i)
+			{
+				boneTransform[i].bone = transforms[i];
+			}
 		}
 
 		void VulkanWindowResources::BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex)
@@ -469,6 +574,17 @@ namespace Parfait
 		{
 			VulkanWindowResources* app = reinterpret_cast<VulkanWindowResources*>(glfwGetWindowUserPointer(window));
 			app->m_IsFramebufferResize = true;
+		}
+
+		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
+		{
+			m_Models.push_back(std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path));
+		}
+		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path)
+		{
+			m_Models.push_back(std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, true));
+			m_Animations.push_back(std::make_unique<Animation>(_path.string(), m_Models.back().get()));
+			m_Animators.push_back(std::make_unique<Animator>(m_Animations.back().get()));
 		}
 	}
 }

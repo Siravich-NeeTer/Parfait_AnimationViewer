@@ -178,9 +178,14 @@ namespace Parfait
 				queueCreateInfos.push_back(queueCreateInfo);
 			}
 
+			VkPhysicalDeviceShaderDrawParametersFeatures shaderDrawParameter{};
+			shaderDrawParameter.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+			shaderDrawParameter.shaderDrawParameters = VK_TRUE;
+
 			VkPhysicalDeviceRobustness2FeaturesEXT robustFeature{};
 			robustFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 			robustFeature.nullDescriptor = VK_TRUE;
+			robustFeature.pNext = &shaderDrawParameter;
 
 			VkPhysicalDeviceVulkan12Features features12{};
 			features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;

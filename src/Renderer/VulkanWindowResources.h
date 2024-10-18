@@ -1,5 +1,6 @@
 #pragma once
 
+#define NOMINMAX
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
@@ -23,6 +24,8 @@
 #include "Core/Input.h"
 #include "Core/Camera.h"
 #include "Core/Model.h"
+#include "Core/Animation.h"
+#include "Core/Animator.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -54,6 +57,7 @@ namespace Parfait
 				void Update(float dt);
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
+				void UpdateAnimation(uint32_t _currentFrame, uint32_t _currentAnimationIndex);
 
 				void BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex);
 				void EndRenderPass(const VulkanCommandBuffer& _VkCommandBuffer);
@@ -87,7 +91,30 @@ namespace Parfait
 				VkDeviceMemory m_DepthImageMemory;
 				VkImageView m_DepthImageView;
 
-				Model m_Model;
+				// Models - Animations
+				std::vector<std::unique_ptr<Model>> m_Models;
+				std::vector<std::unique_ptr<Animation>> m_Animations;
+				std::vector<std::unique_ptr<Animator>> m_Animators;
+				bool m_IsDrawBone = false;
+				
+				// Time Counter
+				float m_Time;
+				uint32_t m_FPS;
+				uint32_t m_FrameCounter = 0;
+
+				// TEMP:
+				struct FrameData
+				{
+					std::unique_ptr<VulkanBuffer> boneTransformBuffer;
+					void* transformData;
+				};
+				FrameData m_FrameData[MAX_FRAMES_IN_FLIGHT];
+				std::unique_ptr<VulkanDescriptor> m_FrameDescriptor;
+				const int MAX_BONE_TRANSFORM = 10000;
+
+				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;
+
+
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
@@ -109,6 +136,9 @@ namespace Parfait
 				// Window Events
 				void BindWindowEvents();
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
+
+				void LoadModel(const std::filesystem::path& _path);
+				void LoadAnimation(const std::filesystem::path& _path);
 		};
 	}
 }

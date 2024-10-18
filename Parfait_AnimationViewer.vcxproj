@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -26,12 +18,14 @@
     <ClCompile Include="External Libraries\imgui\imgui_demo.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_draw.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="External Libraries\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_tables.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="External Libraries\stb\stb_image.cpp" />
+    <ClCompile Include="src\Core\Animation.cpp" />
+    <ClCompile Include="src\Core\Animator.cpp" />
+    <ClCompile Include="src\Core\Bone.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\Model.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
@@ -63,18 +57,23 @@
     <ClInclude Include="External Libraries\imgui\imgui.h" />
     <ClInclude Include="External Libraries\imgui\imgui_extension.h" />
     <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="External Libraries\imgui\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h" />
     <ClInclude Include="External Libraries\imgui\imgui_internal.h" />
     <ClInclude Include="External Libraries\imgui\imstb_rectpack.h" />
     <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="External Libraries\stb\stb_image.h" />
+    <ClInclude Include="src\Core\Animation.h" />
+    <ClInclude Include="src\Core\Animator.h" />
+    <ClInclude Include="src\Core\Bone.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\Model.h" />
     <ClInclude Include="src\Core\Object.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
+    <ClInclude Include="src\Math\AssimpGLMHelpers.h" />
+    <ClInclude Include="src\Math\MathUtility.h" />
+    <ClInclude Include="src\Math\Quaternion.h" />
+    <ClInclude Include="src\Math\VQS.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
@@ -97,6 +96,10 @@
     <Font Include="fonts\TMP.TTF" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\anim.frag" />
+    <None Include="Shaders\anim.vert" />
+    <None Include="Shaders\bone.frag" />
+    <None Include="Shaders\bone.vert" />
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
   </ItemGroup>
@@ -108,19 +111,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -139,12 +129,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -152,70 +136,24 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>PARFAIT_DEBUG;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib32-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;$(SolutionDir)External Libraries\assimp\lib32;$(VULKAN_SDK)/Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;opencv_world490d.lib;fmodL_vc.lib;assimp-vc142-mtd.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmodL.dll" "$(OutDir)"
-copy "$(ProjectDir)External Libraries\assimp\bin32\assimp-vc142-mtd.dll" "$(OutDir)"</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib32-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x86;$(SolutionDir)External Libraries\assimp\lib32;$(VULKAN_SDK)/Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;opencv_world490.lib;fmod_vc.lib;assimp-vc142-mt.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x86\fmod.dll" "$(OutDir)"
-copy "$(ProjectDir)External Libraries\assimp\bin32\assimp-vc142-mt.dll" "$(OutDir)"</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PARFAIT_DEBUG;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(SolutionDir)External Libraries\vulkan\Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;$(SolutionDir)External Libraries\assimp\lib64;$(VULKAN_SDK)/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;opencv_world490d.lib;fmodL_vc.lib;assimp-vc142-mtd.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\assimp\lib64;$(SolutionDir)External Libraries\vulkan\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;assimp-vc142-mtd.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmodL.dll" "$(OutDir)"
+      <Command>
 copy "$(ProjectDir)External Libraries\assimp\bin64\assimp-vc142-mtd.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -227,7 +165,7 @@ copy "$(ProjectDir)External Libraries\assimp\bin64\assimp-vc142-mtd.dll" "$(OutD
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\opencv\include;$(SolutionDir)External Libraries\fmod\core\inc;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(VULKAN_SDK)/Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)External Libraries\GLFW\include;$(SolutionDir)External Libraries\glad\include;$(SolutionDir)External Libraries;$(SolutionDir)External Libraries\vulkan\Include;$(SolutionDir)External Libraries\stb;$(SolutionDir)External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -236,11 +174,11 @@ copy "$(ProjectDir)External Libraries\assimp\bin64\assimp-vc142-mtd.dll" "$(OutD
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\opencv\vc16\lib;$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\fmod\core\lib\x64;$(SolutionDir)External Libraries\assimp\lib64;$(VULKAN_SDK)/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;opencv_world490.lib;fmod_vc.lib;assimp-vc142-mt.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)External Libraries\GLFW\lib-vc2022;$(SolutionDir)External Libraries\assimp\lib64;$(SolutionDir)External Libraries\vulkan\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;assimp-vc142-mt.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)External Libraries\fmod\core\lib\x64\fmod.dll" "$(OutDir)"
+      <Command>
 copy "$(ProjectDir)External Libraries\assimp\bin64\assimp-vc142-mt.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

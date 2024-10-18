@@ -38,7 +38,7 @@ namespace Parfait
 
 			if (!pixels) 
 			{
-				throw std::runtime_error("Failed to load texture image!");
+				throw std::runtime_error("Failed to load texture image! (" + _path.string() + ")");
 			}
 
 
@@ -53,18 +53,18 @@ namespace Parfait
 
 			stbi_image_free(pixels);
 
-			CreateImage(m_VulkanContextRef, m_Width, m_Height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_TextureImage, m_TextureImageMemory);
+			CreateImage(m_VulkanContextRef, m_Width, m_Height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_TextureImage, m_TextureImageMemory);
 
-			TransitionImageLayout(m_VulkanContextRef, m_VulkanCommandPoolRef, m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			TransitionImageLayout(m_VulkanContextRef, m_VulkanCommandPoolRef, m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			CopyBufferToImage(m_VulkanContextRef, m_VulkanCommandPoolRef, stagingBuffer, m_TextureImage, static_cast<uint32_t>(m_Width), static_cast<uint32_t>(m_Height));
-			TransitionImageLayout(m_VulkanContextRef, m_VulkanCommandPoolRef, m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			TransitionImageLayout(m_VulkanContextRef, m_VulkanCommandPoolRef, m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			vkDestroyBuffer(m_VulkanContextRef.GetLogicalDevice(), stagingBuffer, nullptr);
 			vkFreeMemory(m_VulkanContextRef.GetLogicalDevice(), stagingBufferMemory, nullptr);
 		}
 		void VulkanTexture::CreateTextureImageView()
 		{
-			m_TextureImageView = CreateImageView(m_VulkanContextRef, m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+			m_TextureImageView = CreateImageView(m_VulkanContextRef, m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 		void VulkanTexture::CreateTextureSampler()
 		{
