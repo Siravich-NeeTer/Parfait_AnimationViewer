@@ -31,7 +31,7 @@ namespace Parfait
 		{
 			const int FB_SIZE_X = 512;
 			const int FB_SIZE_Y = 512;
-			const VkFormat FB_COLOR_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
+			const VkFormat FB_COLOR_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
 
 			m_Width = FB_SIZE_X;
 			m_Height = FB_SIZE_Y;
@@ -135,7 +135,7 @@ namespace Parfait
 			VkImageCreateInfo image{};
 			image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			image.imageType = VK_IMAGE_TYPE_2D;
-			image.format = VK_FORMAT_R8G8B8A8_SRGB;
+			image.format = VK_FORMAT_R8G8B8A8_UNORM;
 			image.extent.width = m_Width;
 			image.extent.height = m_Height;
 			image.extent.depth = 1;
@@ -160,7 +160,7 @@ namespace Parfait
 			VkImageViewCreateInfo colorImageView{};
 			colorImageView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			colorImageView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			colorImageView.format = VK_FORMAT_R8G8B8A8_SRGB;
+			colorImageView.format = VK_FORMAT_R8G8B8A8_UNORM;
 			colorImageView.subresourceRange = {};
 			colorImageView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			colorImageView.subresourceRange.baseMipLevel = 0;
@@ -180,7 +180,7 @@ namespace Parfait
 			VkImageCreateInfo image{};
 			image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			image.imageType = VK_IMAGE_TYPE_2D;
-			image.format = VK_FORMAT_R8G8B8A8_SRGB;
+			image.format = VK_FORMAT_R8G8B8A8_UNORM;
 			image.extent.width = m_Width;
 			image.extent.height = m_Height;
 			image.extent.depth = 1;
