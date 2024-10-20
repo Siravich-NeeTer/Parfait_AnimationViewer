@@ -37,7 +37,7 @@ namespace Parfait
 
     void Animator::CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform)
     {
-        std::string nodeName = _node->name;
+        const std::string& nodeName = _node->name;
         Math::VQS nodeTransform = _node->transformation;
 
         Bone* Bone = m_CurrentAnimation->FindBone(nodeName);
@@ -48,13 +48,14 @@ namespace Parfait
             nodeTransform = Bone->GetLocalTransform();
         }
 
-        Math::VQS globalTransformation = _parentTransform * nodeTransform;
+        const Math::VQS& globalTransformation = _parentTransform * nodeTransform;
 
-        auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-        if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+        auto& boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
+        const auto& currentBoneIt = boneInfoMap.find(nodeName);
+        if (currentBoneIt != boneInfoMap.end())
         {
-            int index = boneInfoMap[nodeName].id;
-            glm::mat4 offset = boneInfoMap[nodeName].offset;
+            int index = currentBoneIt->second.id;
+            const glm::mat4& offset = currentBoneIt->second.offset;
             m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
         }
 

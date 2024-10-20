@@ -30,7 +30,7 @@ namespace Parfait
             float GetTicksPerSecond() const { return m_TicksPerSecond; }
             float GetDuration() const { return m_Duration; }
             const AssimpNodeData& GetRootNode() const { return m_RootNode; }
-            const std::map<std::string, BoneInfo>& GetBoneIDMap() const { return m_BoneInfoMap; }
+            std::map<std::string, BoneInfo>& GetBoneIDMap() { return m_BoneInfoMap; }
             bool IsValid() const { return m_IsAnimationValid; }
 
         private:
