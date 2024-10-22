@@ -23,7 +23,7 @@ layout(push_constant) uniform PushConsts
 {
 	mat4 model;
     int numBones;
-
+    int boneOffset;
 } primitive;
 
 layout(location = 0) out vec3 fragColor;
@@ -43,9 +43,9 @@ void main()
             break;
         }
 
-        vec4 localPosition = boneTransform.bone[inBoneIDs[i]] * vec4(inPosition, 1.0f);
+        vec4 localPosition = boneTransform.bone[primitive.boneOffset + inBoneIDs[i]] * vec4(inPosition, 1.0f);
         totalPosition += localPosition * inWeights[i];
-        vec3 localNormal = mat3(boneTransform.bone[inBoneIDs[i]]) * inNormal;
+        vec3 localNormal = mat3(boneTransform.bone[primitive.boneOffset + inBoneIDs[i]]) * inNormal;
         isBoneValid = true;
     }
     if(!isBoneValid)

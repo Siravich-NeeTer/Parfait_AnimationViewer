@@ -47,6 +47,8 @@ namespace Parfait
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
+			void SetBoneTransformOffset(int offset) { m_BoneTransformOffset = offset; }
+
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
 			int& GetBoneCount() { return m_BoneCounter; }
 
@@ -94,6 +96,7 @@ namespace Parfait
 			std::vector<Node*> m_Nodes;
 			std::map<std::string, BoneInfo> m_BoneInfoMap;
 			int m_BoneCounter = 0;
+			int m_BoneTransformOffset = 0;
 
 			std::string m_Directory;
 

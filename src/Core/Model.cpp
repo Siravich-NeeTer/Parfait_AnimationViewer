@@ -54,6 +54,7 @@ namespace Parfait
 		Graphics::MeshPushConstants meshConstants;
 		meshConstants.model = model;
 		meshConstants.numBones = m_BoneCounter;
+		meshConstants.boneOffset = m_BoneTransformOffset;
 
 		const VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_BoneVertexBuffer->GetBuffer(), offsets);
@@ -112,7 +113,7 @@ namespace Parfait
 					// Load the texture into Vulkan
 					m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
 					m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
-					m_Textures.back().get()->LoadTexture(GetDirectory(_path) + texturePath.C_Str());
+					m_Textures.back()->LoadTexture(GetDirectory(_path) + texturePath.C_Str());
 
 					std::cout << "LOAD: " << GetDirectory(_path) + texturePath.C_Str() << "\n";
 
@@ -125,7 +126,7 @@ namespace Parfait
 			{
 				m_Descriptor->AddDescriptorSets({ { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr } });
 				m_Textures.push_back(std::make_unique<Graphics::VulkanTexture>(m_VulkanContextRef, m_VulkanCommandPool));
-				m_Textures.back().get()->LoadTexture("Models/null.png");
+				m_Textures.back()->LoadTexture("Models/null.png");
 			}
 		}
 
@@ -252,6 +253,7 @@ namespace Parfait
 			Graphics::MeshPushConstants meshConstants;
 			meshConstants.model = model * nodeMatrix;
 			meshConstants.numBones = m_BoneCounter;
+			meshConstants.boneOffset = m_BoneTransformOffset;
 
 			// Pass the final matrix to the vertex shader using push constants
 			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);

@@ -57,10 +57,7 @@ namespace Parfait
 				void Update(float dt);
 				void Draw();
 				void UpdateUniform(uint32_t _currentFrame);
-				void UpdateAnimation(uint32_t _currentFrame, uint32_t _currentAnimationIndex);
-
-				void BeginRenderPass(const VulkanCommandBuffer& _VkCommandBuffer, uint32_t _imageIndex);
-				void EndRenderPass(const VulkanCommandBuffer& _VkCommandBuffer);
+				void UpdateAnimation(uint32_t _currentFrame);
 
 			private:
 				const VulkanContext& m_VkContextRef;
@@ -72,7 +69,6 @@ namespace Parfait
 
 				std::unique_ptr<VulkanSurfaceSwapchain> m_SurfaceSwapchain;
 				std::unique_ptr<VulkanRenderPass> m_RenderPass;
-				std::unique_ptr<VulkanGraphicsPipeline> m_GraphicsPipeline;
 				std::unique_ptr<VulkanFramebuffer> m_Framebuffers;
 				std::unique_ptr<VulkanCommandPool> m_CommandPool;
 				std::vector<std::unique_ptr<VulkanCommandBuffer>> m_CommandBuffers;
@@ -96,6 +92,7 @@ namespace Parfait
 				std::vector<std::unique_ptr<Animation>> m_Animations;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
+				int m_TotalBoneTransform = 0;
 				
 				// Time Counter
 				float m_Time;
@@ -114,14 +111,14 @@ namespace Parfait
 
 				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;
 
-
-
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;
 
 				int m_CurrentFrame = 0;
 				bool m_IsFramebufferResize = false;
+
+				void InitVulkanResources();
 
 				void CreateCommandBuffers(uint32_t _size);
 				void CreateSyncObject(uint32_t _size);

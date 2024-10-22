@@ -31,7 +31,7 @@ namespace Parfait
 			{
 				float currentTime = glfwGetTime();
 
-				m_WindowResources[i].get()->Update(currentTime - prevTime);
+				m_WindowResources[i]->Update(currentTime - prevTime);
 
 				Input::EndFrame();
 

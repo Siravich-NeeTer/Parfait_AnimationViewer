@@ -110,19 +110,20 @@ namespace Parfait
 				return attributeDescriptions;
 			}
 		};
-		struct UniformBufferObject
+		struct alignas(16) UniformBufferObject
 		{
-			alignas(16) glm::mat4 view;
-			alignas(16) glm::mat4 projection;
+			glm::mat4 view;
+			glm::mat4 projection;
 		};
-		struct BoneTransform
+		struct alignas(16) BoneTransform
 		{
 			glm::mat4 bone;
 		};
-		struct MeshPushConstants
+		struct alignas(16) MeshPushConstants
 		{
 			glm::mat4 model;
 			int numBones;
+			int boneOffset;
 		};
 
 		class VulkanBuffer
