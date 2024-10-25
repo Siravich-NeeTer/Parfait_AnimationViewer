@@ -1,8 +1,7 @@
 // Resources (Marie): https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
+// Modified by: NeeTer
 
 #version 460
-
-#extension GL_EXT_debug_printf : enable
 
 layout(location = 0) in float near;
 layout(location = 1) in float far;
@@ -14,6 +13,14 @@ layout(location = 12) in vec3 cameraPosition;
 
 layout(location = 0) out vec4 outColor;
 
+float INV_LOG_3 = 1.0f / log(3.0f);
+float log3(float x)
+{
+    return INV_LOG_3 * log(x);
+}
+
+
+
 vec4 grid(vec3 fragPos3D, float scale, bool drawAxis) 
 {
     vec2 coord = fragPos3D.xz * scale;
@@ -23,12 +30,6 @@ vec4 grid(vec3 fragPos3D, float scale, bool drawAxis)
     float minimumz = min(derivative.y, 1);
     float minimumx = min(derivative.x, 1);
     vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
-    
-    /*
-    debugPrintfEXT("Coord : %v2f", coord);
-    debugPrintfEXT("Grid : %v2f", grid);
-    debugPrintfEXT("Line : %f", line);
-    */
 
     float lineWidth = max(abs(cameraPosition.y / 15.0f), 0.25f);
 
@@ -64,10 +65,12 @@ void main()
     float fading = max(0, (0.5 - linearDepth));
 
     // outColor = (grid(fragPos3D, 5, true) + grid(fragPos3D, 1, true)) * float(t > 0); // adding multiple resolution for the grid
-    int step = max(int(abs(cameraPosition.y) / 5.0f), 1);
-    vec4 mainGrid =  grid(fragPos3D, 1.0f/step, true);
+    int step = max(int(log3(abs(cameraPosition.y))), 1);
+    float stepScale = pow(10, step - 1);
 
-    outColor = (grid(fragPos3D, 5.0f/step, true) + 3.0f * mainGrid) * float(t > 0); // adding multiple resolution for the grid
+    vec4 mainGrid =  grid(fragPos3D, 1.0f/stepScale, true);
+
+    outColor = (grid(fragPos3D, 10.0f/stepScale, true) + 3.0f * mainGrid) * float(t > 0); // adding multiple resolution for the grid
     outColor.a *= fading;
 
     /*
