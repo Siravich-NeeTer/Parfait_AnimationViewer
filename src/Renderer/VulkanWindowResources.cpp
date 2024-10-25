@@ -136,18 +136,22 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 6, 1, 0, 0);
+
 				for (auto& model : m_Models)
 				{
+					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 2, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
-					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 					model->Draw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout());
 
 					if (m_IsDrawBone)
 					{
+						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
 						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
-						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipeline());
 						model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
 					}
 				}
@@ -382,6 +386,17 @@ namespace Parfait
 				BoneVertex::getAttributeDescriptions(),
 				sizeof(MeshPushConstants),
 				VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+				VK_POLYGON_MODE_FILL,
+				false);
+
+			m_GridPipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/grid.vert", "Shaders/grid.frag" },
+				VkVertexInputBindingDescription{},
+				std::vector<VkVertexInputAttributeDescription>{},
+				0,
+				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 				VK_POLYGON_MODE_FILL,
 				false);
 		}

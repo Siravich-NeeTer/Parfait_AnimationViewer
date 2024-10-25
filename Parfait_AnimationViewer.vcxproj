@@ -100,6 +100,8 @@
     <None Include="Shaders\anim.vert" />
     <None Include="Shaders\bone.frag" />
     <None Include="Shaders\bone.vert" />
+    <None Include="Shaders\grid.frag" />
+    <None Include="Shaders\grid.vert" />
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
   </ItemGroup>
