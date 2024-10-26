@@ -28,10 +28,13 @@ layout(push_constant) uniform PushConsts
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
+layout(location = 2) out vec3 fragNormal;
 
 void main() 
 {
     vec4 totalPosition = vec4(0.0f);
+    vec3 totalNormal = vec3(0.0f);
+    int cnt = 0;
     bool isBoneValid = false;
     for(int i = 0; i < MAX_BONE_INFLUENCE; i++)
     {
@@ -45,13 +48,19 @@ void main()
 
         vec4 localPosition = boneTransform.bone[primitive.boneOffset + inBoneIDs[i]] * vec4(inPosition, 1.0f);
         totalPosition += localPosition * inWeights[i];
-        vec3 localNormal = mat3(boneTransform.bone[primitive.boneOffset + inBoneIDs[i]]) * inNormal;
+        totalNormal += mat3(boneTransform.bone[primitive.boneOffset + inBoneIDs[i]]) * inNormal;
+        cnt++;
         isBoneValid = true;
     }
     if(!isBoneValid)
+    {
+        totalNormal = inNormal;
+        cnt = 1;
         totalPosition = vec4(inPosition, 1.0f);
+    }
 
     gl_Position = ubo.projection * ubo.view * primitive.model * totalPosition;
     fragColor = inColor;
+    fragNormal = normalize((primitive.model * vec4(totalNormal / cnt, 0.0f)).xyz);
     fragTexCoord = inTexCoord;
 }

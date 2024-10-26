@@ -47,8 +47,8 @@ namespace Parfait
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model *= glm::translate(glm::mat4(1.0f), position);
-		model *= glm::scale(glm::mat4(1.0f), scale);
 		model *= glm::toMat4(glm::quat(glm::radians(rotation)));
+		model *= glm::scale(glm::mat4(1.0f), scale);
 		//model *= glm::translate(glm::mat4(1.0f), -center);
 
 		Graphics::MeshPushConstants meshConstants;
@@ -247,8 +247,8 @@ namespace Parfait
 
 			glm::mat4 model = glm::mat4(1.0f);
 			model *= glm::translate(glm::mat4(1.0f), position);
-			model *= glm::scale(glm::mat4(1.0f), scale);
 			model *= glm::toMat4(glm::quat(glm::radians(rotation)));
+			model *= glm::scale(glm::mat4(1.0f), scale);
 
 			Graphics::MeshPushConstants meshConstants;
 			meshConstants.model = model * nodeMatrix;
