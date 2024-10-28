@@ -11,6 +11,7 @@ namespace Parfait
 		{
 			public:
 				VulkanRenderPass(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain);
+				VulkanRenderPass(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain, VkFormat colorFormat, VkFormat depthFormat);
 				~VulkanRenderPass();
 
 				const VkRenderPass& GetRenderPass() const { return m_RenderPass; }
@@ -21,7 +22,7 @@ namespace Parfait
 
 				VkRenderPass m_RenderPass;
 
-				void CreateRenderPass();
+				void CreateRenderPass(VkFormat _colorFormat, VkFormat _depthFormat);
 		};
 	}
 }

@@ -15,6 +15,7 @@ layout(push_constant) uniform PushConsts
 	mat4 model;
     int numBones;
     int boneOffset;
+    int isAnimation;
 } primitive;
 
 layout(std140, set = 1, binding = 0) readonly buffer BoneTransform

@@ -2,17 +2,20 @@
 
 namespace Parfait
 {
-	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, bool _isAnimation)
+	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, bool _isAnimation)
 		: m_VulkanContextRef(_vulkanContext),
 		m_VulkanCommandPool(_vulkanCommandPool),
 		m_Descriptor(std::make_unique<Graphics::VulkanDescriptor>(_vulkanContext)),
 		m_IsAnimation(_isAnimation)
 	{
 		m_Directory = _path.root_directory().string();
+		id = _id;
 		LoadModel(_path);
 
 		m_VertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::Vertex>>(_vulkanContext, _vulkanCommandPool, m_Vertices.data(), m_Vertices.size());
 		m_IndexBuffer = std::make_unique<Graphics::VulkanIndexBuffer>(_vulkanContext, _vulkanCommandPool, m_Indices.data(), m_Indices.size());
+
+		m_ObjectPickingVertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::ObjectPickingVertex>>(_vulkanContext, _vulkanCommandPool, m_ObjectPickingVertices.data(), m_ObjectPickingVertices.size());
 
 		if (m_BoneVertices.size() > 0)
 		{
@@ -63,6 +66,19 @@ namespace Parfait
 		// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
 		vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
 		vkCmdDrawIndexed(commandBuffer, m_BoneIndices.size(), 1, 0, 0, 0);
+	}
+	void Model::DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
+	{
+		m_PipelineLayoutRef = _pipelineLayout;
+
+		const VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_ObjectPickingVertexBuffer->GetBuffer(), offsets);
+		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+		for (Node* node : m_Nodes)
+		{
+			DrawPickingNode(commandBuffer, node);
+		}
 	}
 
 	void Model::LoadModel(const std::filesystem::path& _path)
@@ -208,8 +224,10 @@ namespace Parfait
 			{
 				vertex.uv = glm::vec2(0.0f, 0.0f);
 			}
+			vertex.color = glm::vec3(1.0f);
 
 			m_Vertices.push_back(vertex);
+			m_ObjectPickingVertices.push_back({ vertex.position, id });
 		}
 		primitive.materialIndex = _mesh->mMaterialIndex;
 
@@ -254,6 +272,7 @@ namespace Parfait
 			meshConstants.model = model * nodeMatrix;
 			meshConstants.numBones = m_BoneCounter;
 			meshConstants.boneOffset = m_BoneTransformOffset;
+			meshConstants.isAnimation = m_IsAnimation;
 
 			// Pass the final matrix to the vertex shader using push constants
 			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);
@@ -271,6 +290,45 @@ namespace Parfait
 		for (Node* child : _node->children) 
 		{
 			DrawNode(commandBuffer, child);
+		}
+	}
+	void Model::DrawPickingNode(VkCommandBuffer commandBuffer, Node* _node)
+	{
+		if (_node->mesh.primitives.size() > 0)
+		{
+			// Pass the node's matrix via push constants
+			// Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
+			glm::mat4 nodeMatrix = _node->matrix;
+			Node* currentParent = _node->parent;
+			while (currentParent)
+			{
+				nodeMatrix = currentParent->matrix * nodeMatrix;
+				currentParent = currentParent->parent;
+			}
+
+			glm::mat4 model = glm::mat4(1.0f);
+			model *= glm::translate(glm::mat4(1.0f), position);
+			model *= glm::toMat4(glm::quat(glm::radians(rotation)));
+			model *= glm::scale(glm::mat4(1.0f), scale);
+
+			glm::mat4 modelPushConst = model * nodeMatrix;
+
+			// Pass the final matrix to the vertex shader using push constants
+			// vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &nodeMatrix);
+			for (Primitive primitive : _node->mesh.primitives)
+			{
+				if (primitive.indexCount > 0)
+				{
+					//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
+					vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &modelPushConst);
+
+					vkCmdDrawIndexed(commandBuffer, primitive.indexCount, 1, primitive.firstIndex, 0, 0);
+				}
+			}
+		}
+		for (Node* child : _node->children)
+		{
+			DrawPickingNode(commandBuffer, child);
 		}
 	}
 
@@ -293,7 +351,6 @@ namespace Parfait
 				return;
 			}
 		}
-		//assert(0);
 	}
 	void Model::ExtractBoneWeightForVertices(std::vector<Graphics::Vertex>& _vertices, uint32_t _startIdx, aiMesh* _mesh, const aiScene* _scene)
 	{
@@ -333,18 +390,6 @@ namespace Parfait
 				SetVertexBoneData(_vertices[_startIdx + vertexId], boneID, weight);
 			}
 		}
-
-		/*
-		for (int boneIndex = 0; boneIndex < _mesh->mNumBones; ++boneIndex)
-		{
-			aiNode* node = _mesh->mBones[boneIndex]->mNode;
-			if (m_BoneInfoMap.find(node->mParent->mName.C_Str()) != m_BoneInfoMap.end())
-			{
-				m_BoneVertices.push_back({ glm::vec3(AssimpGLMHelpers::ConvertMatrixToGLMFormat(node->mParent->mTransformation) * glm::inverse(m_BoneInfoMap[node->mParent->mName.C_Str()].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f} });
-				m_BoneVertices.push_back({ glm::vec3(AssimpGLMHelpers::ConvertMatrixToGLMFormat(node->mTransformation) * glm::inverse(m_BoneInfoMap[node->mName.C_Str()].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f}});
-			}
-		}
-		*/
 	}
 
 	std::string Model::GetDirectory(const std::filesystem::path& _path)

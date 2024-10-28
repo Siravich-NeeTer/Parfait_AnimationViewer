@@ -276,5 +276,7 @@
     <None Include="Shaders\bone.vert" />
     <None Include="Shaders\grid.frag" />
     <None Include="Shaders\grid.vert" />
+    <None Include="Shaders\objectPicking.frag" />
+    <None Include="Shaders\objectPicking.vert" />
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@ layout(push_constant) uniform PushConsts
 	mat4 model;
     int numBones;
     int boneOffset;
+    int isAnimation;
 } primitive;
 
 layout(location = 0) out vec3 fragColor;
@@ -35,24 +36,25 @@ void main()
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
     int cnt = 0;
-    bool isBoneValid = false;
-    for(int i = 0; i < MAX_BONE_INFLUENCE; i++)
+    if(primitive.isAnimation != 0)
     {
-        if(inBoneIDs[i] == -1)
-            continue;
-        if(inBoneIDs[i] >= primitive.numBones)
+        for(int i = 0; i < MAX_BONE_INFLUENCE; i++)
         {
-            totalPosition += vec4(inPosition, 1.0f);
-            break;
-        }
+            if(inBoneIDs[i] == -1)
+                continue;
+            if(inBoneIDs[i] >= primitive.numBones)
+            {
+                totalPosition += vec4(inPosition, 1.0f);
+                break;
+            }
 
-        vec4 localPosition = boneTransform.bone[primitive.boneOffset + inBoneIDs[i]] * vec4(inPosition, 1.0f);
-        totalPosition += localPosition * inWeights[i];
-        totalNormal += mat3(boneTransform.bone[primitive.boneOffset + inBoneIDs[i]]) * inNormal;
-        cnt++;
-        isBoneValid = true;
+            vec4 localPosition = boneTransform.bone[primitive.boneOffset + inBoneIDs[i]] * vec4(inPosition, 1.0f);
+            totalPosition += localPosition * inWeights[i];
+            totalNormal += mat3(boneTransform.bone[primitive.boneOffset + inBoneIDs[i]]) * inNormal;
+            cnt++;
+        }
     }
-    if(!isBoneValid)
+    else
     {
         totalNormal = inNormal;
         cnt = 1;

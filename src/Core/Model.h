@@ -43,11 +43,13 @@ namespace Parfait
 	class Model : public Object
 	{
 		public:
-			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, bool _isAnimation = false);
+			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, bool _isAnimation = false);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+			void DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
 			void SetBoneTransformOffset(int offset) { m_BoneTransformOffset = offset; }
+			void SetIsAnimation(bool active) { m_IsAnimation = active; }
 
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
 			int& GetBoneCount() { return m_BoneCounter; }
@@ -93,6 +95,8 @@ namespace Parfait
 			std::vector<Graphics::BoneVertex> m_BoneVertices;
 			std::vector<uint32_t> m_BoneIndices;
 
+			std::vector<Graphics::ObjectPickingVertex> m_ObjectPickingVertices;
+
 			std::vector<Node*> m_Nodes;
 			std::map<std::string, BoneInfo> m_BoneInfoMap;
 			int m_BoneCounter = 0;
@@ -110,12 +114,15 @@ namespace Parfait
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>> m_BoneVertexBuffer;
 			std::unique_ptr<Graphics::VulkanIndexBuffer> m_BoneIndexBuffer;
 
+			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::ObjectPickingVertex>> m_ObjectPickingVertexBuffer;
+
 
 			void LoadModel(const std::filesystem::path& _path);
 			void ProcessNode(aiNode* _node, const aiScene* _scene, Node* _parent);
 			void ProcessMesh(aiMesh* _mesh, const aiScene* _scene, Node* _currentNode);
 
 			void DrawNode(VkCommandBuffer commandBuffer, Node* _node);
+			void DrawPickingNode(VkCommandBuffer commandBuffer, Node* _node);
 
 			void SetVertexBoneDataToDefault(Graphics::Vertex& _vertex);
 			void SetVertexBoneData(Graphics::Vertex& _vertex, int _boneID, float _weight);

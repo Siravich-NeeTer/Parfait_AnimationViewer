@@ -13,12 +13,23 @@ namespace Parfait
 
 			// Model Loading
 			// -------------------------------------------------
-			LoadAnimation("Models/Zombie.dae");
+			LoadModel("Models/Zombie.dae");
+			//LoadAnimation("Models/Fox.gltf");
+			//LoadModel("Models/viking_room.obj");
 			// -------------------------------------------------
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
+
+
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
+			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageView, nullptr);
+			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageMemory, nullptr);
+
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
+			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageView, nullptr);
+			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageMemory, nullptr);
 
 			DestroyDepthResources();
 			DestroySyncObject();
@@ -97,6 +108,9 @@ namespace Parfait
 
 			UpdateUniform(m_CurrentFrame);
 			UpdateAnimation(m_CurrentFrame);
+			SelectObjectComponent* selectObject = static_cast<SelectObjectComponent*>(m_SelectedObject[m_CurrentFrame]);
+			SelectObjectComponent* selectObjectA = static_cast<SelectObjectComponent*>(m_SelectedObject[0]);
+			SelectObjectComponent* selectObjectB = static_cast<SelectObjectComponent*>(m_SelectedObject[1]);
 
 			vkResetFences(m_VkContextRef.GetLogicalDevice(), 1, &m_InflightFence[m_CurrentFrame]);
 
@@ -160,14 +174,12 @@ namespace Parfait
 			}
 
 			ImVec2 currentOffscreenSize;
-			/*
-			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
-			*/
+			ImVec2 currentViewportPosition;
 			{
 				VkRenderPassBeginInfo renderPassInfo{};
 				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 				renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
-				renderPassInfo.framebuffer = m_Framebuffers->GetFramebuffers()[imageIndex];
+				renderPassInfo.framebuffer = m_Framebuffers[imageIndex]->GetFramebuffer();
 				renderPassInfo.renderArea.offset = { 0, 0 };
 				renderPassInfo.renderArea.extent = m_SurfaceSwapchain->GetExtent();
 
@@ -189,13 +201,10 @@ namespace Parfait
 				ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
 				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
-				ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-
 				ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight() });
 				currentOffscreenSize = ImGui::GetWindowSize();
 				m_IsViewportFocus = ImGui::IsWindowHovered() || isCameraMove;
-
-				ImGui::EndChild();
+				currentViewportPosition = ImGui::GetCursorScreenPos();
 				ImGui::End();
 
 				int cnt = 0;
@@ -235,15 +244,80 @@ namespace Parfait
 
 				ImGui::End();
 
+				ImGui::ShowDemoWindow();
+
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
+
+			if (m_IsViewportFocus && Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_LEFT))
+			{
+				m_IsUpdateSelectedObject = true;
+
+				glm::vec2 mouse {
+				Input::mouseX - currentViewportPosition.x,
+				(m_OffscreenRenderer->GetHeight() + Input::mouseY) - currentViewportPosition.y};
+
+				
+				selectObject->id = 0;
+				selectObject->minDepth = std::numeric_limits<float>::max();
+
+				VkClearValue clearValues[2];
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				//begin renderpass
+				VkRenderPassBeginInfo object_picking_renderpass_begin_info{};
+				object_picking_renderpass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				object_picking_renderpass_begin_info.renderPass = m_ObjectPickingRenderPass->GetRenderPass();
+				object_picking_renderpass_begin_info.framebuffer = m_ObjectPickingFramebuffer->GetFramebuffer();
+				object_picking_renderpass_begin_info.renderArea.offset = { 0,0 };
+				object_picking_renderpass_begin_info.renderArea.extent = { m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight() };
+				object_picking_renderpass_begin_info.clearValueCount = 2;
+				object_picking_renderpass_begin_info.pClearValues = clearValues;
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &object_picking_renderpass_begin_info,
+					VK_SUBPASS_CONTENTS_INLINE);
+
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_ObjectPickingPipeline->GetPipeline());
+
+				//render all renderables
+				for (size_t j = 0; j < m_Models.size(); j++)
+				{
+					VkViewport viewport{};
+					viewport.x = 0.0f;
+					viewport.y = 0.0f;
+					viewport.width = (float)m_OffscreenRenderer->GetWidth();
+					viewport.height = (float)m_OffscreenRenderer->GetHeight();
+					viewport.minDepth = 0.0f;
+					viewport.maxDepth = 1.0f;
+					vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
+
+					//the dynamic pipeline state means we have to set the scissor before each draw
+					VkRect2D rect{};
+					rect.offset.x = mouse.x > 0 && mouse.x < m_OffscreenRenderer->GetWidth() ? mouse.x : 0;
+					rect.offset.y = mouse.y > 0 && mouse.y < m_OffscreenRenderer->GetHeight() ? mouse.y : 0;
+					rect.extent = { 1, 1 };
+
+					//can only be used with a dynamic scissor state
+					vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &rect);
+
+					//bind descriptor sets for current object
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+						m_ObjectPickingPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame],
+						0, nullptr);
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+						m_ObjectPickingPipeline->GetPipelineLayout(), 1, 1, &m_ObjectPickingDescriptor->GetDescriptorSets(0)[m_CurrentFrame],
+						0, nullptr);
+
+					m_Models[j]->DrawPicking(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_ObjectPickingPipeline->GetPipelineLayout());
+				}
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+			}
+
 			m_CommandBuffers[m_CurrentFrame]->End();
-			/*
-			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
-			*/
 
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -294,7 +368,27 @@ namespace Parfait
 			{
 				vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 				m_OffscreenRenderer->ReCreateFrameBuffer(currentOffscreenSize.x, currentOffscreenSize.y);
+
+				vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
+				vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageView, nullptr);
+				vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageMemory, nullptr);
+
+				vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
+				vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageView, nullptr);
+				vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageMemory, nullptr);
+
+				CreateObjectPicking();
 				m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+
+			if (m_IsUpdateSelectedObject)
+			{
+				std::cout << "Current Frame: " << m_CurrentFrame << " | " << selectObjectA->id << " " << selectObjectB->id << "\n";
+				//std::cout << "Result: " << selectObject->id << "\n";
+				m_SelectedObjectID = selectObject->id;
+				std::cout << "Update Object ID: " << m_SelectedObjectID << "\n";
+
+				m_IsUpdateSelectedObject = false;
 			}
 			m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 		}
@@ -329,7 +423,11 @@ namespace Parfait
 			m_CommandPool = std::make_unique<VulkanCommandPool>(m_VkContextRef);
 
 			CreateDepthResources();
-			m_Framebuffers = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
+			m_Framebuffers.resize(m_SurfaceSwapchain->GetSwapchainImageViews().size());
+			for (size_t i = 0; i < m_Framebuffers.size(); i++)
+			{
+				m_Framebuffers[i] = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{ m_SurfaceSwapchain->GetSwapchainImageViews()[i], m_DepthImageView });
+			}
 
 			// Uniform Buffer
 			m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -399,6 +497,8 @@ namespace Parfait
 				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 				VK_POLYGON_MODE_FILL,
 				false);
+
+			CreateObjectPicking();
 		}
 
 		void VulkanWindowResources::CreateCommandBuffers(uint32_t _size)
@@ -503,6 +603,54 @@ namespace Parfait
 			ImGui_ImplVulkan_Init(&init_info);
 			ImGui_ImplVulkan_CreateFontsTexture();
 		}
+		void VulkanWindowResources::CreateObjectPicking()
+		{
+			//Create VKImage with the VK_FORMAT_R32_SFLOAT format for the color attachment 
+			CreateImage(m_VkContextRef, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(),
+				VK_FORMAT_R32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				m_ObjectPickingColorImage, m_ObjectPickingColorImageMemory);
+
+			m_ObjectPickingColorImageView = CreateImageView(m_VkContextRef, m_ObjectPickingColorImage, VK_FORMAT_R32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+
+			//Create VKImage with the VK_FORMAT_R32_SFLOAT format for the depth attachment 
+			CreateImage(m_VkContextRef, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(),
+				FindDepthFormat(m_VkContextRef), VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				m_ObjectPickingDepthImage, m_ObjectPickingDepthImageMemory);
+
+			m_ObjectPickingDepthImageView = CreateImageView(m_VkContextRef, m_ObjectPickingDepthImage, FindDepthFormat(m_VkContextRef), VK_IMAGE_ASPECT_DEPTH_BIT);
+
+			//object picking pass
+			m_ObjectPickingRenderPass = std::make_unique<VulkanRenderPass>(m_VkContextRef, *m_SurfaceSwapchain, VK_FORMAT_R32_SFLOAT, FindDepthFormat(m_VkContextRef));
+			m_ObjectPickingFramebuffer = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_ObjectPickingRenderPass, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(), std::vector<VkImageView>{ m_ObjectPickingColorImageView, m_ObjectPickingDepthImageView });
+
+			m_ObjectPickingDescriptor = std::make_unique<VulkanDescriptor>(m_VkContextRef); 
+			m_ObjectPickingDescriptor->AddDescriptorSets({
+				{ 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr }
+				});
+			m_ObjectPickingDescriptor->Init();
+			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				m_ObjectPickingBuffers[i] = std::make_unique<VulkanBuffer>(m_VkContextRef, *m_CommandPool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(SelectObjectComponent));
+				m_ObjectPickingDescriptor->WriteStorageBuffer(0, m_ObjectPickingBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(SelectObjectComponent)), i);
+				m_ObjectPickingDescriptor->UpdateDescriptorSet();
+
+				vkMapMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(SelectObjectComponent)), 0, &m_SelectedObject[i]);
+			}
+
+			m_ObjectPickingPipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_ObjectPickingRenderPass->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout> { m_Descriptor->GetDescriptorSetLayout(0), m_ObjectPickingDescriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path> { "Shaders/objectPicking.vert", "Shaders/objectPicking.frag" },
+				ObjectPickingVertex::getBindingDescription(),
+				ObjectPickingVertex::getAttributeDescriptions(),
+				sizeof(glm::mat4), 
+				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
+				VK_POLYGON_MODE_FILL);
+		}
 
 		void VulkanWindowResources::RecreateSwapchain()
 		{
@@ -523,7 +671,9 @@ namespace Parfait
 			CreateDepthResources();
 
 			// Re-Bind depth attachment to Framebuffer
-			m_Framebuffers->RecreateFramebuffer({ m_DepthImageView });
+			for(size_t i = 0; i < m_Framebuffers.size(); i++)
+				m_Framebuffers[i]->RecreateFramebuffer(*m_SurfaceSwapchain, 
+					{ m_SurfaceSwapchain->GetSwapchainImageViews()[i], m_DepthImageView });
 		}
 
 		void VulkanWindowResources::DestroySyncObject()
@@ -563,17 +713,25 @@ namespace Parfait
 			app->m_IsFramebufferResize = true;
 		}
 
-		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
+		Model* VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
 		{
-			m_Models.push_back(std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path));
-			m_Models.back()->SetBoneTransformOffset(m_TotalBoneTransform);
-			m_TotalBoneTransform += m_Models.back()->GetBoneCount();
+			std::unique_ptr<Model> newModel = std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID++);
+
+			newModel->SetBoneTransformOffset(m_TotalBoneTransform);
+			m_TotalBoneTransform += newModel->GetBoneCount();
+
+			m_Models.push_back(std::move(newModel));
+			return m_Models.back().get();
 		}
 		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path)
 		{
-			LoadModel(_path);
-			m_Animations.push_back(std::make_unique<Animation>(_path.string(), m_Models.back().get()));
-			m_Animators.push_back(std::make_unique<Animator>(m_Animations.back().get()));
+			Model* newModel = LoadModel(_path);
+			newModel->SetIsAnimation(true);
+			std::unique_ptr<Animation> newAnimation = std::make_unique<Animation>(_path.string(), newModel);
+			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newAnimation.get());
+
+			m_Animations.push_back(std::move(newAnimation));
+			m_Animators.push_back(std::move(newAnimator));
 		}
 	}
 }

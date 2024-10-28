@@ -69,7 +69,7 @@ namespace Parfait
 
 				std::unique_ptr<VulkanSurfaceSwapchain> m_SurfaceSwapchain;
 				std::unique_ptr<VulkanRenderPass> m_RenderPass;
-				std::unique_ptr<VulkanFramebuffer> m_Framebuffers;
+				std::vector<std::unique_ptr<VulkanFramebuffer>> m_Framebuffers;
 				std::unique_ptr<VulkanCommandPool> m_CommandPool;
 				std::vector<std::unique_ptr<VulkanCommandBuffer>> m_CommandBuffers;
 				std::unique_ptr<VulkanDescriptor> m_Descriptor;
@@ -93,6 +93,7 @@ namespace Parfait
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
+				int m_LastObjectID = 1;
 				
 				// Time Counter
 				float m_Time;
@@ -112,6 +113,29 @@ namespace Parfait
 				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;	// Draw Bone Animation
 				std::unique_ptr<VulkanGraphicsPipeline> m_GridPipeline;	// Draw Infinite Grid in Editor
 
+				// Object Picking
+				VkImage m_ObjectPickingColorImage;
+				VkDeviceMemory m_ObjectPickingColorImageMemory;
+				VkImageView m_ObjectPickingColorImageView;
+				VkImage m_ObjectPickingDepthImage;
+				VkDeviceMemory m_ObjectPickingDepthImageMemory;
+				VkImageView m_ObjectPickingDepthImageView;
+
+				std::unique_ptr<VulkanFramebuffer> m_ObjectPickingFramebuffer;
+				std::unique_ptr<VulkanRenderPass> m_ObjectPickingRenderPass;
+				std::unique_ptr<VulkanGraphicsPipeline> m_ObjectPickingPipeline;
+				std::unique_ptr<VulkanDescriptor> m_ObjectPickingDescriptor;
+				std::unique_ptr<VulkanBuffer> m_ObjectPickingBuffers[MAX_FRAMES_IN_FLIGHT];
+				struct SelectObjectComponent
+				{
+					uint32_t id;
+					float minDepth;
+				};
+				void* m_SelectedObject[MAX_FRAMES_IN_FLIGHT];
+				bool m_IsUpdateSelectedObject;
+				uint32_t m_SelectedObjectID;
+
+
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;
@@ -125,6 +149,7 @@ namespace Parfait
 				void CreateSyncObject(uint32_t _size);
 				void CreateDepthResources();
 				void CreateImGui();
+				void CreateObjectPicking();
 
 				void RecreateSwapchain();
 
@@ -135,7 +160,7 @@ namespace Parfait
 				void BindWindowEvents();
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
-				void LoadModel(const std::filesystem::path& _path);
+				Model* LoadModel(const std::filesystem::path& _path);
 				void LoadAnimation(const std::filesystem::path& _path);
 		};
 	}

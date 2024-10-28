@@ -7,17 +7,23 @@ namespace Parfait
 		VulkanRenderPass::VulkanRenderPass(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain)
 			: m_VulkanContextRef(_vulkanContext), m_VulkanSurfaceSwapchainRef(_vulkanSurfaceSwapchain)
 		{
-			CreateRenderPass();
+			CreateRenderPass(m_VulkanSurfaceSwapchainRef.GetSurfaceFormat().format, FindDepthFormat(_vulkanContext));
+		}
+
+		VulkanRenderPass::VulkanRenderPass(const VulkanContext& _vulkanContext, const VulkanSurfaceSwapchain& _vulkanSurfaceSwapchain, VkFormat _colorFormat, VkFormat _depthFormat)
+			: m_VulkanContextRef(_vulkanContext), m_VulkanSurfaceSwapchainRef(_vulkanSurfaceSwapchain)
+		{
+			CreateRenderPass(_colorFormat, _depthFormat);
 		}
 		VulkanRenderPass::~VulkanRenderPass()
 		{
 			vkDestroyRenderPass(m_VulkanContextRef.GetLogicalDevice(), m_RenderPass, nullptr);
 		}
 
-		void VulkanRenderPass::CreateRenderPass()
+		void VulkanRenderPass::CreateRenderPass(VkFormat _colorFormat, VkFormat _depthFormat)
 		{
 			VkAttachmentDescription colorAttachment{};
-			colorAttachment.format = m_VulkanSurfaceSwapchainRef.GetSurfaceFormat().format;
+			colorAttachment.format = _colorFormat;
 			colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -27,7 +33,7 @@ namespace Parfait
 			colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 			VkAttachmentDescription depthAttachment{};
-			depthAttachment.format = FindDepthFormat(m_VulkanContextRef);
+			depthAttachment.format = _depthFormat;
 			depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

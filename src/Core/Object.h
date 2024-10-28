@@ -11,9 +11,12 @@ namespace Parfait
 			const glm::vec3 GetRotation() const { return rotation; }
 			const glm::vec3 GetScale() const { return scale; }
 
+			uint32_t id = std::numeric_limits<uint32_t>::max();
+
 			glm::vec3 position = glm::vec3(0.0f);
 			glm::vec3 rotation = glm::vec3(0.0f);
 			glm::vec3 scale = glm::vec3(1.0f);
+
 		protected:
 	};
 }
