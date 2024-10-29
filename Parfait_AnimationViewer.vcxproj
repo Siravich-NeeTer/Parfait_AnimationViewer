@@ -12,8 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External Libraries\glad\src\glad.c" />
+    <ClCompile Include="External Libraries\imgui\extensions\GraphEditor.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImCurveEdit.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImGradient.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImGuizmo.cpp" />
     <ClCompile Include="External Libraries\imgui\extensions\imgui_combo.cpp" />
     <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImSequencer.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_demo.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_draw.cpp" />
@@ -49,10 +54,16 @@
     <ClCompile Include="src\Renderer\VulkanWindowResources.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="External Libraries\imgui\extensions\GraphEditor.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImCurveEdit.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImGradient.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImGuizmo.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_combo.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImSequencer.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImZoomSlider.h" />
     <ClInclude Include="External Libraries\imgui\imconfig.h" />
     <ClInclude Include="External Libraries\imgui\imgui.h" />
     <ClInclude Include="External Libraries\imgui\imgui_extension.h" />
