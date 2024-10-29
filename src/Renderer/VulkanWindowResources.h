@@ -164,8 +164,8 @@ namespace Parfait
 				void BindWindowEvents();
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
-				Model* LoadModel(const std::filesystem::path& _path);
-				void LoadAnimation(const std::filesystem::path& _path);
+				Model* LoadModel(const std::filesystem::path& _path, const std::string& _objectName = "");
+				void LoadAnimation(const std::filesystem::path& _path, const std::string& _objectName = "");
 		};
 	}
 }

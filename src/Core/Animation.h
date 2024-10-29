@@ -27,6 +27,7 @@ namespace Parfait
 
             Bone* FindBone(const std::string& _name);
 
+            Model* GetModel() const { return m_pModel; }
             float GetTicksPerSecond() const { return m_TicksPerSecond; }
             float GetDuration() const { return m_Duration; }
             const AssimpNodeData& GetRootNode() const { return m_RootNode; }
@@ -40,6 +41,7 @@ namespace Parfait
             AssimpNodeData m_RootNode;
             std::map<std::string, BoneInfo> m_BoneInfoMap;
             bool m_IsAnimationValid = false;
+            Model* m_pModel;
 
             void ReadMissingBones(const aiAnimation* _animation, Model& _model);
             void ReadHeirarchyData(AssimpNodeData& _dest, const aiNode* _src);

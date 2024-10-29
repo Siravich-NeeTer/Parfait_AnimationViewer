@@ -7,6 +7,11 @@ namespace Parfait
 	class Object
 	{
 		public:
+			Object(uint32_t _id, const std::string& _objectName)
+				: id(_id), name(_objectName)
+			{
+			}
+
 			const glm::vec3 GetPosition() const { return position; }
 			const glm::vec3 GetRotation() const { return rotation; }
 			const glm::vec3 GetScale() const { return scale; }
@@ -23,6 +28,7 @@ namespace Parfait
 			}
 
 			uint32_t id = std::numeric_limits<uint32_t>::max();
+			std::string name;
 
 			glm::vec3 position = glm::vec3(0.0f);
 			glm::vec3 rotation = glm::vec3(0.0f);

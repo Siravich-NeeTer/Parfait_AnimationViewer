@@ -4,6 +4,8 @@ namespace Parfait
 {
     Animation::Animation(const std::string& _animationPath, Model* _model)
     {
+        m_pModel = _model;
+
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(_animationPath, aiProcess_Triangulate);
         assert(scene && scene->mRootNode);

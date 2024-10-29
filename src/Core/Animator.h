@@ -14,6 +14,7 @@ namespace Parfait
 
             void CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform);
 
+            const Animation* GetAnimation() const { return m_CurrentAnimation; }
             const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices;  }
 
         private:

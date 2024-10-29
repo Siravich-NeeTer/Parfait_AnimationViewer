@@ -43,7 +43,7 @@ namespace Parfait
 	class Model : public Object
 	{
 		public:
-			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, bool _isAnimation = false);
+			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, const std::string& _objectName, bool _isAnimation = false);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
@@ -52,6 +52,7 @@ namespace Parfait
 			void SetIsAnimation(bool active) { m_IsAnimation = active; }
 
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
+			int GetBoneTransformOffset() const { return m_BoneTransformOffset; }
 			int& GetBoneCount() { return m_BoneCounter; }
 
 			const Graphics::VulkanDescriptor& GetDescriptor() const { return *m_Descriptor; }

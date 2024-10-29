@@ -458,10 +458,10 @@ namespace Parfait
 		}
 		void VulkanWindowResources::UpdateAnimation(uint32_t _currentFrame)
 		{
-			int currentBoneTransformCount = 0;
 			BoneTransform* boneTransform = static_cast<BoneTransform*>(m_FrameData[_currentFrame].transformData);
 			for (auto& animator : m_Animators)
 			{
+				int currentBoneTransformCount = animator->GetAnimation()->GetModel()->GetBoneTransformOffset();
 				auto& transforms = animator->GetFinalBoneMatrices();
 				for (int i = 0; i < transforms.size(); ++i)
 				{
@@ -768,9 +768,9 @@ namespace Parfait
 			app->m_IsFramebufferResize = true;
 		}
 
-		Model* VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
+		Model* VulkanWindowResources::LoadModel(const std::filesystem::path& _path, const std::string& _objectName)
 		{
-			std::unique_ptr<Model> newModel = std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID++);
+			std::unique_ptr<Model> newModel = std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID++, _objectName == "" ? "untitled_" + std::to_string(m_LastObjectID) : _objectName);
 
 			newModel->SetBoneTransformOffset(m_TotalBoneTransform);
 			m_TotalBoneTransform += newModel->GetBoneCount();
@@ -778,9 +778,9 @@ namespace Parfait
 			m_Models.push_back(std::move(newModel));
 			return m_Models.back().get();
 		}
-		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path)
+		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path, const std::string& _objectName)
 		{
-			Model* newModel = LoadModel(_path);
+			Model* newModel = LoadModel(_path, _objectName);
 			newModel->SetIsAnimation(true);
 			std::unique_ptr<Animation> newAnimation = std::make_unique<Animation>(_path.string(), newModel);
 			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newAnimation.get());

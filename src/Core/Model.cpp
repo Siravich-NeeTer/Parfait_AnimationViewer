@@ -2,14 +2,14 @@
 
 namespace Parfait
 {
-	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, bool _isAnimation)
-		: m_VulkanContextRef(_vulkanContext),
+	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, const std::string& _objectName, bool _isAnimation)
+		: Object(_id, _objectName),
+		m_VulkanContextRef(_vulkanContext),
 		m_VulkanCommandPool(_vulkanCommandPool),
 		m_Descriptor(std::make_unique<Graphics::VulkanDescriptor>(_vulkanContext)),
 		m_IsAnimation(_isAnimation)
 	{
 		m_Directory = _path.root_directory().string();
-		id = _id;
 		LoadModel(_path);
 
 		m_VertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::Vertex>>(_vulkanContext, _vulkanCommandPool, m_Vertices.data(), m_Vertices.size());
