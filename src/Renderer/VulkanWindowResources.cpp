@@ -175,6 +175,7 @@ namespace Parfait
 
 			ImVec2 currentOffscreenSize;
 			ImVec2 currentViewportPosition;
+			ImVec2 currentCursorScreenPos;
 			{
 				VkRenderPassBeginInfo renderPassInfo{};
 				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -197,6 +198,7 @@ namespace Parfait
 				ImGui_ImplGlfw_NewFrame();
 
 				ImGui::NewFrame();
+				ImGuizmo::BeginFrame();
 
 				ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
@@ -204,8 +206,57 @@ namespace Parfait
 				ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight() });
 				currentOffscreenSize = ImGui::GetWindowSize();
 				m_IsViewportFocus = ImGui::IsWindowHovered() || isCameraMove;
-				currentViewportPosition = ImGui::GetCursorScreenPos();
+				currentViewportPosition = ImGui::GetWindowPos();
+				currentCursorScreenPos = ImGui::GetCursorScreenPos();
+				ImGuizmo::SetDrawlist();
 				ImGui::End();
+
+				ImGuiIO& io = ImGui::GetIO();
+				float st_x = currentViewportPosition.x;
+				float st_y = currentViewportPosition.y + 20;
+				ImGuizmo::SetRect(st_x, st_y, currentOffscreenSize.x, currentOffscreenSize.y);
+
+				if (m_SelectedObjectID != 0) 
+				{
+					if (Input::IsKeyBeginPressed(GLFW_KEY_W))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+					else if (Input::IsKeyBeginPressed(GLFW_KEY_E))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+					else if (Input::IsKeyBeginPressed(GLFW_KEY_R))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::SCALE;
+
+					ImGuizmo::Enable(true);
+					glm::mat view = m_Camera.GetViewMatrix();
+					glm::mat4 proj = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
+
+					ImGuizmo::Manipulate(&view[0][0],
+						&proj[0][0],
+						m_CurrentGizmoOperation,
+						ImGuizmo::WORLD,
+						&currentMat[0][0],
+						NULL,
+						NULL);
+
+					if (ImGuizmo::IsUsingAny())
+					{
+						glm::vec3 scale, position;
+						glm::quat rotation;
+
+						// Unused:
+						glm::vec3 skew;
+						glm::vec4 perspective;
+						glm::decompose(currentMat, scale, rotation, position, skew, perspective);
+						m_Models[m_SelectedObjectID - 1]->position = position;
+						m_Models[m_SelectedObjectID - 1]->rotation = glm::degrees(glm::eulerAngles(rotation));
+						m_Models[m_SelectedObjectID - 1]->scale = scale;
+
+						m_IsUsingGizmo = true;
+					}
+					else
+					{
+						m_IsUsingGizmo = false;
+					}
+				}
 
 				int cnt = 0;
 				ImGui::Begin("Model");
@@ -252,13 +303,14 @@ namespace Parfait
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
 
-			if (m_IsViewportFocus && Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_LEFT))
+			if (m_IsViewportFocus && Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_LEFT) && !m_IsUsingGizmo)
 			{
 				m_IsUpdateSelectedObject = true;
 
 				glm::vec2 mouse {
-				Input::mouseX - currentViewportPosition.x,
-				(m_OffscreenRenderer->GetHeight() + Input::mouseY) - currentViewportPosition.y};
+				Input::mouseX - currentCursorScreenPos.x,
+				(m_OffscreenRenderer->GetHeight() + Input::mouseY) - currentCursorScreenPos.y
+				};
 
 				
 				selectObject->id = 0;
@@ -387,6 +439,9 @@ namespace Parfait
 				//std::cout << "Result: " << selectObject->id << "\n";
 				m_SelectedObjectID = selectObject->id;
 				std::cout << "Update Object ID: " << m_SelectedObjectID << "\n";
+
+				if(m_SelectedObjectID != 0)
+					currentMat = m_Models[m_SelectedObjectID - 1]->GetModelMatrix();
 
 				m_IsUpdateSelectedObject = false;
 			}

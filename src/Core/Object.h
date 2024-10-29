@@ -11,6 +11,17 @@ namespace Parfait
 			const glm::vec3 GetRotation() const { return rotation; }
 			const glm::vec3 GetScale() const { return scale; }
 
+			glm::mat4 GetModelMatrix() const
+			{
+				glm::mat4 ret(1.0f);
+
+				ret = glm::translate(ret, position);
+				ret *= glm::toMat4(glm::quat(glm::radians(rotation)));
+				ret = glm::scale(ret, scale);
+
+				return ret;
+			}
+
 			uint32_t id = std::numeric_limits<uint32_t>::max();
 
 			glm::vec3 position = glm::vec3(0.0f);

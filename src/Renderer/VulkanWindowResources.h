@@ -16,6 +16,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_vulkan.h>
+#include <imgui/extensions/ImGuizmo.h>
 
 #include <chrono>
 #include <windows.h>
@@ -133,7 +134,10 @@ namespace Parfait
 				};
 				void* m_SelectedObject[MAX_FRAMES_IN_FLIGHT];
 				bool m_IsUpdateSelectedObject;
+				bool m_IsUsingGizmo;
+				ImGuizmo::OPERATION m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 				uint32_t m_SelectedObjectID;
+				glm::mat4 currentMat = glm::mat4(1.0f);
 
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
