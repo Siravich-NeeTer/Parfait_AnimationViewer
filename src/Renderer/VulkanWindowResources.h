@@ -141,7 +141,7 @@ namespace Parfait
 				glm::mat4 currentMat = glm::mat4(1.0f);
 
 				// TODO: TEMP
-				Curve* curve, *curve1;
+				std::unique_ptr<Curve> curve;
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;

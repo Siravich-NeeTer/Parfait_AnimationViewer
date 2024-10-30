@@ -557,7 +557,7 @@ namespace Parfait
 				false);
 
 			// TODO: Remove this temp
-			curve = new Curve(m_VkContextRef, *m_CommandPool);
+			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
 			curve->AddPoint({ -1.0f, 0.0f,  0.0f });
 			curve->AddPoint({ -0.5f, 0.0f,  1.0f });
 			curve->AddPoint({  0.5f, 0.0f, -1.0f });
