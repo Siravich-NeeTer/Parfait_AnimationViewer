@@ -150,6 +150,9 @@
     <ClCompile Include="External Libraries\imgui\extensions\ImGradient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Core\Curve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External Libraries\imgui\imconfig.h">
@@ -296,6 +299,9 @@
     <ClInclude Include="External Libraries\imgui\extensions\ImGradient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\Curve.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
@@ -311,5 +317,7 @@
     <None Include="Shaders\grid.vert" />
     <None Include="Shaders\objectPicking.frag" />
     <None Include="Shaders\objectPicking.vert" />
+    <None Include="Shaders\Curve.frag" />
+    <None Include="Shaders\Curve.vert" />
   </ItemGroup>
 </Project>

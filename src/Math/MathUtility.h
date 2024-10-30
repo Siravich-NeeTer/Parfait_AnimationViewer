@@ -58,5 +58,20 @@ namespace Parfait
             ret.z = a.z * std::pow(b.z / a.z, t);
             return ret;
         }
+
+        static glm::vec3 CubicBezier(const glm::vec3& P0,
+            const glm::vec3& P1,
+            const glm::vec3& P2,
+            const glm::vec3& P3,
+            float t)
+        {
+            // 1 - t
+            float _1_t = 1.0f - t;
+            
+            return (_1_t * _1_t * _1_t) * P0 +
+                3.0f * (_1_t * _1_t) * t * P1 +
+                3.0f * _1_t * t * t * P2 +
+                t * t * t * P3;
+        }
 	}
 }

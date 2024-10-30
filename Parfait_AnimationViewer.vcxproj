@@ -31,6 +31,7 @@
     <ClCompile Include="src\Core\Animation.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
     <ClCompile Include="src\Core\Bone.cpp" />
+    <ClCompile Include="src\Core\Curve.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\Model.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
@@ -81,6 +82,7 @@
     <ClInclude Include="src\Core\Model.h" />
     <ClInclude Include="src\Core\Object.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
+    <ClInclude Include="src\Core\Curve.h" />
     <ClInclude Include="src\Math\AssimpGLMHelpers.h" />
     <ClInclude Include="src\Math\MathUtility.h" />
     <ClInclude Include="src\Math\Quaternion.h" />
@@ -111,6 +113,8 @@
     <None Include="Shaders\anim.vert" />
     <None Include="Shaders\bone.frag" />
     <None Include="Shaders\bone.vert" />
+    <None Include="Shaders\Curve.frag" />
+    <None Include="Shaders\Curve.vert" />
     <None Include="Shaders\grid.frag" />
     <None Include="Shaders\grid.vert" />
     <None Include="Shaders\mesh.frag" />

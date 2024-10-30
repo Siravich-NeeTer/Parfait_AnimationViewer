@@ -22,13 +22,12 @@ namespace Parfait
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 
-
-			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
 			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageView, nullptr);
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
 			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageMemory, nullptr);
 
-			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
 			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageView, nullptr);
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
 			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageMemory, nullptr);
 
 			DestroyDepthResources();
@@ -170,6 +169,10 @@ namespace Parfait
 					}
 				}
 
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				curve->Render(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), curvePipeline->GetPipelineLayout());
+				
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
 
@@ -550,6 +553,24 @@ namespace Parfait
 				std::vector<VkVertexInputAttributeDescription>{},
 				0,
 				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+				VK_POLYGON_MODE_FILL,
+				false);
+
+			// TODO: Remove this temp
+			curve = new Curve(m_VkContextRef, *m_CommandPool);
+			curve->AddPoint({ -1.0f, 0.0f,  0.0f });
+			curve->AddPoint({ -0.5f, 0.0f,  1.0f });
+			curve->AddPoint({  0.5f, 0.0f, -1.0f });
+			curve->AddPoint({  1.0f, 0.0f,  0.0f });
+
+			curvePipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/Curve.vert", "Shaders/Curve.frag" },
+				PointVertex::getBindingDescription(),
+				PointVertex::getAttributeDescriptions(),
+				sizeof(glm::mat4),
+				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
 				VK_POLYGON_MODE_FILL,
 				false);
 

@@ -27,6 +27,7 @@
 #include "Core/Model.h"
 #include "Core/Animation.h"
 #include "Core/Animator.h"
+#include "Core/Curve.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -139,6 +140,9 @@ namespace Parfait
 				uint32_t m_SelectedObjectID;
 				glm::mat4 currentMat = glm::mat4(1.0f);
 
+				// TODO: TEMP
+				Curve* curve, *curve1;
+				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;

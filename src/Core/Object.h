@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Parfait
 {
@@ -12,11 +14,11 @@ namespace Parfait
 			{
 			}
 
-			const glm::vec3 GetPosition() const { return position; }
-			const glm::vec3 GetRotation() const { return rotation; }
-			const glm::vec3 GetScale() const { return scale; }
+			const glm::vec3& GetPosition() const { return position; }
+			const glm::vec3& GetRotation() const { return rotation; }
+			const glm::vec3& GetScale() const { return scale; }
 
-			glm::mat4 GetModelMatrix() const
+			const glm::mat4& GetModelMatrix() const
 			{
 				glm::mat4 ret(1.0f);
 
