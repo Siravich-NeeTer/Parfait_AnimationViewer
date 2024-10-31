@@ -92,5 +92,16 @@ namespace Parfait
             }
             return positionList.back();
         }
+        static glm::vec3 CatmullRom(const glm::vec3& P0,
+            const glm::vec3& P1,
+            const glm::vec3& P2,
+            const glm::vec3& P3,
+            float t)
+        {
+            return 0.5f * ((2.0f * P1) +
+                (-P0 + P2) * t +
+                (2.0f * P0 - 5.0f * P1 + 4.0f * P2 - P3) * t * t +
+                (-P0 + 3.0f * P1 - 3.0f * P2 + P3) * t * t * t);
+        }
 	}
 }

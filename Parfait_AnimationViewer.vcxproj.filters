@@ -302,6 +302,9 @@
     <ClInclude Include="src\Core\Curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Renderer\Utilities\PrimitiveMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="fonts\TMP.TTF" />
@@ -319,5 +322,7 @@
     <None Include="Shaders\objectPicking.vert" />
     <None Include="Shaders\Curve.frag" />
     <None Include="Shaders\Curve.vert" />
+    <None Include="Shaders\default.frag" />
+    <None Include="Shaders\default.vert" />
   </ItemGroup>
 </Project>

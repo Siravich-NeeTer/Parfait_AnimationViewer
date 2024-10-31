@@ -92,6 +92,7 @@
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
     <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\Renderer\OffScreenRenderer.h" />
+    <ClInclude Include="src\Renderer\Utilities\PrimitiveMesh.h" />
     <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
@@ -115,6 +116,8 @@
     <None Include="Shaders\bone.vert" />
     <None Include="Shaders\Curve.frag" />
     <None Include="Shaders\Curve.vert" />
+    <None Include="Shaders\default.frag" />
+    <None Include="Shaders\default.vert" />
     <None Include="Shaders\grid.frag" />
     <None Include="Shaders\grid.vert" />
     <None Include="Shaders\mesh.frag" />

@@ -173,6 +173,9 @@ namespace Parfait
 				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipeline());
 				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 				curve->Render(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), curvePipeline->GetPipelineLayout());
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				curve->RenderPoint(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), spherePointPipeline->GetPipelineLayout());
 				
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -180,6 +183,7 @@ namespace Parfait
 			ImVec2 currentOffscreenSize;
 			ImVec2 currentViewportPosition;
 			ImVec2 currentCursorScreenPos;
+			bool updateCurve = false;
 			{
 				VkRenderPassBeginInfo renderPassInfo{};
 				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -273,6 +277,15 @@ namespace Parfait
 					ImGui::DragFloat3(std::string("Rotation" + std::to_string(cnt)).c_str(), &model->rotation[0], 0.1f, -360.0f, 360.0f);
 					ImGui::DragFloat3(std::string("Scale" + std::to_string(cnt)).c_str(), &model->scale[0], 0.01f, 0.0f, 100.0f);
 					ImGui::NewLine();
+					cnt++;
+				}
+				std::vector<Object>& objs = curve->GetPointObject();
+				for (auto& obj : objs)
+				{
+					if (ImGui::DragFloat3(std::string("Position" + std::to_string(cnt)).c_str(), &obj.position[0], 0.01f, -100.0f, 100.0f))
+					{
+						updateCurve = true;
+					}
 					cnt++;
 				}
 
@@ -449,6 +462,10 @@ namespace Parfait
 
 				m_IsUpdateSelectedObject = false;
 			}
+			if (updateCurve)
+			{
+				curve->UpdateCurve();
+			}
 			m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 		}
 		void VulkanWindowResources::UpdateUniform(uint32_t _currentFrame)
@@ -560,20 +577,12 @@ namespace Parfait
 			// TODO: Remove this temp
 			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
 			std::vector<glm::vec3> controlPoints = {
-				{-3.0f, 0.0f, 0.0f},{-1.5f, 0.0f, -2.0f}, {1.5f, 0.0f, -2.0f}, {3.0f, 0.0f, 0.0f},
-				{4.0f, 0.0f, 0.0f}, {2.0f, 0.0f, 1.5f}, {0.0f, 0.0f, 2.0f},
-				{-1.0f, 0.0f, 1.0f}, {-3.0f, 0.0f, 0.0f}
+				{-3.0f, 0.0f, 0.0f},{-1.5f, 0.0f, -2.0f}, {1.5f, 0.0f, -2.0f}, {3.0f, 0.0f, 0.0f}
 			};
 			for (const auto& pos : controlPoints)
 			{
 				curve->AddPoint(2.0f * pos);
 			}
-			/*
-			curve->AddPoint({ -1.0f, 0.0f,  0.0f });
-			curve->AddPoint({ -0.5f, 0.0f,  1.0f });
-			curve->AddPoint({  0.5f, 0.0f, -1.0f });
-			curve->AddPoint({  1.0f, 0.0f,  0.0f });
-			*/
 
 			curvePositionList = curve->GetPositionList();
 
@@ -583,6 +592,20 @@ namespace Parfait
 				std::vector<std::filesystem::path>{ "Shaders/Curve.vert", "Shaders/Curve.frag" },
 				PointVertex::getBindingDescription(),
 				PointVertex::getAttributeDescriptions(),
+				sizeof(glm::mat4),
+				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+				VK_POLYGON_MODE_FILL);
+			VkVertexInputAttributeDescription tmp;
+			tmp.binding = 0;
+			tmp.location = 0;
+			tmp.format = VK_FORMAT_R32G32B32_SFLOAT;
+			tmp.offset = 0;
+			spherePointPipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/default.vert", "Shaders/default.frag" },
+				VkVertexInputBindingDescription{ .binding = 0, .stride = sizeof(glm::vec3), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX },
+				std::vector<VkVertexInputAttributeDescription>{ tmp },
 				sizeof(glm::mat4),
 				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
 				VK_POLYGON_MODE_FILL);

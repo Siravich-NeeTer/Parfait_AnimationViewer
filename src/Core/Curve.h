@@ -21,7 +21,8 @@ namespace Parfait
 			Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool);
 
 			void AddPoint(const glm::vec3& _newPosition);
-			void Render(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+			void Render(VkCommandBuffer commandBuffer, VkPipelineLayout _curvePipelineLayout);
+			void RenderPoint(VkCommandBuffer commandBuffer, VkPipelineLayout _spherePointPipelineLayout);
 
 			void UpdateCurve();
 
@@ -42,10 +43,10 @@ namespace Parfait
 
 			std::vector<Object> m_Points;
 			std::vector<PointVertex> m_PointVertices;
-			std::vector<PointVertex> m_TempPointVertices;
+			std::vector<glm::vec3> m_SphereVertices;
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_VertexBuffer;
-			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_TempVertexBuffer;
+			std::unique_ptr<Graphics::VulkanVertexBuffer<glm::vec3>> m_SpherePointBuffer;
 
 	};
 }

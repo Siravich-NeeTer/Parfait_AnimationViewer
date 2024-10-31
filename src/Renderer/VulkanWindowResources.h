@@ -142,6 +142,7 @@ namespace Parfait
 				std::unique_ptr<Curve> curve;
 				std::vector<glm::vec3> curvePositionList;
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
+				std::unique_ptr<VulkanGraphicsPipeline> spherePointPipeline;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
