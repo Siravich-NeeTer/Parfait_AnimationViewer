@@ -13,9 +13,10 @@ namespace Parfait
 
 			// Model Loading
 			// -------------------------------------------------
-			LoadModel("Models/Zombie.dae");
-			//LoadAnimation("Models/Fox.gltf");
+			Animator* animator = LoadAnimator("Models/Zombie.dae");
+			animator->GetModel()->AddAnimation("Models/Dance.dae", "Dance");
 			//LoadModel("Models/viking_room.obj");
+			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
 		}
 		VulkanWindowResources::~VulkanWindowResources()
@@ -276,19 +277,19 @@ namespace Parfait
 				}
 
 				ImGui::Text("Animations ");
-				const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
+				const std::vector<std::string>& animationNameList = m_Animators[0]->GetModel()->GetAnimationNameList();
+				//const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
 				static const char* current_item = NULL;
 				if (ImGui::BeginCombo("##combo", current_item))
 				{
-					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					for (int n = 0; n < animationNameList.size(); n++)
 					{
-						bool is_selected = (current_item == items[n]);
-						if (ImGui::Selectable(items[n], is_selected))
+						bool is_selected = (current_item == animationNameList[n].c_str());
+						if (ImGui::Selectable(animationNameList[n].c_str(), is_selected))
 						{
-							current_item = items[n];
+							current_item = animationNameList[n].c_str();
 
-							m_Animations[0] = std::make_unique<Animation>("Models/" + std::string(current_item), m_Models.back().get());
-							m_Animators[0] = std::make_unique<Animator>(m_Animations.back().get());
+							m_Animators[0]->PlayAnimation(std::string(current_item));
 						}
 						if (is_selected)
 							ImGui::SetItemDefaultFocus();
@@ -464,7 +465,7 @@ namespace Parfait
 			BoneTransform* boneTransform = static_cast<BoneTransform*>(m_FrameData[_currentFrame].transformData);
 			for (auto& animator : m_Animators)
 			{
-				int currentBoneTransformCount = animator->GetAnimation()->GetModel()->GetBoneTransformOffset();
+				int currentBoneTransformCount = animator->GetModel()->GetBoneTransformOffset();
 				auto& transforms = animator->GetFinalBoneMatrices();
 				for (int i = 0; i < transforms.size(); ++i)
 				{
@@ -558,10 +559,23 @@ namespace Parfait
 
 			// TODO: Remove this temp
 			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
+			std::vector<glm::vec3> controlPoints = {
+				{-3.0f, 0.0f, 0.0f},{-1.5f, 0.0f, -2.0f}, {1.5f, 0.0f, -2.0f}, {3.0f, 0.0f, 0.0f},
+				{4.0f, 0.0f, 0.0f}, {2.0f, 0.0f, 1.5f}, {0.0f, 0.0f, 2.0f},
+				{-1.0f, 0.0f, 1.0f}, {-3.0f, 0.0f, 0.0f}
+			};
+			for (const auto& pos : controlPoints)
+			{
+				curve->AddPoint(2.0f * pos);
+			}
+			/*
 			curve->AddPoint({ -1.0f, 0.0f,  0.0f });
 			curve->AddPoint({ -0.5f, 0.0f,  1.0f });
 			curve->AddPoint({  0.5f, 0.0f, -1.0f });
 			curve->AddPoint({  1.0f, 0.0f,  0.0f });
+			*/
+
+			curvePositionList = curve->GetPositionList();
 
 			curvePipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
 				m_OffscreenRenderer->GetRenderPass(),
@@ -571,8 +585,7 @@ namespace Parfait
 				PointVertex::getAttributeDescriptions(),
 				sizeof(glm::mat4),
 				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
-				VK_POLYGON_MODE_FILL,
-				false);
+				VK_POLYGON_MODE_FILL);
 
 			CreateObjectPicking();
 		}
@@ -799,15 +812,14 @@ namespace Parfait
 			m_Models.push_back(std::move(newModel));
 			return m_Models.back().get();
 		}
-		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path, const std::string& _objectName)
+		Animator* VulkanWindowResources::LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName)
 		{
 			Model* newModel = LoadModel(_path, _objectName);
 			newModel->SetIsAnimation(true);
-			std::unique_ptr<Animation> newAnimation = std::make_unique<Animation>(_path.string(), newModel);
-			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newAnimation.get());
+			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newModel);
 
-			m_Animations.push_back(std::move(newAnimation));
 			m_Animators.push_back(std::move(newAnimator));
+			return m_Animators.back().get();
 		}
 	}
 }

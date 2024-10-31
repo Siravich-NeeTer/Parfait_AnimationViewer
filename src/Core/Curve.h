@@ -19,8 +19,22 @@ namespace Parfait
 	{
 		public:
 			Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool);
+
 			void AddPoint(const glm::vec3& _newPosition);
 			void Render(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+
+			void UpdateCurve();
+
+			std::vector<glm::vec3> GetPositionList() const
+			{
+				std::vector<glm::vec3> positions(m_PointVertices.size());
+				for (int i = 0; i < m_PointVertices.size(); i++)
+				{
+					positions[i] = m_PointVertices[i].position;
+				}
+				return positions;
+			}
+			std::vector<Object>& GetPointObject() { return m_Points; }
 
 		private:
 			const Graphics::VulkanContext& m_VulkanContextRef;
@@ -28,9 +42,10 @@ namespace Parfait
 
 			std::vector<Object> m_Points;
 			std::vector<PointVertex> m_PointVertices;
+			std::vector<PointVertex> m_TempPointVertices;
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_VertexBuffer;
+			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_TempVertexBuffer;
 
-			void UpdateCurve();
 	};
 }

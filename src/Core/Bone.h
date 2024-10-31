@@ -37,6 +37,12 @@ namespace Parfait
 		float timeStamp;
 	};
 
+	struct BoneInfo
+	{
+		int id;
+		glm::mat4 offset;
+	};
+
 	class Bone
 	{
 		public:

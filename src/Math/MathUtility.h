@@ -73,5 +73,24 @@ namespace Parfait
                 3.0f * _1_t * t * t * P2 +
                 t * t * t * P3;
         }
+        static glm::vec3 ComputeBezier(std::vector<glm::vec3> positionList, float t)
+        {
+            // Wrap the parameter t to be in the range of [0, 1]
+            if (t < 0.0f) t = 0.0f;
+            if (t > 1.0f) t = 1.0f;
+
+            // Use De Casteljau's algorithm
+            int degree = positionList.size() - 1;
+            for (size_t i = 1; i <= degree; i++)
+            {
+                for (size_t j = 0; j <= degree - i; j++)
+                {
+                    // Calculate new Coefficients using previous coefficients
+                    positionList[j] = (1.0f - t) * positionList[j] + t * positionList[j + 1];
+                }
+                positionList.pop_back();
+            }
+            return positionList.back();
+        }
 	}
 }

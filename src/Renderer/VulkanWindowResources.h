@@ -25,7 +25,6 @@
 #include "Core/Input.h"
 #include "Core/Camera.h"
 #include "Core/Model.h"
-#include "Core/Animation.h"
 #include "Core/Animator.h"
 #include "Core/Curve.h"
 
@@ -91,7 +90,6 @@ namespace Parfait
 
 				// Models - Animations
 				std::vector<std::unique_ptr<Model>> m_Models;
-				std::vector<std::unique_ptr<Animation>> m_Animations;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
@@ -142,6 +140,7 @@ namespace Parfait
 
 				// TODO: TEMP
 				std::unique_ptr<Curve> curve;
+				std::vector<glm::vec3> curvePositionList;
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
@@ -169,7 +168,7 @@ namespace Parfait
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 				Model* LoadModel(const std::filesystem::path& _path, const std::string& _objectName = "");
-				void LoadAnimation(const std::filesystem::path& _path, const std::string& _objectName = "");
+				Animator* LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName = "");
 		};
 	}
 }

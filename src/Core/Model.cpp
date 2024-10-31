@@ -19,13 +19,7 @@ namespace Parfait
 
 		if (m_BoneVertices.size() > 0)
 		{
-			for (size_t i = 0; i < m_BoneVertices.size(); i++)
-			{
-				m_BoneIndices.push_back(i);
-				//m_BoneIndices.push_back(i + 1);
-			}
 			m_BoneVertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>>(_vulkanContext, _vulkanCommandPool, m_BoneVertices.data(), m_BoneVertices.size());
-			m_BoneIndexBuffer = std::make_unique<Graphics::VulkanIndexBuffer>(_vulkanContext, _vulkanCommandPool, m_BoneIndices.data(), m_BoneIndices.size());
 		}
 	}
 	void Model::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
@@ -61,11 +55,9 @@ namespace Parfait
 
 		const VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_BoneVertexBuffer->GetBuffer(), offsets);
-		vkCmdBindIndexBuffer(commandBuffer, m_BoneIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		
-		// vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayoutRef, 1, 1, &m_Descriptor->GetDescriptorSets(primitive.materialIndex)[1], 0, nullptr);
+
 		vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
-		vkCmdDrawIndexed(commandBuffer, m_BoneIndices.size(), 1, 0, 0, 0);
+		vkCmdDraw(commandBuffer, m_BoneVertices.size(), 1, 0, 0);
 	}
 	void Model::DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
 	{
@@ -79,6 +71,32 @@ namespace Parfait
 		{
 			DrawPickingNode(commandBuffer, node);
 		}
+	}
+	void Model::AddAnimation(const std::filesystem::path& _path, const std::string& customName)
+	{
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(_path.string(),
+			aiProcess_Triangulate |
+			aiProcess_GenSmoothNormals |
+			aiProcess_CalcTangentSpace |
+			aiProcess_FlipUVs |
+			aiProcess_JoinIdenticalVertices |
+			aiProcess_TransformUVCoords |
+			aiProcess_PopulateArmatureData
+		);
+
+		/*
+		for (size_t i = 0; i < scene->mNumAnimations; i++)
+		{
+			std::string name = scene->mAnimations[i]->mName.C_Str();
+			m_Animations[name] = Animation(scene, scene->mAnimations[i], m_BoneInfoMap, m_BoneCounter);
+			m_AnimationNameList.emplace_back(name);
+		}
+		*/
+
+		std::string name = customName == "" ? scene->mAnimations[0]->mName.C_Str() : customName;
+		m_Animations[name] = Animation(scene, scene->mAnimations[0], m_BoneInfoMap, m_BoneCounter);
+		m_AnimationNameList.emplace_back(name);
 	}
 
 	void Model::LoadModel(const std::filesystem::path& _path)
@@ -168,6 +186,18 @@ namespace Parfait
 		//scale = glm::vec3(1.0f);
 
 		ProcessNode(scene->mRootNode, scene, nullptr);
+
+		if (scene->HasAnimations())
+		{
+			for (size_t i = 0; i < scene->mNumAnimations; i++)
+			{
+				std::string name = scene->mAnimations[i]->mName.C_Str();
+				std::cout << "Load Animation : " << name << "\n";
+				m_Animations[name] = Animation(scene, scene->mAnimations[i], m_BoneInfoMap, m_BoneCounter);
+				m_AnimationNameList.emplace_back(name);
+			}
+			m_CurrentActiveAnimation = &m_Animations[scene->mAnimations[0]->mName.C_Str()];
+		}
 	}
 	void Model::ProcessNode(aiNode * _node, const aiScene * _scene, Node* _parent)
 	{
