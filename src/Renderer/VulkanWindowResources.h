@@ -97,6 +97,7 @@ namespace Parfait
 				
 				// Time Counter
 				float m_Time;
+				float m_FPSTime;
 				uint32_t m_FPS;
 				uint32_t m_FrameCounter = 0;
 

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include "Renderer/Buffers/VulkanVertexBuffer.h"
 
@@ -26,6 +27,8 @@ namespace Parfait
 
 			void UpdateCurve();
 
+			glm::vec3 QueryPoint(float _t);
+
 			std::vector<glm::vec3> GetPositionList() const
 			{
 				std::vector<glm::vec3> positions(m_PointVertices.size());
@@ -45,8 +48,18 @@ namespace Parfait
 			std::vector<PointVertex> m_PointVertices;
 			std::vector<glm::vec3> m_SphereVertices;
 
+			// Build-Table
+			std::vector<float> m_EventPoint_t;	// P0 = t0, Pn = tn
+			std::vector<float> m_EventPoint_arclength;
+			std::map<float, float> m_ArcLengthTable;
+			std::map<float, glm::vec3> m_PointTable;
+
 			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanVertexBuffer<glm::vec3>> m_SpherePointBuffer;
+
+			void BuildTable();
+			void ClearTable();
+			void ClearEventPoint();
 
 	};
 }

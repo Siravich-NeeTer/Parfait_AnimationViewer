@@ -51,6 +51,15 @@ namespace Parfait
         glm::vec3 scale = InterpolateScaling(_animationTime);
         m_LocalTransform = Math::VQS(translation, rotation, scale);
     }
+    std::tuple<glm::vec3, Math::Quaternion, glm::vec3> Bone::GetInterpolateTransform(float _animationTime)
+    {
+        glm::vec3 translation = InterpolatePosition(_animationTime);
+        Math::Quaternion rotation = InterpolateRotation(_animationTime);
+        glm::vec3 scale = InterpolateScaling(_animationTime);
+        m_LocalTransform = Math::VQS(translation, rotation, scale);
+
+        return std::make_tuple(translation, rotation, scale);
+    }
 
     int Bone::GetPositionIndex(float _animationTime) const 
     {

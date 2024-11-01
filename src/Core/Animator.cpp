@@ -4,9 +4,13 @@ namespace Parfait
 {
     Animator::Animator(Model* model)
     {
-        m_CurrentTime = 0.0;
+        m_CurrentAnimationTime = 0.0f;
+        m_CurrentNextAnimationTime = 0.0f;
+
         m_pCurrentModel = model;
+
         m_pCurrentAnimation = model->GetCurrentActiveAnimation();
+        m_pNextAnimation = nullptr;
 
         m_FinalBoneMatrices.reserve(model->GetCurrentActiveAnimation()->GetBoneIDMap().size());
 
@@ -22,10 +26,20 @@ namespace Parfait
         }
 
         m_DeltaTime = _dt;
-        if (m_pCurrentAnimation)
+        if (m_pCurrentAnimation && m_pNextAnimation)
         {
-            m_CurrentTime += m_pCurrentAnimation->GetTicksPerSecond() * _dt;
-            m_CurrentTime = fmod(m_CurrentTime, m_pCurrentAnimation->GetDuration());
+            m_CurrentAnimationTime += m_pCurrentAnimation->GetTicksPerSecond() * _dt;
+            m_CurrentAnimationTime = fmod(m_CurrentAnimationTime, m_pCurrentAnimation->GetDuration());
+
+            m_CurrentNextAnimationTime += m_pNextAnimation->GetTicksPerSecond() * _dt;
+            m_CurrentNextAnimationTime = fmod(m_CurrentNextAnimationTime, m_pNextAnimation->GetDuration());
+
+            CalculateBoneTransform(&m_pCurrentAnimation->GetRootNode(), &m_pNextAnimation->GetRootNode(), Math::VQS::Identity());
+        }
+        else if (m_pCurrentAnimation)
+        {
+            m_CurrentAnimationTime += m_pCurrentAnimation->GetTicksPerSecond() * _dt;
+            m_CurrentAnimationTime = fmod(m_CurrentAnimationTime, m_pCurrentAnimation->GetDuration());
             CalculateBoneTransform(&m_pCurrentAnimation->GetRootNode(), Math::VQS::Identity());
         }
     }
@@ -33,12 +47,17 @@ namespace Parfait
     void Animator::PlayAnimation(Animation* _pAnimation)
     {
         m_pCurrentAnimation = _pAnimation;
-        m_CurrentTime = 0.0f;
+        m_CurrentAnimationTime = 0.0f;
     }
     void Animator::PlayAnimation(const std::string& _animationName)
     {
         m_pCurrentModel->SetCurrentActiveAnimation(_animationName);
         PlayAnimation(m_pCurrentModel->GetCurrentActiveAnimation());
+    }
+    void Animator::BlendAnimation(const std::string& _newAnimationName, float _blendFactor)
+    {
+        m_pNextAnimation = m_pCurrentModel->GetAnimation(_newAnimationName);
+        m_BlendFactor = _blendFactor;
     }
 
     void Animator::CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform)
@@ -50,7 +69,7 @@ namespace Parfait
 
         if (Bone)
         {
-            Bone->Update(m_CurrentTime);
+            Bone->Update(m_CurrentAnimationTime);
             nodeTransform = Bone->GetLocalTransform();
         }
 
@@ -67,5 +86,55 @@ namespace Parfait
 
         for (int i = 0; i < _node->childrenCount; i++)
             CalculateBoneTransform(&_node->children[i], globalTransformation);
+    }
+    void Animator::CalculateBoneTransform(const AssimpNodeData* _currentAnimationNode, const AssimpNodeData* _nextAnimationNode, Math::VQS _parentTransform)
+    {
+        const std::string& nodeStartName = _currentAnimationNode->name;
+        const std::string& nodeEndName = _nextAnimationNode->name;
+
+        Math::VQS nodeTransform = Math::VQS::Identity();
+
+        Bone* boneStart = m_pCurrentAnimation->FindBone(nodeStartName);
+        Bone* boneEnd = m_pNextAnimation->FindBone(nodeEndName);
+
+        nodeTransform = _currentAnimationNode->transformation;
+
+        if (boneStart && boneEnd)
+        {
+            glm::vec3 startTranslation, endTranslation;
+            Math::Quaternion startQuaternion, endQuaternion;
+            glm::vec3 startScale, endScale;
+
+            std::tie(startTranslation, startQuaternion, startScale) = boneStart->GetInterpolateTransform(m_CurrentAnimationTime);
+            std::tie(endTranslation, endQuaternion, endScale) = boneEnd->GetInterpolateTransform(m_CurrentNextAnimationTime);
+            
+            glm::vec3 finalTranslation = glm::mix(startTranslation, endTranslation, m_BlendFactor);
+            Math::Quaternion finalQuaternion = Math::Lerp(startQuaternion, endQuaternion, m_BlendFactor);
+            glm::vec3 finalScale = glm::mix(startScale, endScale, m_BlendFactor);
+
+            nodeTransform = Math::VQS(finalTranslation, finalQuaternion, finalScale);
+        }
+
+        const Math::VQS& globalTransformation = _parentTransform * nodeTransform;
+
+        auto& boneInfoMap = m_pCurrentAnimation->GetBoneIDMap();
+        const auto& currentBoneIt = boneInfoMap.find(nodeStartName);
+        const auto& nextBoneIt = boneInfoMap.find(nodeEndName);
+        if (currentBoneIt != boneInfoMap.end())
+        {
+            int index1 = currentBoneIt->second.id;
+            const glm::mat4& offset1 = currentBoneIt->second.offset;
+
+            int index2 = nextBoneIt->second.id;
+            const glm::mat4& offset2 = nextBoneIt->second.offset;
+
+            glm::mat4 offset = (1.0f - m_BlendFactor) * offset1 + m_BlendFactor * offset2;
+
+            m_FinalBoneMatrices[index1] = globalTransformation.Matrix() * offset1;
+        }
+
+        // TODO: Assume currentAnimationNode & nextAnimationNode use same hierachy
+        for (int i = 0; i < std::min(_currentAnimationNode->childrenCount, _nextAnimationNode->childrenCount); i++)
+            CalculateBoneTransform(&_currentAnimationNode->children[i], &_nextAnimationNode->children[i], globalTransformation);
     }
 }

@@ -13,8 +13,11 @@ namespace Parfait
 
 			// Model Loading
 			// -------------------------------------------------
-			Animator* animator = LoadAnimator("Models/Zombie.dae");
-			animator->GetModel()->AddAnimation("Models/Dance.dae", "Dance");
+			Animator* animator = LoadAnimator("Models/Soldier.dae");
+			animator->GetModel()->AddAnimation("Models/Soldier.dae", "Walk");
+			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
+			animator->GetModel()->AddAnimation("Models/Running.dae", "Run");
+			animator->PlayAnimation("SlowRun");
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -43,10 +46,11 @@ namespace Parfait
 		void VulkanWindowResources::Update(float dt)
 		{
 			m_Time += dt;
-			if (m_Time >= 1.0f)
+			m_FPSTime += dt;
+			if (m_FPSTime >= 1.0f)
 			{
 				m_FPS = m_FrameCounter;
-				m_Time = 0.0f;
+				m_FPSTime = 0.0f;
 				m_FrameCounter = 0;
 			}
 
@@ -308,6 +312,11 @@ namespace Parfait
 							ImGui::SetItemDefaultFocus();
 					}
 					ImGui::EndCombo();
+				}
+				float blendingFactor = m_Animators[0]->GetBlendFactor();
+				if (ImGui::SliderFloat("Blending Factor", &blendingFactor, 0.0f, 1.0f))
+				{
+					m_Animators[0]->BlendAnimation("Run", blendingFactor);
 				}
 
 				ImGui::End();
