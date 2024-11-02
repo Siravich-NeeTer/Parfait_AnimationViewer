@@ -27,6 +27,9 @@
     <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_tables.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot_demo.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot_items.cpp" />
     <ClCompile Include="External Libraries\stb\stb_image.cpp" />
     <ClCompile Include="src\Core\Animation.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
@@ -71,6 +74,8 @@
     <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h" />
     <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h" />
     <ClInclude Include="External Libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="External Libraries\imgui\implot.h" />
+    <ClInclude Include="External Libraries\imgui\implot_internal.h" />
     <ClInclude Include="External Libraries\imgui\imstb_rectpack.h" />
     <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
