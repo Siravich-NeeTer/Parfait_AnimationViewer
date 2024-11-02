@@ -25,19 +25,42 @@ namespace Parfait
 			void Render(VkCommandBuffer commandBuffer, VkPipelineLayout _curvePipelineLayout);
 			void RenderPoint(VkCommandBuffer commandBuffer, VkPipelineLayout _spherePointPipelineLayout);
 
-			void UpdateCurve();
+			// ImGui Related Functions
+			void AddVelocity(float _t, float _velocity);
+			void DisplayGraph();
 
-			glm::vec3 GetPointFromTable(float _t) const
+			void UpdateCurve();
+			
+			glm::vec3 GetFinalPoint(float _t) const
 			{
 				if (_t < 0.0f)
 					_t = std::fabs(_t);
 				if (_t > 1.0f)
 					_t -= (int)_t;
 
+				const size_t distanceStepSize = m_DistanceStep.size() - 1;
+				size_t prevIndex = _t * distanceStepSize;
+				size_t nextIndex = prevIndex + 1;
+
+				float prev_t = m_DistanceStep[prevIndex];
+				float next_t = m_DistanceStep[nextIndex];
+				float t = (_t - prev_t) / (next_t - prev_t);
+
+				return GetPointFromTable(prev_t);
+			}
+			glm::vec3 GetPointFromTable(float _t) const
+			{
+				/*
+				if (_t < 0.0f)
+					_t = std::fabs(_t);
+				if (_t > 1.0f)
+					_t -= (int)_t;
+				*/
+
 				auto it = m_PointTable.lower_bound(_t);
 
-				float next_t = it->first;
-				float prev_t = (--it)->first;
+				float next_t = (_t == 0.0f ? 0.0f : it->first);
+				float prev_t = (_t == 0.0f ? 1.0f : (--it)->first);
 
 				glm::vec3 nextPoint = m_PointTable.find(next_t)->second;
 				glm::vec3 prevPoint = m_PointTable.find(prev_t)->second;
@@ -69,8 +92,21 @@ namespace Parfait
 			std::map<float, float> m_ArcLengthTable;
 			std::map<float, glm::vec3> m_PointTable;
 
+			#define GRAPH_SIZE 1001
+			std::map<float, float> m_VelocityTable;
+			// ImGui Related members
+			std::array<float, GRAPH_SIZE> m_TStep;
+			std::array<float, GRAPH_SIZE> m_VelocityStep;
+			std::array<float, GRAPH_SIZE> m_DistanceStep;
+			float m_SelectedEventTime;
+			float m_SelectedEventVelocity;
+
 			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanVertexBuffer<glm::vec3>> m_SpherePointBuffer;
+			
+			void InitDisplayVelocity();
+			void UpdateVelocityTable(float _eventT);
+			void UpdateDistanceTable();
 
 			glm::vec3 QueryPoint(float _t);
 			void BuildTable();

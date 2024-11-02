@@ -1,5 +1,7 @@
 #include "VulkanWindowResources.h"
 
+#include <imgui/implot.h>
+
 namespace Parfait
 {
 	namespace Graphics
@@ -17,8 +19,9 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/Soldier.dae", "Walk");
 			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
 			animator->GetModel()->AddAnimation("Models/Running.dae", "Run");
+			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
 			animator->PlayAnimation("SlowRun");
-			animator->AttachPath(curve.get(), 5.0f);
+			animator->AttachPath(curve.get(), 10.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -40,6 +43,7 @@ namespace Parfait
 
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
+			ImPlot::DestroyContext();
 			ImGui::DestroyContext();
 			vkDestroyDescriptorPool(m_VkContextRef.GetLogicalDevice(), m_ImGuiPool, nullptr);
 		}
@@ -317,9 +321,13 @@ namespace Parfait
 				float blendingFactor = m_Animators[0]->GetBlendFactor();
 				if (ImGui::SliderFloat("Blending Factor", &blendingFactor, 0.0f, 1.0f))
 				{
-					m_Animators[0]->BlendAnimation("Run", blendingFactor);
+					m_Animators[0]->BlendAnimation("Idle", blendingFactor);
 				}
 
+				ImGui::End();
+
+				ImGui::Begin("Plot");
+				curve->DisplayGraph();
 				ImGui::End();
 
 				ImGui::ShowDemoWindow();
@@ -703,6 +711,7 @@ namespace Parfait
 
 			// 2: initialize imgui library
 			ImGui::CreateContext();
+			ImPlot::CreateContext();
 			ImGui::StyleColorsDark();
 			ImGuiIO& io = ImGui::GetIO(); (void)io;
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls

@@ -147,8 +147,11 @@ namespace Parfait
 
     void Animator::MoveAlongPath()
     {
-        glm::vec3 currentPoint = m_pCurrentPath->GetPointFromTable(m_CurrentLoopTime / m_PathLoopTime);
-        glm::vec3 nextPoint = m_pCurrentPath->GetPointFromTable(m_CurrentLoopTime / m_PathLoopTime + 0.01f);
+        glm::vec3 currentPoint = m_pCurrentPath->GetFinalPoint(m_CurrentLoopTime / m_PathLoopTime);
+        glm::vec3 nextPoint = m_pCurrentPath->GetFinalPoint(m_CurrentLoopTime / m_PathLoopTime + 0.01f);
+
+        if (glm::distance(currentPoint, nextPoint) < 1e-6f)
+            return;
 
         m_pCurrentModel->position = currentPoint;
 
