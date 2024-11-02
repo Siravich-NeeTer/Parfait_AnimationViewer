@@ -42,6 +42,13 @@ namespace Parfait
             m_CurrentAnimationTime = fmod(m_CurrentAnimationTime, m_pCurrentAnimation->GetDuration());
             CalculateBoneTransform(&m_pCurrentAnimation->GetRootNode(), Math::VQS::Identity());
         }
+
+        if (m_pCurrentPath)
+        {
+            m_CurrentLoopTime += _dt;
+            m_CurrentLoopTime = fmod(m_CurrentLoopTime, m_PathLoopTime);
+            MoveAlongPath();
+        }
     }
 
     void Animator::PlayAnimation(Animation* _pAnimation)
@@ -136,5 +143,27 @@ namespace Parfait
         // TODO: Assume currentAnimationNode & nextAnimationNode use same hierachy
         for (int i = 0; i < std::min(_currentAnimationNode->childrenCount, _nextAnimationNode->childrenCount); i++)
             CalculateBoneTransform(&_currentAnimationNode->children[i], &_nextAnimationNode->children[i], globalTransformation);
+    }
+
+    void Animator::MoveAlongPath()
+    {
+        glm::vec3 currentPoint = m_pCurrentPath->GetPointFromTable(m_CurrentLoopTime / m_PathLoopTime);
+        glm::vec3 nextPoint = m_pCurrentPath->GetPointFromTable(m_CurrentLoopTime / m_PathLoopTime + 0.01f);
+
+        m_pCurrentModel->position = currentPoint;
+
+        glm::mat4 viewMatrix = glm::lookAt(m_pCurrentModel->position, nextPoint, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Extract the forward vector
+        glm::vec3 forward = glm::normalize(glm::vec3(viewMatrix[2]));
+        // Extract the up vector
+        glm::vec3 upVec = glm::normalize(glm::vec3(viewMatrix[1]));
+
+        // Calculate Euler angles
+        float pitch = std::asin(-forward.y);
+        float yaw = std::atan2(forward.z, forward.x);
+        float roll = std::atan2(upVec.x, upVec.y);
+        m_pCurrentModel->rotation = { AI_RAD_TO_DEG(pitch), AI_RAD_TO_DEG(yaw) + 90.0f, AI_RAD_TO_DEG(roll) };
+
     }
 }

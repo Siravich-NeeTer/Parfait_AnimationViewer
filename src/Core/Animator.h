@@ -3,6 +3,8 @@
 #include "Core/Model.h"
 #include "Core/Animation.h"
 
+#include "Core/Curve.h"
+
 namespace Parfait
 {
     class Animator
@@ -18,6 +20,12 @@ namespace Parfait
             void CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform);
             void CalculateBoneTransform(const AssimpNodeData* _currentAnimationNode, const AssimpNodeData* _nextAnimationNode, Math::VQS _parentTransform);
 
+            void AttachPath(Curve* _curve, float _loopInSecond) 
+            { 
+                m_pCurrentPath = _curve; 
+                m_PathLoopTime = _loopInSecond;
+            }
+
             Animation* GetAnimation() const { return m_pCurrentAnimation; }
             Model* GetModel() const { return m_pCurrentModel; }
             float GetBlendFactor() const { return m_BlendFactor; }
@@ -32,5 +40,12 @@ namespace Parfait
             float m_CurrentNextAnimationTime;
             float m_DeltaTime;
             float m_BlendFactor;
+
+            // Move Along Path
+            Curve* m_pCurrentPath;
+            float m_PathLoopTime;
+            float m_CurrentLoopTime;
+
+            void MoveAlongPath();
     };
 }

@@ -18,6 +18,7 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
 			animator->GetModel()->AddAnimation("Models/Running.dae", "Run");
 			animator->PlayAnimation("SlowRun");
+			animator->AttachPath(curve.get(), 5.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------

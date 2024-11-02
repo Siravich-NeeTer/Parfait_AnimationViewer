@@ -27,8 +27,23 @@ namespace Parfait
 
 			void UpdateCurve();
 
-			glm::vec3 QueryPoint(float _t);
+			glm::vec3 GetPointFromTable(float _t) const
+			{
+				if (_t < 0.0f)
+					_t = std::fabs(_t);
+				if (_t > 1.0f)
+					_t -= (int)_t;
 
+				auto it = m_PointTable.lower_bound(_t);
+
+				float next_t = it->first;
+				float prev_t = (--it)->first;
+
+				glm::vec3 nextPoint = m_PointTable.find(next_t)->second;
+				glm::vec3 prevPoint = m_PointTable.find(prev_t)->second;
+
+				return glm::mix(prevPoint, nextPoint, (_t - prev_t) / (next_t - prev_t));
+			}
 			std::vector<glm::vec3> GetPositionList() const
 			{
 				std::vector<glm::vec3> positions(m_PointVertices.size());
@@ -57,6 +72,7 @@ namespace Parfait
 			std::unique_ptr<Graphics::VulkanVertexBuffer<PointVertex>> m_VertexBuffer;
 			std::unique_ptr<Graphics::VulkanVertexBuffer<glm::vec3>> m_SpherePointBuffer;
 
+			glm::vec3 QueryPoint(float _t);
 			void BuildTable();
 			void ClearTable();
 			void ClearEventPoint();
