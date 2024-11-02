@@ -63,6 +63,13 @@ namespace Parfait
     }
     void Animator::BlendAnimation(const std::string& _newAnimationName, float _blendFactor)
     {
+        if (_newAnimationName == "")
+        {
+            m_pNextAnimation = nullptr;
+            m_BlendFactor = 0.0f;
+            return;
+        }
+
         m_pNextAnimation = m_pCurrentModel->GetAnimation(_newAnimationName);
         m_BlendFactor = _blendFactor;
     }
@@ -147,8 +154,25 @@ namespace Parfait
 
     void Animator::MoveAlongPath()
     {
-        glm::vec3 currentPoint = m_pCurrentPath->GetFinalPoint(m_CurrentLoopTime / m_PathLoopTime);
-        glm::vec3 nextPoint = m_pCurrentPath->GetFinalPoint(m_CurrentLoopTime / m_PathLoopTime + 0.01f);
+        float t = m_pCurrentPath->GetDistanceParameter(m_CurrentLoopTime / m_PathLoopTime);
+        float next_t = m_pCurrentPath->GetDistanceParameter(m_CurrentLoopTime / m_PathLoopTime + 0.01f);
+        glm::vec3 currentPoint = m_pCurrentPath->GetPointFromTable(t);
+        glm::vec3 nextPoint = m_pCurrentPath->GetPointFromTable(next_t);
+
+        float currentVelocity = m_pCurrentPath->GetVelocity(t);
+
+        if (currentVelocity <= 0.25f)
+        {
+            BlendAnimation("Idle", currentVelocity / 0.25f);
+        }
+        else if (currentVelocity >= 0.75f)
+        {
+            BlendAnimation("Run", (currentVelocity - 0.75f) / 0.25f);
+        }
+        else
+        {
+            BlendAnimation("", 0.0f);
+        }
 
         if (glm::distance(currentPoint, nextPoint) < 1e-6f)
             return;

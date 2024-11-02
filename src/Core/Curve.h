@@ -31,32 +31,30 @@ namespace Parfait
 
 			void UpdateCurve();
 			
-			glm::vec3 GetFinalPoint(float _t) const
+			float GetDistanceParameter(float _t) const
 			{
-				if (_t < 0.0f)
-					_t = std::fabs(_t);
-				if (_t > 1.0f)
-					_t -= (int)_t;
+				_t = ClampParameter(_t);
 
 				const size_t distanceStepSize = m_DistanceStep.size() - 1;
 				size_t prevIndex = _t * distanceStepSize;
-				size_t nextIndex = prevIndex + 1;
 
-				float prev_t = m_DistanceStep[prevIndex];
-				float next_t = m_DistanceStep[nextIndex];
-				float t = (_t - prev_t) / (next_t - prev_t);
+				float t = m_DistanceStep[prevIndex];
 
-				return GetPointFromTable(prev_t);
+				return t;
+			}
+			float GetVelocity(float _t) const
+			{
+				_t = ClampParameter(_t);
+
+				const size_t distanceStepSize = m_VelocityStep.size() - 1;
+				size_t prevIndex = _t * distanceStepSize;
+
+				float velocity = m_VelocityStep[prevIndex];
+
+				return velocity;
 			}
 			glm::vec3 GetPointFromTable(float _t) const
 			{
-				/*
-				if (_t < 0.0f)
-					_t = std::fabs(_t);
-				if (_t > 1.0f)
-					_t -= (int)_t;
-				*/
-
 				auto it = m_PointTable.lower_bound(_t);
 
 				float next_t = (_t == 0.0f ? 0.0f : it->first);
@@ -112,6 +110,16 @@ namespace Parfait
 			void BuildTable();
 			void ClearTable();
 			void ClearEventPoint();
+
+			// Helper Functions
+			float ClampParameter(float _t) const
+			{
+				if (_t < 0.0f)
+					_t = std::fabs(_t);
+				if (_t > 1.0f)
+					_t -= (int)_t;
+				return _t;
+			}
 
 	};
 }

@@ -21,7 +21,7 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/Running.dae", "Run");
 			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
 			animator->PlayAnimation("SlowRun");
-			animator->AttachPath(curve.get(), 10.0f);
+			animator->AttachPath(curve.get(), 20.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -131,7 +131,7 @@ namespace Parfait
 			*/
 			{
 				VkClearValue clearValues[2];
-				clearValues[0].color = { { 0.5f, 0.5f, 0.5f, 1.0f } };
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 				clearValues[1].depthStencil = { 1.0f, 0 };
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -159,9 +159,12 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipeline());
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-				vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 6, 1, 0, 0);
+				if (m_IsRenderGrid)
+				{
+					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipeline());
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+					vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 6, 1, 0, 0);
+				}
 
 				for (auto& model : m_Models)
 				{
@@ -279,6 +282,7 @@ namespace Parfait
 				ImGui::Begin("Model");
 				ImGui::Text(std::string("FPS : " + std::to_string(m_FPS)).c_str());
 				ImGui::Checkbox("Render Bone", &m_IsDrawBone);
+				ImGui::Checkbox("Grid", &m_IsRenderGrid);
 				ImGui::NewLine();
 				for (auto& model : m_Models)
 				{
@@ -288,6 +292,8 @@ namespace Parfait
 					ImGui::NewLine();
 					cnt++;
 				}
+
+				ImGui::Text("Curve Position");
 				std::vector<Object>& objs = curve->GetPointObject();
 				for (auto& obj : objs)
 				{
@@ -297,40 +303,16 @@ namespace Parfait
 					}
 					cnt++;
 				}
-
-				ImGui::Text("Animations ");
-				const std::vector<std::string>& animationNameList = m_Animators[0]->GetModel()->GetAnimationNameList();
-				//const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
-				static const char* current_item = NULL;
-				if (ImGui::BeginCombo("##combo", current_item))
-				{
-					for (int n = 0; n < animationNameList.size(); n++)
-					{
-						bool is_selected = (current_item == animationNameList[n].c_str());
-						if (ImGui::Selectable(animationNameList[n].c_str(), is_selected))
-						{
-							current_item = animationNameList[n].c_str();
-
-							m_Animators[0]->PlayAnimation(std::string(current_item));
-						}
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-					ImGui::EndCombo();
-				}
-				float blendingFactor = m_Animators[0]->GetBlendFactor();
-				if (ImGui::SliderFloat("Blending Factor", &blendingFactor, 0.0f, 1.0f))
-				{
-					m_Animators[0]->BlendAnimation("Idle", blendingFactor);
-				}
-
 				ImGui::End();
 
 				ImGui::Begin("Plot");
 				curve->DisplayGraph();
 				ImGui::End();
 
-				ImGui::ShowDemoWindow();
+				ImGui::Begin("Help");
+				ImGui::Text("Controls (Same as Unity)");
+				ImGui::Text("Hold RMB + W/A/S/D : Move Camera");
+				ImGui::End();
 
 				ImGui::Render();
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
@@ -566,6 +548,8 @@ namespace Parfait
 			}
 			// -------------------------------------------------
 			LoadModel("Models/Plane.fbx");
+			m_Models[0]->scale = glm::vec3(5.0f);
+			m_Models[0]->position.y = -0.1f;
 
 			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(m_VkContextRef, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Models.back()->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -592,10 +576,10 @@ namespace Parfait
 				VK_POLYGON_MODE_FILL,
 				false);
 
-			// TODO: Remove this temp
 			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
 			std::vector<glm::vec3> controlPoints = {
-				{-3.0f, 0.0f, 0.0f},{-1.5f, 0.0f, -2.0f}, {1.5f, 0.0f, -2.0f}, {3.0f, 0.0f, 0.0f}
+				{-6.0f, 0.0f, 0.0f},{-3.0f, 0.0f, -4.0f}, { 3.0f, 0.0f, -4.0f}, { 6.0f, 0.0f, 0.0f},
+				{ 4.0f, 0.0f, 2.0f},{ 1.0f, 0.0f,  5.0f}, {-2.0f, 0.0f,  1.0f}, {-3.0f, 0.0f, 0.0f}
 			};
 			for (const auto& pos : controlPoints)
 			{

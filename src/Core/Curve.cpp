@@ -16,6 +16,9 @@ namespace Parfait
 		m_SpherePointBuffer = std::make_unique<Graphics::VulkanVertexBuffer<glm::vec3>>(m_VulkanContextRef, m_VulkanCommandPool, m_SphereVertices.data(), m_SphereVertices.size());
 
 		InitDisplayVelocity();
+		AddVelocity(0.0f, 1.0f);
+		AddVelocity(1.0f, 1.0f);
+
 		AddVelocity(0.25f, 1.0f);
 		AddVelocity(0.75f, 1.0f);
 

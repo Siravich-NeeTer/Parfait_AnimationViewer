@@ -145,6 +145,8 @@ namespace Parfait
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 				std::unique_ptr<VulkanGraphicsPipeline> spherePointPipeline;
 
+				bool m_IsRenderGrid = true;
+
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;
