@@ -71,7 +71,7 @@ namespace Parfait
         }
 
         m_pNextAnimation = m_pCurrentModel->GetAnimation(_newAnimationName);
-        m_BlendFactor = _blendFactor;
+        m_BlendFactor = glm::clamp(_blendFactor, 0.0f, 1.0f);
     }
 
     void Animator::CalculateBoneTransform(const AssimpNodeData* _node, Math::VQS _parentTransform)
@@ -113,6 +113,7 @@ namespace Parfait
 
         nodeTransform = _currentAnimationNode->transformation;
 
+        // Blending Animation using Interpolation in each component(position, rotation, scale)
         if (boneStart && boneEnd)
         {
             glm::vec3 startTranslation, endTranslation;
@@ -123,7 +124,7 @@ namespace Parfait
             std::tie(endTranslation, endQuaternion, endScale) = boneEnd->GetInterpolateTransform(m_CurrentNextAnimationTime);
             
             glm::vec3 finalTranslation = glm::mix(startTranslation, endTranslation, m_BlendFactor);
-            Math::Quaternion finalQuaternion = Math::Lerp(startQuaternion, endQuaternion, m_BlendFactor);
+            Math::Quaternion finalQuaternion = Math::Slerp(startQuaternion, endQuaternion, m_BlendFactor);
             glm::vec3 finalScale = glm::mix(startScale, endScale, m_BlendFactor);
 
             nodeTransform = Math::VQS(finalTranslation, finalQuaternion, finalScale);
@@ -144,7 +145,7 @@ namespace Parfait
 
             glm::mat4 offset = (1.0f - m_BlendFactor) * offset1 + m_BlendFactor * offset2;
 
-            m_FinalBoneMatrices[index1] = globalTransformation.Matrix() * offset1;
+            m_FinalBoneMatrices[index1] = globalTransformation.Matrix() * offset;
         }
 
         // TODO: Assume currentAnimationNode & nextAnimationNode use same hierachy
@@ -161,9 +162,10 @@ namespace Parfait
 
         float currentVelocity = m_pCurrentPath->GetVelocity(t);
 
+        // Animation Blending rely on character velocity
         if (currentVelocity <= 0.25f)
         {
-            BlendAnimation("Idle", currentVelocity / 0.25f);
+            BlendAnimation("Idle", 1.0f - (currentVelocity / 0.25f));
         }
         else if (currentVelocity >= 0.75f)
         {
@@ -174,23 +176,26 @@ namespace Parfait
             BlendAnimation("", 0.0f);
         }
 
-        if (glm::distance(currentPoint, nextPoint) < 1e-6f)
+        // Skip Update Rotation/Position if currentPoint & nextPoint are same
+        if (glm::distance(currentPoint, nextPoint) < 1e-6f || currentVelocity <= 0.0f)
             return;
 
         m_pCurrentModel->position = currentPoint;
 
-        glm::mat4 viewMatrix = glm::lookAt(m_pCurrentModel->position, nextPoint, glm::vec3(0.0f, 1.0f, 0.0f));
+        // Center Of Interest : Orientation Control 
+        {
+            glm::mat4 viewMatrix = glm::lookAt(m_pCurrentModel->position, nextPoint, glm::vec3(0.0f, 1.0f, 0.0f));
+            // Extract the forward vector
+            glm::vec3 forward = glm::normalize(glm::vec3(viewMatrix[2]));
+            // Extract the up vector
+            glm::vec3 upVec = glm::normalize(glm::vec3(viewMatrix[1]));
 
-        // Extract the forward vector
-        glm::vec3 forward = glm::normalize(glm::vec3(viewMatrix[2]));
-        // Extract the up vector
-        glm::vec3 upVec = glm::normalize(glm::vec3(viewMatrix[1]));
-
-        // Calculate Euler angles
-        float pitch = std::asin(-forward.y);
-        float yaw = std::atan2(forward.z, forward.x);
-        float roll = std::atan2(upVec.x, upVec.y);
-        m_pCurrentModel->rotation = { AI_RAD_TO_DEG(pitch), AI_RAD_TO_DEG(yaw) + 90.0f, AI_RAD_TO_DEG(roll) };
+            // Calculate Euler angles
+            float pitch = std::asin(-forward.y);
+            float yaw = std::atan2(forward.z, forward.x);
+            float roll = std::atan2(upVec.x, upVec.y);
+            m_pCurrentModel->rotation = { AI_RAD_TO_DEG(pitch), AI_RAD_TO_DEG(yaw) + 90.0f, AI_RAD_TO_DEG(roll) };
+        }
 
     }
 }

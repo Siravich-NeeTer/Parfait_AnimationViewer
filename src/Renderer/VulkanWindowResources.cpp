@@ -18,7 +18,7 @@ namespace Parfait
 			Animator* animator = LoadAnimator("Models/Soldier.dae");
 			animator->GetModel()->AddAnimation("Models/Soldier.dae", "Walk");
 			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
-			animator->GetModel()->AddAnimation("Models/Running.dae", "Run");
+			animator->GetModel()->AddAnimation("Models/Run.dae", "Run");
 			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
 			animator->PlayAnimation("SlowRun");
 			animator->AttachPath(curve.get(), 20.0f);
@@ -311,7 +311,10 @@ namespace Parfait
 
 				ImGui::Begin("Help");
 				ImGui::Text("Controls (Same as Unity)");
-				ImGui::Text("Hold RMB + W/A/S/D : Move Camera");
+				ImGui::Text("Hold RMB + A/D : Move Camera (Left/Right)");
+				ImGui::Text("Hold RMB + W/S : Move Camera (Forward/Backward)");
+				ImGui::Text("Hold RMB + Q/E : Move Camera (Up/Down)");
+				ImGui::Text("Scroll Mouse : Zoom in/out");
 				ImGui::End();
 
 				ImGui::Render();

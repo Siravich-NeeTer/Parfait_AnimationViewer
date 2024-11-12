@@ -16,14 +16,11 @@ namespace Parfait
 		m_SpherePointBuffer = std::make_unique<Graphics::VulkanVertexBuffer<glm::vec3>>(m_VulkanContextRef, m_VulkanCommandPool, m_SphereVertices.data(), m_SphereVertices.size());
 
 		InitDisplayVelocity();
-		AddVelocity(0.0f, 1.0f);
-		AddVelocity(1.0f, 1.0f);
+		AddVelocity(0.0f, 0.0f);
+		AddVelocity(1.0f, 0.0f);
 
 		AddVelocity(0.25f, 1.0f);
 		AddVelocity(0.75f, 1.0f);
-
-		AddVelocity(0.4f, 0.3f);
-		AddVelocity(0.6f, 0.3f);
 	}
 	void Curve::AddPoint(const glm::vec3& _newPosition)
 	{
@@ -39,6 +36,7 @@ namespace Parfait
 	}
 	void Curve::Render(VkCommandBuffer commandBuffer, VkPipelineLayout _curvePipelineLayout)
 	{
+		// Render Path
 		glm::mat4 model(1.0f);
 
 		const VkDeviceSize offsets[] = { 0 };
@@ -48,6 +46,7 @@ namespace Parfait
 	}
 	void Curve::RenderPoint(VkCommandBuffer commandBuffer, VkPipelineLayout _spherePointPipelineLayout)
 	{
+		// Render Control Points
 		const VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_SpherePointBuffer->GetBuffer(), offsets);
 		for (size_t i = 0; i < m_Points.size(); i++)
@@ -68,6 +67,7 @@ namespace Parfait
 	}
 	void Curve::DisplayGraph()
 	{
+		// Sliding & Skidding Controls
 		ImGui::SliderFloat("Time", &m_SelectedEventTime, 0.0f, 1.0f);
 		ImGui::SliderFloat("Velocity", &m_SelectedEventVelocity, 0.0f, 1.0f);
 		if (ImGui::Button("Add to Graph"))
@@ -135,13 +135,7 @@ namespace Parfait
 			m_EventPoint_arclength.push_back(currentArcLength);
 		}
 
-		/*
-		std::cout << "Curve ArcLength\n";
-		for (int i = 0; i < m_EventPoint_t.size(); i++)
-		{
-			std::cout << m_EventPoint_t[i] << " : " << m_EventPoint_arclength[i] << "\n";
-		}
-		*/
+		// Table - Concaternation after adding a new point
 		BuildTable();
 
 		m_VertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<PointVertex>>(m_VulkanContextRef, m_VulkanCommandPool, m_PointVertices.data(), m_PointVertices.size());
@@ -173,6 +167,7 @@ namespace Parfait
 	}
 	void Curve::UpdateVelocityTable(float _eventT)
 	{
+		// Ease-in/out velocity-time function
 		auto it = m_VelocityTable.find(_eventT);
 		size_t index = std::distance(m_VelocityTable.begin(), it);
 		if (index > 0)
@@ -200,6 +195,7 @@ namespace Parfait
 	}
 	void Curve::UpdateDistanceTable()
 	{
+		// Ease-in/out distance-time function
 		float step = 1.0f / (m_TStep.size() - 1);
 		for (size_t i = 0; i < m_TStep.size(); i++)
 		{
@@ -243,6 +239,7 @@ namespace Parfait
 		// Maximum parameter interval
 		const float delta = 0.01f;
 
+		// Table Construction - Adaptive Approach
 		std::queue<std::pair<float, float>> segmentList;
 		m_ArcLengthTable[0.0f] = 0.0f;
 		m_PointTable[0.0f] = m_Points[0].position;
