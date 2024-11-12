@@ -12,8 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External Libraries\glad\src\glad.c" />
+    <ClCompile Include="External Libraries\imgui\extensions\GraphEditor.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImCurveEdit.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImGradient.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImGuizmo.cpp" />
     <ClCompile Include="External Libraries\imgui\extensions\imgui_combo.cpp" />
     <ClCompile Include="External Libraries\imgui\extensions\imgui_knob.cpp" />
+    <ClCompile Include="External Libraries\imgui\extensions\ImSequencer.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_demo.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_draw.cpp" />
@@ -22,10 +27,14 @@
     <ClCompile Include="External Libraries\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_tables.cpp" />
     <ClCompile Include="External Libraries\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot_demo.cpp" />
+    <ClCompile Include="External Libraries\imgui\implot_items.cpp" />
     <ClCompile Include="External Libraries\stb\stb_image.cpp" />
     <ClCompile Include="src\Core\Animation.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
     <ClCompile Include="src\Core\Bone.cpp" />
+    <ClCompile Include="src\Core\Curve.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\Model.cpp" />
     <ClCompile Include="src\Core\ParfaitEngine.cpp" />
@@ -49,16 +58,24 @@
     <ClCompile Include="src\Renderer\VulkanWindowResources.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="External Libraries\imgui\extensions\GraphEditor.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImCurveEdit.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImGradient.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImGuizmo.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_combo.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_curve.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_knob.h" />
     <ClInclude Include="External Libraries\imgui\extensions\imgui_pie_menu.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImSequencer.h" />
+    <ClInclude Include="External Libraries\imgui\extensions\ImZoomSlider.h" />
     <ClInclude Include="External Libraries\imgui\imconfig.h" />
     <ClInclude Include="External Libraries\imgui\imgui.h" />
     <ClInclude Include="External Libraries\imgui\imgui_extension.h" />
     <ClInclude Include="External Libraries\imgui\imgui_impl_glfw.h" />
     <ClInclude Include="External Libraries\imgui\imgui_impl_vulkan.h" />
     <ClInclude Include="External Libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="External Libraries\imgui\implot.h" />
+    <ClInclude Include="External Libraries\imgui\implot_internal.h" />
     <ClInclude Include="External Libraries\imgui\imstb_rectpack.h" />
     <ClInclude Include="External Libraries\imgui\imstb_textedit.h" />
     <ClInclude Include="External Libraries\imgui\imstb_truetype.h" />
@@ -70,6 +87,7 @@
     <ClInclude Include="src\Core\Model.h" />
     <ClInclude Include="src\Core\Object.h" />
     <ClInclude Include="src\Core\ParfaitEngine.h" />
+    <ClInclude Include="src\Core\Curve.h" />
     <ClInclude Include="src\Math\AssimpGLMHelpers.h" />
     <ClInclude Include="src\Math\MathUtility.h" />
     <ClInclude Include="src\Math\Quaternion.h" />
@@ -79,6 +97,7 @@
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h" />
     <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\Renderer\OffScreenRenderer.h" />
+    <ClInclude Include="src\Renderer\Utilities\PrimitiveMesh.h" />
     <ClInclude Include="src\Renderer\Utilities\VulkanUtilities.h" />
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Renderer\VulkanCommandPool.h" />
@@ -100,10 +119,16 @@
     <None Include="Shaders\anim.vert" />
     <None Include="Shaders\bone.frag" />
     <None Include="Shaders\bone.vert" />
+    <None Include="Shaders\Curve.frag" />
+    <None Include="Shaders\Curve.vert" />
+    <None Include="Shaders\default.frag" />
+    <None Include="Shaders\default.vert" />
     <None Include="Shaders\grid.frag" />
     <None Include="Shaders\grid.vert" />
     <None Include="Shaders\mesh.frag" />
     <None Include="Shaders\mesh.vert" />
+    <None Include="Shaders\objectPicking.frag" />
+    <None Include="Shaders\objectPicking.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -1,9 +1,15 @@
 #pragma once
 
-#include "Bone.h"
-#include "Model.h"
+#include <map>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "Math/AssimpGLMHelpers.h"
+#include "Math/VQS.h"
+
+#include "Core/Bone.h"
 
 #include "Renderer/Utilities/VulkanUtilities.h"
 
@@ -21,7 +27,8 @@ namespace Parfait
     {
         public:
             Animation() = default;
-            Animation(const std::string& _animationPath, Model* _model);
+            Animation(const std::string& _animationPath, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter, size_t _animationIndex = 0);
+            Animation(const aiScene* _scene, const aiAnimation* _animation, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter);
 
             ~Animation();
 
@@ -41,7 +48,7 @@ namespace Parfait
             std::map<std::string, BoneInfo> m_BoneInfoMap;
             bool m_IsAnimationValid = false;
 
-            void ReadMissingBones(const aiAnimation* _animation, Model& _model);
+            void ReadMissingBones(const aiAnimation* _animation, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter);
             void ReadHeirarchyData(AssimpNodeData& _dest, const aiNode* _src);
     };
 }

@@ -37,6 +37,12 @@ namespace Parfait
 		float timeStamp;
 	};
 
+	struct BoneInfo
+	{
+		int id;
+		glm::mat4 offset;
+	};
+
 	class Bone
 	{
 		public:
@@ -47,6 +53,7 @@ namespace Parfait
             const int& GetBoneID() const { return m_ID; }
 
             void Update(float _animationTime);
+			std::tuple<glm::vec3, Math::Quaternion, glm::vec3> GetInterpolateTransform(float _animationTime);
 
             int GetPositionIndex(float _animationTime) const;
             int GetRotationIndex(float _animationTime) const;

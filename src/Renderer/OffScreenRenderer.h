@@ -23,8 +23,8 @@ namespace Parfait
 				const VkFramebuffer& GetFramebuffer() const { return m_FrameBuffer; }
 				const VulkanGraphicsPipeline& GetGraphicsPipeline() const { return *m_Pipeline; }
 
-				const uint32_t& GetWidth() const { return m_Width; }
-				const uint32_t& GetHeight() const { return m_Height; }
+				uint32_t GetWidth() const { return m_Width; }
+				uint32_t GetHeight() const { return m_Height; }
 
 			private:
 				const VulkanContext& m_VkContextRef;

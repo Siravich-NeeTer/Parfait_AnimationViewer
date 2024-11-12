@@ -1,5 +1,7 @@
 #include "VulkanWindowResources.h"
 
+#include <imgui/implot.h>
+
 namespace Parfait
 {
 	namespace Graphics
@@ -13,18 +15,35 @@ namespace Parfait
 
 			// Model Loading
 			// -------------------------------------------------
-			LoadAnimation("Models/Zombie.dae");
+			Animator* animator = LoadAnimator("Models/Soldier.dae");
+			animator->GetModel()->AddAnimation("Models/Soldier.dae", "Walk");
+			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
+			animator->GetModel()->AddAnimation("Models/Run.dae", "Run");
+			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
+			animator->PlayAnimation("SlowRun");
+			animator->AttachPath(curve.get(), 20.0f);
+			//LoadModel("Models/viking_room.obj");
+			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
 		}
 		VulkanWindowResources::~VulkanWindowResources()
 		{
 			vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 
+			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageView, nullptr);
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
+			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageMemory, nullptr);
+
+			vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageView, nullptr);
+			vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
+			vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageMemory, nullptr);
+
 			DestroyDepthResources();
 			DestroySyncObject();
 
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
+			ImPlot::DestroyContext();
 			ImGui::DestroyContext();
 			vkDestroyDescriptorPool(m_VkContextRef.GetLogicalDevice(), m_ImGuiPool, nullptr);
 		}
@@ -32,10 +51,11 @@ namespace Parfait
 		void VulkanWindowResources::Update(float dt)
 		{
 			m_Time += dt;
-			if (m_Time >= 1.0f)
+			m_FPSTime += dt;
+			if (m_FPSTime >= 1.0f)
 			{
 				m_FPS = m_FrameCounter;
-				m_Time = 0.0f;
+				m_FPSTime = 0.0f;
 				m_FrameCounter = 0;
 			}
 
@@ -97,6 +117,9 @@ namespace Parfait
 
 			UpdateUniform(m_CurrentFrame);
 			UpdateAnimation(m_CurrentFrame);
+			SelectObjectComponent* selectObject = static_cast<SelectObjectComponent*>(m_SelectedObject[m_CurrentFrame]);
+			SelectObjectComponent* selectObjectA = static_cast<SelectObjectComponent*>(m_SelectedObject[0]);
+			SelectObjectComponent* selectObjectB = static_cast<SelectObjectComponent*>(m_SelectedObject[1]);
 
 			vkResetFences(m_VkContextRef.GetLogicalDevice(), 1, &m_InflightFence[m_CurrentFrame]);
 
@@ -108,7 +131,7 @@ namespace Parfait
 			*/
 			{
 				VkClearValue clearValues[2];
-				clearValues[0].color = { { 0.5f, 0.5f, 0.5f, 1.0f } };
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 				clearValues[1].depthStencil = { 1.0f, 0 };
 
 				VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -136,9 +159,12 @@ namespace Parfait
 				scissor.extent = { (unsigned int)m_OffscreenRenderer->GetWidth(), (unsigned int)m_OffscreenRenderer->GetHeight() };
 				vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &scissor);
 
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipeline());
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-				vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 6, 1, 0, 0);
+				if (m_IsRenderGrid)
+				{
+					vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipeline());
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_GridPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+					vkCmdDraw(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 6, 1, 0, 0);
+				}
 
 				for (auto& model : m_Models)
 				{
@@ -156,18 +182,25 @@ namespace Parfait
 					}
 				}
 
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				curve->Render(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), curvePipeline->GetPipelineLayout());
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipeline());
+				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+				curve->RenderPoint(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), spherePointPipeline->GetPipelineLayout());
+				
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
 
 			ImVec2 currentOffscreenSize;
-			/*
-			BeginRenderPass(*m_CommandBuffers[m_CurrentFrame], imageIndex);
-			*/
+			ImVec2 currentViewportPosition;
+			ImVec2 currentCursorScreenPos;
+			bool updateCurve = false;
 			{
 				VkRenderPassBeginInfo renderPassInfo{};
 				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 				renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
-				renderPassInfo.framebuffer = m_Framebuffers->GetFramebuffers()[imageIndex];
+				renderPassInfo.framebuffer = m_Framebuffers[imageIndex]->GetFramebuffer();
 				renderPassInfo.renderArea.offset = { 0, 0 };
 				renderPassInfo.renderArea.extent = m_SurfaceSwapchain->GetExtent();
 
@@ -185,23 +218,71 @@ namespace Parfait
 				ImGui_ImplGlfw_NewFrame();
 
 				ImGui::NewFrame();
+				ImGuizmo::BeginFrame();
 
 				ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
 				ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
-				ImGui::BeginChild("EmptyChild", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
-
 				ImGui::Image(m_ImGuiDescriptorSet, ImVec2{ (float)m_OffscreenRenderer->GetWidth(), (float)m_OffscreenRenderer->GetHeight() });
 				currentOffscreenSize = ImGui::GetWindowSize();
 				m_IsViewportFocus = ImGui::IsWindowHovered() || isCameraMove;
-
-				ImGui::EndChild();
+				currentViewportPosition = ImGui::GetWindowPos();
+				currentCursorScreenPos = ImGui::GetCursorScreenPos();
+				ImGuizmo::SetDrawlist();
 				ImGui::End();
+
+				ImGuiIO& io = ImGui::GetIO();
+				float st_x = currentViewportPosition.x;
+				float st_y = currentViewportPosition.y + 20;
+				ImGuizmo::SetRect(st_x, st_y, currentOffscreenSize.x, currentOffscreenSize.y);
+
+				if (m_SelectedObjectID != 0) 
+				{
+					if (Input::IsKeyBeginPressed(GLFW_KEY_W))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+					else if (Input::IsKeyBeginPressed(GLFW_KEY_E))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+					else if (Input::IsKeyBeginPressed(GLFW_KEY_R))
+						m_CurrentGizmoOperation = ImGuizmo::OPERATION::SCALE;
+
+					ImGuizmo::Enable(true);
+					glm::mat view = m_Camera.GetViewMatrix();
+					glm::mat4 proj = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
+
+					ImGuizmo::Manipulate(&view[0][0],
+						&proj[0][0],
+						m_CurrentGizmoOperation,
+						ImGuizmo::WORLD,
+						&currentMat[0][0],
+						NULL,
+						NULL);
+
+					if (ImGuizmo::IsUsingAny())
+					{
+						glm::vec3 scale, position;
+						glm::quat rotation;
+
+						// Unused:
+						glm::vec3 skew;
+						glm::vec4 perspective;
+						glm::decompose(currentMat, scale, rotation, position, skew, perspective);
+						m_Models[m_SelectedObjectID - 1]->position = position;
+						m_Models[m_SelectedObjectID - 1]->rotation = glm::degrees(glm::eulerAngles(rotation));
+						m_Models[m_SelectedObjectID - 1]->scale = scale;
+
+						m_IsUsingGizmo = true;
+					}
+					else
+					{
+						m_IsUsingGizmo = false;
+					}
+				}
 
 				int cnt = 0;
 				ImGui::Begin("Model");
 				ImGui::Text(std::string("FPS : " + std::to_string(m_FPS)).c_str());
 				ImGui::Checkbox("Render Bone", &m_IsDrawBone);
+				ImGui::Checkbox("Grid", &m_IsRenderGrid);
 				ImGui::NewLine();
 				for (auto& model : m_Models)
 				{
@@ -212,27 +293,28 @@ namespace Parfait
 					cnt++;
 				}
 
-				ImGui::Text("Animations ");
-				const char* items[] = { "Dying.dae", "Dance.dae", "Walk.dae", "Run.dae", "Hurricane Kick.dae" };
-				static const char* current_item = NULL;
-				if (ImGui::BeginCombo("##combo", current_item))
+				ImGui::Text("Curve Position");
+				std::vector<Object>& objs = curve->GetPointObject();
+				for (auto& obj : objs)
 				{
-					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					if (ImGui::DragFloat3(std::string("Position" + std::to_string(cnt)).c_str(), &obj.position[0], 0.01f, -100.0f, 100.0f))
 					{
-						bool is_selected = (current_item == items[n]);
-						if (ImGui::Selectable(items[n], is_selected))
-						{
-							current_item = items[n];
-
-							m_Animations[0] = std::make_unique<Animation>("Models/" + std::string(current_item), m_Models.back().get());
-							m_Animators[0] = std::make_unique<Animator>(m_Animations.back().get());
-						}
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
+						updateCurve = true;
 					}
-					ImGui::EndCombo();
+					cnt++;
 				}
+				ImGui::End();
 
+				ImGui::Begin("Plot");
+				curve->DisplayGraph();
+				ImGui::End();
+
+				ImGui::Begin("Help");
+				ImGui::Text("Controls (Same as Unity)");
+				ImGui::Text("Hold RMB + A/D : Move Camera (Left/Right)");
+				ImGui::Text("Hold RMB + W/S : Move Camera (Forward/Backward)");
+				ImGui::Text("Hold RMB + Q/E : Move Camera (Up/Down)");
+				ImGui::Text("Scroll Mouse : Zoom in/out");
 				ImGui::End();
 
 				ImGui::Render();
@@ -240,10 +322,74 @@ namespace Parfait
 
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
+
+			if (m_IsViewportFocus && Input::IsKeyBeginPressed(GLFW_MOUSE_BUTTON_LEFT) && !m_IsUsingGizmo)
+			{
+				m_IsUpdateSelectedObject = true;
+
+				glm::vec2 mouse {
+				Input::mouseX - currentCursorScreenPos.x,
+				(m_OffscreenRenderer->GetHeight() + Input::mouseY) - currentCursorScreenPos.y
+				};
+
+				
+				selectObject->id = 0;
+				selectObject->minDepth = std::numeric_limits<float>::max();
+
+				VkClearValue clearValues[2];
+				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+				clearValues[1].depthStencil = { 1.0f, 0 };
+
+				//begin renderpass
+				VkRenderPassBeginInfo object_picking_renderpass_begin_info{};
+				object_picking_renderpass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				object_picking_renderpass_begin_info.renderPass = m_ObjectPickingRenderPass->GetRenderPass();
+				object_picking_renderpass_begin_info.framebuffer = m_ObjectPickingFramebuffer->GetFramebuffer();
+				object_picking_renderpass_begin_info.renderArea.offset = { 0,0 };
+				object_picking_renderpass_begin_info.renderArea.extent = { m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight() };
+				object_picking_renderpass_begin_info.clearValueCount = 2;
+				object_picking_renderpass_begin_info.pClearValues = clearValues;
+
+				vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), &object_picking_renderpass_begin_info,
+					VK_SUBPASS_CONTENTS_INLINE);
+
+				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_ObjectPickingPipeline->GetPipeline());
+
+				//render all renderables
+				for (size_t j = 0; j < m_Models.size(); j++)
+				{
+					VkViewport viewport{};
+					viewport.x = 0.0f;
+					viewport.y = 0.0f;
+					viewport.width = (float)m_OffscreenRenderer->GetWidth();
+					viewport.height = (float)m_OffscreenRenderer->GetHeight();
+					viewport.minDepth = 0.0f;
+					viewport.maxDepth = 1.0f;
+					vkCmdSetViewport(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &viewport);
+
+					//the dynamic pipeline state means we have to set the scissor before each draw
+					VkRect2D rect{};
+					rect.offset.x = mouse.x > 0 && mouse.x < m_OffscreenRenderer->GetWidth() ? mouse.x : 0;
+					rect.offset.y = mouse.y > 0 && mouse.y < m_OffscreenRenderer->GetHeight() ? mouse.y : 0;
+					rect.extent = { 1, 1 };
+
+					//can only be used with a dynamic scissor state
+					vkCmdSetScissor(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), 0, 1, &rect);
+
+					//bind descriptor sets for current object
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+						m_ObjectPickingPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame],
+						0, nullptr);
+					vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+						m_ObjectPickingPipeline->GetPipelineLayout(), 1, 1, &m_ObjectPickingDescriptor->GetDescriptorSets(0)[m_CurrentFrame],
+						0, nullptr);
+
+					m_Models[j]->DrawPicking(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_ObjectPickingPipeline->GetPipelineLayout());
+				}
+				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
+			}
+
 			m_CommandBuffers[m_CurrentFrame]->End();
-			/*
-			EndRenderPass(*m_CommandBuffers[m_CurrentFrame]);
-			*/
 
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -294,7 +440,34 @@ namespace Parfait
 			{
 				vkDeviceWaitIdle(m_VkContextRef.GetLogicalDevice());
 				m_OffscreenRenderer->ReCreateFrameBuffer(currentOffscreenSize.x, currentOffscreenSize.y);
+
+				vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImage, nullptr);
+				vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageView, nullptr);
+				vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingColorImageMemory, nullptr);
+
+				vkDestroyImage(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImage, nullptr);
+				vkDestroyImageView(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageView, nullptr);
+				vkFreeMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingDepthImageMemory, nullptr);
+
+				CreateObjectPicking();
 				m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+
+			if (m_IsUpdateSelectedObject)
+			{
+				std::cout << "Current Frame: " << m_CurrentFrame << " | " << selectObjectA->id << " " << selectObjectB->id << "\n";
+				//std::cout << "Result: " << selectObject->id << "\n";
+				m_SelectedObjectID = selectObject->id;
+				std::cout << "Update Object ID: " << m_SelectedObjectID << "\n";
+
+				if(m_SelectedObjectID != 0)
+					currentMat = m_Models[m_SelectedObjectID - 1]->GetModelMatrix();
+
+				m_IsUpdateSelectedObject = false;
+			}
+			if (updateCurve)
+			{
+				curve->UpdateCurve();
 			}
 			m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 		}
@@ -309,10 +482,10 @@ namespace Parfait
 		}
 		void VulkanWindowResources::UpdateAnimation(uint32_t _currentFrame)
 		{
-			int currentBoneTransformCount = 0;
 			BoneTransform* boneTransform = static_cast<BoneTransform*>(m_FrameData[_currentFrame].transformData);
 			for (auto& animator : m_Animators)
 			{
+				int currentBoneTransformCount = animator->GetModel()->GetBoneTransformOffset();
 				auto& transforms = animator->GetFinalBoneMatrices();
 				for (int i = 0; i < transforms.size(); ++i)
 				{
@@ -329,7 +502,11 @@ namespace Parfait
 			m_CommandPool = std::make_unique<VulkanCommandPool>(m_VkContextRef);
 
 			CreateDepthResources();
-			m_Framebuffers = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{m_DepthImageView});
+			m_Framebuffers.resize(m_SurfaceSwapchain->GetSwapchainImageViews().size());
+			for (size_t i = 0; i < m_Framebuffers.size(); i++)
+			{
+				m_Framebuffers[i] = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_SurfaceSwapchain, *m_RenderPass, std::vector<VkImageView>{ m_SurfaceSwapchain->GetSwapchainImageViews()[i], m_DepthImageView });
+			}
 
 			// Uniform Buffer
 			m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -374,6 +551,8 @@ namespace Parfait
 			}
 			// -------------------------------------------------
 			LoadModel("Models/Plane.fbx");
+			m_Models[0]->scale = glm::vec3(5.0f);
+			m_Models[0]->position.y = -0.1f;
 
 			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(m_VkContextRef, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), m_Models.back()->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -399,6 +578,44 @@ namespace Parfait
 				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 				VK_POLYGON_MODE_FILL,
 				false);
+
+			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
+			std::vector<glm::vec3> controlPoints = {
+				{-6.0f, 0.0f, 0.0f},{-3.0f, 0.0f, -4.0f}, { 3.0f, 0.0f, -4.0f}, { 6.0f, 0.0f, 0.0f},
+				{ 4.0f, 0.0f, 2.0f},{ 1.0f, 0.0f,  5.0f}, {-2.0f, 0.0f,  1.0f}, {-3.0f, 0.0f, 0.0f}
+			};
+			for (const auto& pos : controlPoints)
+			{
+				curve->AddPoint(2.0f * pos);
+			}
+
+			curvePositionList = curve->GetPositionList();
+
+			curvePipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/Curve.vert", "Shaders/Curve.frag" },
+				PointVertex::getBindingDescription(),
+				PointVertex::getAttributeDescriptions(),
+				sizeof(glm::mat4),
+				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+				VK_POLYGON_MODE_FILL);
+			VkVertexInputAttributeDescription tmp;
+			tmp.binding = 0;
+			tmp.location = 0;
+			tmp.format = VK_FORMAT_R32G32B32_SFLOAT;
+			tmp.offset = 0;
+			spherePointPipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_OffscreenRenderer->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path>{ "Shaders/default.vert", "Shaders/default.frag" },
+				VkVertexInputBindingDescription{ .binding = 0, .stride = sizeof(glm::vec3), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX },
+				std::vector<VkVertexInputAttributeDescription>{ tmp },
+				sizeof(glm::mat4),
+				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+				VK_POLYGON_MODE_FILL);
+
+			CreateObjectPicking();
 		}
 
 		void VulkanWindowResources::CreateCommandBuffers(uint32_t _size)
@@ -481,6 +698,7 @@ namespace Parfait
 
 			// 2: initialize imgui library
 			ImGui::CreateContext();
+			ImPlot::CreateContext();
 			ImGui::StyleColorsDark();
 			ImGuiIO& io = ImGui::GetIO(); (void)io;
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
@@ -503,6 +721,54 @@ namespace Parfait
 			ImGui_ImplVulkan_Init(&init_info);
 			ImGui_ImplVulkan_CreateFontsTexture();
 		}
+		void VulkanWindowResources::CreateObjectPicking()
+		{
+			//Create VKImage with the VK_FORMAT_R32_SFLOAT format for the color attachment 
+			CreateImage(m_VkContextRef, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(),
+				VK_FORMAT_R32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				m_ObjectPickingColorImage, m_ObjectPickingColorImageMemory);
+
+			m_ObjectPickingColorImageView = CreateImageView(m_VkContextRef, m_ObjectPickingColorImage, VK_FORMAT_R32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+
+			//Create VKImage with the VK_FORMAT_R32_SFLOAT format for the depth attachment 
+			CreateImage(m_VkContextRef, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(),
+				FindDepthFormat(m_VkContextRef), VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				m_ObjectPickingDepthImage, m_ObjectPickingDepthImageMemory);
+
+			m_ObjectPickingDepthImageView = CreateImageView(m_VkContextRef, m_ObjectPickingDepthImage, FindDepthFormat(m_VkContextRef), VK_IMAGE_ASPECT_DEPTH_BIT);
+
+			//object picking pass
+			m_ObjectPickingRenderPass = std::make_unique<VulkanRenderPass>(m_VkContextRef, *m_SurfaceSwapchain, VK_FORMAT_R32_SFLOAT, FindDepthFormat(m_VkContextRef));
+			m_ObjectPickingFramebuffer = std::make_unique<VulkanFramebuffer>(m_VkContextRef, *m_ObjectPickingRenderPass, m_OffscreenRenderer->GetWidth(), m_OffscreenRenderer->GetHeight(), std::vector<VkImageView>{ m_ObjectPickingColorImageView, m_ObjectPickingDepthImageView });
+
+			m_ObjectPickingDescriptor = std::make_unique<VulkanDescriptor>(m_VkContextRef); 
+			m_ObjectPickingDescriptor->AddDescriptorSets({
+				{ 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr }
+				});
+			m_ObjectPickingDescriptor->Init();
+			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				m_ObjectPickingBuffers[i] = std::make_unique<VulkanBuffer>(m_VkContextRef, *m_CommandPool, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, sizeof(SelectObjectComponent));
+				m_ObjectPickingDescriptor->WriteStorageBuffer(0, m_ObjectPickingBuffers[i]->GetBuffer(), static_cast<VkDeviceSize>(sizeof(SelectObjectComponent)), i);
+				m_ObjectPickingDescriptor->UpdateDescriptorSet();
+
+				vkMapMemory(m_VkContextRef.GetLogicalDevice(), m_ObjectPickingBuffers[i]->GetDeviceMemory(), 0, static_cast<VkDeviceSize>(sizeof(SelectObjectComponent)), 0, &m_SelectedObject[i]);
+			}
+
+			m_ObjectPickingPipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
+				m_ObjectPickingRenderPass->GetRenderPass(),
+				std::vector<VkDescriptorSetLayout> { m_Descriptor->GetDescriptorSetLayout(0), m_ObjectPickingDescriptor->GetDescriptorSetLayout(0) },
+				std::vector<std::filesystem::path> { "Shaders/objectPicking.vert", "Shaders/objectPicking.frag" },
+				ObjectPickingVertex::getBindingDescription(),
+				ObjectPickingVertex::getAttributeDescriptions(),
+				sizeof(glm::mat4), 
+				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 
+				VK_POLYGON_MODE_FILL);
+		}
 
 		void VulkanWindowResources::RecreateSwapchain()
 		{
@@ -523,7 +789,9 @@ namespace Parfait
 			CreateDepthResources();
 
 			// Re-Bind depth attachment to Framebuffer
-			m_Framebuffers->RecreateFramebuffer({ m_DepthImageView });
+			for(size_t i = 0; i < m_Framebuffers.size(); i++)
+				m_Framebuffers[i]->RecreateFramebuffer(*m_SurfaceSwapchain, 
+					{ m_SurfaceSwapchain->GetSwapchainImageViews()[i], m_DepthImageView });
 		}
 
 		void VulkanWindowResources::DestroySyncObject()
@@ -563,17 +831,24 @@ namespace Parfait
 			app->m_IsFramebufferResize = true;
 		}
 
-		void VulkanWindowResources::LoadModel(const std::filesystem::path& _path)
+		Model* VulkanWindowResources::LoadModel(const std::filesystem::path& _path, const std::string& _objectName)
 		{
-			m_Models.push_back(std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path));
-			m_Models.back()->SetBoneTransformOffset(m_TotalBoneTransform);
-			m_TotalBoneTransform += m_Models.back()->GetBoneCount();
+			std::unique_ptr<Model> newModel = std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID++, _objectName == "" ? "untitled_" + std::to_string(m_LastObjectID) : _objectName);
+
+			newModel->SetBoneTransformOffset(m_TotalBoneTransform);
+			m_TotalBoneTransform += newModel->GetBoneCount();
+
+			m_Models.push_back(std::move(newModel));
+			return m_Models.back().get();
 		}
-		void VulkanWindowResources::LoadAnimation(const std::filesystem::path& _path)
+		Animator* VulkanWindowResources::LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName)
 		{
-			LoadModel(_path);
-			m_Animations.push_back(std::make_unique<Animation>(_path.string(), m_Models.back().get()));
-			m_Animators.push_back(std::make_unique<Animator>(m_Animations.back().get()));
+			Model* newModel = LoadModel(_path, _objectName);
+			newModel->SetIsAnimation(true);
+			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newModel);
+
+			m_Animators.push_back(std::move(newAnimator));
+			return m_Animators.back().get();
 		}
 	}
 }

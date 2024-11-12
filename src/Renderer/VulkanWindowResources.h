@@ -16,6 +16,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_vulkan.h>
+#include <imgui/extensions/ImGuizmo.h>
 
 #include <chrono>
 #include <windows.h>
@@ -24,8 +25,8 @@
 #include "Core/Input.h"
 #include "Core/Camera.h"
 #include "Core/Model.h"
-#include "Core/Animation.h"
 #include "Core/Animator.h"
+#include "Core/Curve.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -69,7 +70,7 @@ namespace Parfait
 
 				std::unique_ptr<VulkanSurfaceSwapchain> m_SurfaceSwapchain;
 				std::unique_ptr<VulkanRenderPass> m_RenderPass;
-				std::unique_ptr<VulkanFramebuffer> m_Framebuffers;
+				std::vector<std::unique_ptr<VulkanFramebuffer>> m_Framebuffers;
 				std::unique_ptr<VulkanCommandPool> m_CommandPool;
 				std::vector<std::unique_ptr<VulkanCommandBuffer>> m_CommandBuffers;
 				std::unique_ptr<VulkanDescriptor> m_Descriptor;
@@ -89,13 +90,14 @@ namespace Parfait
 
 				// Models - Animations
 				std::vector<std::unique_ptr<Model>> m_Models;
-				std::vector<std::unique_ptr<Animation>> m_Animations;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
+				int m_LastObjectID = 1;
 				
 				// Time Counter
 				float m_Time;
+				float m_FPSTime;
 				uint32_t m_FPS;
 				uint32_t m_FrameCounter = 0;
 
@@ -112,6 +114,39 @@ namespace Parfait
 				std::unique_ptr<VulkanGraphicsPipeline> m_BonePipeline;	// Draw Bone Animation
 				std::unique_ptr<VulkanGraphicsPipeline> m_GridPipeline;	// Draw Infinite Grid in Editor
 
+				// Object Picking
+				VkImage m_ObjectPickingColorImage;
+				VkDeviceMemory m_ObjectPickingColorImageMemory;
+				VkImageView m_ObjectPickingColorImageView;
+				VkImage m_ObjectPickingDepthImage;
+				VkDeviceMemory m_ObjectPickingDepthImageMemory;
+				VkImageView m_ObjectPickingDepthImageView;
+
+				std::unique_ptr<VulkanFramebuffer> m_ObjectPickingFramebuffer;
+				std::unique_ptr<VulkanRenderPass> m_ObjectPickingRenderPass;
+				std::unique_ptr<VulkanGraphicsPipeline> m_ObjectPickingPipeline;
+				std::unique_ptr<VulkanDescriptor> m_ObjectPickingDescriptor;
+				std::unique_ptr<VulkanBuffer> m_ObjectPickingBuffers[MAX_FRAMES_IN_FLIGHT];
+				struct SelectObjectComponent
+				{
+					uint32_t id;
+					float minDepth;
+				};
+				void* m_SelectedObject[MAX_FRAMES_IN_FLIGHT];
+				bool m_IsUpdateSelectedObject;
+				bool m_IsUsingGizmo;
+				ImGuizmo::OPERATION m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+				uint32_t m_SelectedObjectID;
+				glm::mat4 currentMat = glm::mat4(1.0f);
+
+				// TODO: TEMP
+				std::unique_ptr<Curve> curve;
+				std::vector<glm::vec3> curvePositionList;
+				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
+				std::unique_ptr<VulkanGraphicsPipeline> spherePointPipeline;
+
+				bool m_IsRenderGrid = true;
+
 				std::unique_ptr<OffScreenRenderer> m_OffscreenRenderer;
 				VkDescriptorSet m_ImGuiDescriptorSet;
 				VkDescriptorPool m_ImGuiPool;
@@ -125,6 +160,7 @@ namespace Parfait
 				void CreateSyncObject(uint32_t _size);
 				void CreateDepthResources();
 				void CreateImGui();
+				void CreateObjectPicking();
 
 				void RecreateSwapchain();
 
@@ -135,8 +171,8 @@ namespace Parfait
 				void BindWindowEvents();
 				static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
-				void LoadModel(const std::filesystem::path& _path);
-				void LoadAnimation(const std::filesystem::path& _path);
+				Model* LoadModel(const std::filesystem::path& _path, const std::string& _objectName = "");
+				Animator* LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName = "");
 		};
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace Parfait
 {
-    Animation::Animation(const std::string& _animationPath, Model* _model)
+    Animation::Animation(const std::string& _animationPath, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter, size_t _animationIndex)
     {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(_animationPath, aiProcess_Triangulate);
@@ -13,11 +13,24 @@ namespace Parfait
         {
             scene->mRootNode->mTransformation = aiMatrix4x4();
 
-            aiAnimation* animation = scene->mAnimations[0];
+            aiAnimation* animation = scene->mAnimations[_animationIndex];
             m_Duration = animation->mDuration;
             m_TicksPerSecond = animation->mTicksPerSecond;
             ReadHeirarchyData(m_RootNode, scene->mRootNode);
-            ReadMissingBones(animation, *_model);
+            ReadMissingBones(animation, _boneInfoMap, _boneCounter);
+        }
+    }
+    Animation::Animation(const aiScene* _scene, const aiAnimation* _animation, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter)
+    {
+        if (_animation)
+        {
+            m_IsAnimationValid = true;
+            _scene->mRootNode->mTransformation = aiMatrix4x4();
+
+            m_Duration = _animation->mDuration;
+            m_TicksPerSecond = _animation->mTicksPerSecond;
+            ReadHeirarchyData(m_RootNode, _scene->mRootNode);
+            ReadMissingBones(_animation, _boneInfoMap, _boneCounter);
         }
     }
 
@@ -39,13 +52,9 @@ namespace Parfait
             return &(*iter);
     }
 
-
-    void Animation::ReadMissingBones(const aiAnimation* _animation, Model& _model)
+    void Animation::ReadMissingBones(const aiAnimation* _animation, std::map<std::string, BoneInfo>& _boneInfoMap, int& _boneCounter)
     {
         int size = _animation->mNumChannels;
-
-        auto& boneInfoMap = _model.GetBoneInfoMap();//getting m_BoneInfoMap from Model class
-        int& boneCount = _model.GetBoneCount(); //getting the m_BoneCounter from Model class
 
         //reading channels(bones engaged in an animation and their keyframes)
         for (int i = 0; i < size; i++)
@@ -53,17 +62,18 @@ namespace Parfait
             auto channel = _animation->mChannels[i];
             std::string boneName = channel->mNodeName.data;
 
-            if (boneInfoMap.find(boneName) == boneInfoMap.end())
+            if (_boneInfoMap.find(boneName) == _boneInfoMap.end())
             {
-                boneInfoMap[boneName].id = boneCount;
-                boneCount++;
+                _boneInfoMap[boneName].id = _boneCounter;
+                _boneCounter++;
             }
             m_Bones.push_back(Bone(channel->mNodeName.data,
-                boneInfoMap[channel->mNodeName.data].id, channel));
+                _boneInfoMap[channel->mNodeName.data].id, channel));
         }
 
-        m_BoneInfoMap = boneInfoMap;
+        m_BoneInfoMap = _boneInfoMap;
     }
+
     void Animation::ReadHeirarchyData(AssimpNodeData& _dest, const aiNode* _src)
     {
         assert(_src);
