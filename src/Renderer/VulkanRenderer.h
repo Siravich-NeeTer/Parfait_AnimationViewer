@@ -24,9 +24,9 @@
 
 #include "Core/Input.h"
 #include "Core/Camera.h"
-#include "Core/Model.h"
-#include "Core/Animator.h"
-#include "Core/Curve.h"
+#include "Core/GameObject/Model.h"
+#include "Core/GameObject/Animator.h"
+#include "Core/GameObject/Curve.h"
 
 #include "Renderer/VulkanContext.h"
 #include "Renderer/VulkanSurfaceSwapchain.h"
@@ -49,11 +49,11 @@ namespace Parfait
 {
 	namespace Graphics
 	{
-		class VulkanWindowResources
+		class VulkanRenderer
 		{
 			public:
-				VulkanWindowResources(const VulkanContext& _vulkanContext, GLFWwindow* _window);
-				~VulkanWindowResources();
+				VulkanRenderer(const VulkanContext& _vulkanContext, GLFWwindow* _window);
+				~VulkanRenderer();
 
 				void Update(float dt);
 				void Draw();
@@ -89,7 +89,7 @@ namespace Parfait
 				VkImageView m_DepthImageView;
 
 				// Models - Animations
-				std::vector<std::unique_ptr<Model>> m_Models;
+				std::vector<std::unique_ptr<Object>> m_Objects;
 				std::vector<std::unique_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
@@ -140,10 +140,12 @@ namespace Parfait
 				glm::mat4 currentMat = glm::mat4(1.0f);
 
 				// TODO: TEMP
+				/*
 				std::unique_ptr<Curve> curve;
 				std::vector<glm::vec3> curvePositionList;
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 				std::unique_ptr<VulkanGraphicsPipeline> spherePointPipeline;
+				*/
 
 				bool m_IsRenderGrid = true;
 

@@ -2,7 +2,7 @@
 
 #define NOMINMAX
 #include <GLFW/glfw3.h>
-#include "Renderer/VulkanWindowResources.h"
+#include "Renderer/VulkanRenderer.h"
 
 namespace Parfait
 {
@@ -16,7 +16,7 @@ namespace Parfait
 
 		private:
 			std::unique_ptr <Graphics::VulkanContext> m_VkContext;
-			std::vector<std::unique_ptr<Graphics::VulkanWindowResources>> m_WindowResources;
+			std::vector<std::unique_ptr<Graphics::VulkanRenderer>> m_WindowResources;
 			std::vector<GLFWwindow*> m_Windows;
 	};
 }

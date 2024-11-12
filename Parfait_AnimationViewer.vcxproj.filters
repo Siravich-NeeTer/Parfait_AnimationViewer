@@ -90,7 +90,7 @@
     <ClCompile Include="src\Renderer\VulkanCommandBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Renderer\VulkanWindowResources.cpp">
+    <ClCompile Include="src\Renderer\VulkanRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\Buffers\VulkanBuffer.cpp">
@@ -123,16 +123,16 @@
     <ClCompile Include="src\Renderer\OffScreenRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\Model.cpp">
+    <ClCompile Include="src\Core\GameObject\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\Bone.cpp">
+    <ClCompile Include="src\Core\GameObject\Bone.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\Animator.cpp">
+    <ClCompile Include="src\Core\GameObject\Animator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\Animation.cpp">
+    <ClCompile Include="src\Core\GameObject\Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="External Libraries\imgui\extensions\ImGuizmo.cpp">
@@ -150,7 +150,7 @@
     <ClCompile Include="External Libraries\imgui\extensions\ImGradient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Core\Curve.cpp">
+    <ClCompile Include="src\Core\GameObject\Curve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="External Libraries\imgui\implot.cpp">
@@ -224,7 +224,7 @@
     <ClInclude Include="src\Renderer\VulkanCommandBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\VulkanWindowResources.h">
+    <ClInclude Include="src\Renderer\VulkanRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Buffers\VulkanBuffer.h">
@@ -263,19 +263,19 @@
     <ClInclude Include="src\Renderer\OffScreenRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Model.h">
+    <ClInclude Include="src\Core\GameObject\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Object.h">
+    <ClInclude Include="src\Core\GameObject\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Bone.h">
+    <ClInclude Include="src\Core\GameObject\Bone.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Animation.h">
+    <ClInclude Include="src\Core\GameObject\Animation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Animator.h">
+    <ClInclude Include="src\Core\GameObject\Animator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Math\AssimpGLMHelpers.h">
@@ -308,7 +308,7 @@
     <ClInclude Include="External Libraries\imgui\extensions\ImGradient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Curve.h">
+    <ClInclude Include="src\Core\GameObject\Curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Utilities\PrimitiveMesh.h">

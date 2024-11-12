@@ -6,7 +6,7 @@
 
 #include "Renderer/Buffers/VulkanVertexBuffer.h"
 
-#include "Core/Object.h"
+#include "Object.h"
 
 namespace Parfait
 {
@@ -16,7 +16,7 @@ namespace Parfait
 		glm::vec3 color;
 	};
 
-	class Curve
+	class Curve : public Object
 	{
 		public:
 			Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool);

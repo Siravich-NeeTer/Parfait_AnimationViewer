@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Core/Model.h"
-#include "Core/Animation.h"
+#include "Model.h"
+#include "Animation.h"
 
-#include "Core/Curve.h"
+#include "Curve.h"
 
 namespace Parfait
 {

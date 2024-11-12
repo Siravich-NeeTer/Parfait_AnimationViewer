@@ -15,9 +15,9 @@
 #include <filesystem>
 #include <map>
 
-#include "Core/Object.h"
-#include "Core/Bone.h"
-#include "Core/Animation.h"
+#include "Object.h"
+#include "Bone.h"
+#include "Animation.h"
 
 #include "Math/AssimpGLMHelpers.h"
 

@@ -20,7 +20,7 @@ namespace Parfait
 		// 5th parameter : Only for OpenGL
 		GLFWwindow* window = glfwCreateWindow(_width, _height, _title, nullptr, nullptr);
 		m_Windows.emplace_back(window);
-		m_WindowResources.emplace_back(std::make_unique<Graphics::VulkanWindowResources>(*m_VkContext, window));
+		m_WindowResources.emplace_back(std::make_unique<Graphics::VulkanRenderer>(*m_VkContext, window));
 	}
 	void ParfaitEngine::Run() 
 	{

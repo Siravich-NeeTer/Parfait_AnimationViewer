@@ -9,7 +9,7 @@
 #include "Math/AssimpGLMHelpers.h"
 #include "Math/VQS.h"
 
-#include "Core/Bone.h"
+#include "Bone.h"
 
 #include "Renderer/Utilities/VulkanUtilities.h"
 
