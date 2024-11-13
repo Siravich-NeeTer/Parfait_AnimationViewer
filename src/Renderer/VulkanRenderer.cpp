@@ -21,7 +21,7 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/Run.dae", "Run");
 			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
 			animator->PlayAnimation("SlowRun");
-			//animator->AttachPath(curve.get(), 20.0f);
+			//animator->AttachPath(curve, 20.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -168,7 +168,7 @@ namespace Parfait
 
 				for (auto& obj : m_Objects)
 				{
-					if (Model* model = dynamic_cast<Model*>(obj.get()))
+					if (Model* model = dynamic_cast<Model*>(obj.second.get()))
 					{
 						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipeline());
 						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_OffscreenRenderer->GetGraphicsPipeline().GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
@@ -183,16 +183,16 @@ namespace Parfait
 							model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
 						}
 					}
+					else if (Curve* curve = dynamic_cast<Curve*>(obj.second.get()))
+					{
+						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipeline());
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+						curve->Render(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), curvePipeline->GetPipelineLayout());
+						vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipeline());
+						vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+						curve->RenderPoint(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), spherePointPipeline->GetPipelineLayout());
+					}
 				}
-
-				/*
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipeline());
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, curvePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-				curve->Render(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), curvePipeline->GetPipelineLayout());
-				vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipeline());
-				vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
-				curve->RenderPoint(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), spherePointPipeline->GetPipelineLayout());
-				*/
 				
 				vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer());
 			}
@@ -258,8 +258,10 @@ namespace Parfait
 				float st_y = currentViewportPosition.y + 20;
 				ImGuizmo::SetRect(st_x, st_y, currentOffscreenSize.x, currentOffscreenSize.y);
 
-				if (m_SelectedObjectID != 0) 
+				if (m_SelectedObjectID != std::numeric_limits<uint32_t>::max()) 
 				{
+					currentMat = m_Objects[m_SelectedObjectID]->GetModelMatrix();
+
 					if (Input::IsKeyBeginPressed(GLFW_KEY_W))
 						m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 					else if (Input::IsKeyBeginPressed(GLFW_KEY_E))
@@ -288,9 +290,9 @@ namespace Parfait
 						glm::vec3 skew;
 						glm::vec4 perspective;
 						glm::decompose(currentMat, scale, rotation, position, skew, perspective);
-						m_Objects[m_SelectedObjectID - 1]->position = position;
-						m_Objects[m_SelectedObjectID - 1]->rotation = glm::degrees(glm::eulerAngles(rotation));
-						m_Objects[m_SelectedObjectID - 1]->scale = scale;
+						m_Objects[m_SelectedObjectID]->position = position;
+						m_Objects[m_SelectedObjectID]->rotation = glm::degrees(glm::eulerAngles(rotation));
+						m_Objects[m_SelectedObjectID]->scale = scale;
 
 						m_IsUsingGizmo = true;
 					}
@@ -307,14 +309,14 @@ namespace Parfait
 				ImGui::End();
 
 				ImGui::Begin("Inspector");
-				if (m_SelectedObjectID != 0)
+				if (m_SelectedObjectID != std::numeric_limits<uint32_t>::max())
 				{
 					ImGui::Text("Position"); ImGui::SameLine();
-					ImGui::DragFloat3("##Position", &m_Objects[m_SelectedObjectID - 1]->position[0], 0.01f, -100.0f, 100.0f);
+					ImGui::DragFloat3("##Position", &m_Objects[m_SelectedObjectID]->position[0], 0.01f, -100.0f, 100.0f);
 					ImGui::Text("Rotation"); ImGui::SameLine();
-					ImGui::DragFloat3("##Rotation", &m_Objects[m_SelectedObjectID - 1]->rotation[0], 0.1f, -360.0f, 360.0f);
+					ImGui::DragFloat3("##Rotation", &m_Objects[m_SelectedObjectID]->rotation[0], 0.1f, -360.0f, 360.0f);
 					ImGui::Text("Scale"); ImGui::SameLine();
-					ImGui::DragFloat3("##Scale", &m_Objects[m_SelectedObjectID - 1]->scale[0], 0.01f, 0.0f, 100.0f);
+					ImGui::DragFloat3("##Scale", &m_Objects[m_SelectedObjectID]->scale[0], 0.01f, 0.0f, 100.0f);
 				}
 				ImGui::End();
 
@@ -341,15 +343,20 @@ namespace Parfait
 				ImGui::Begin("Hierachy");
 				for(size_t i = 0; i < m_Objects.size(); i++)
 				{
-					if (ImGui::TreeNodeEx(m_Objects[i]->name.c_str(), ImGuiTreeNodeFlags_Leaf | (m_SelectedObjectID == i + 1 ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None)))
+					if (m_Objects[i]->GetParent() == nullptr)
 					{
-						if (ImGui::IsItemClicked())
+						ImGuiTreeNodeFlags_ selectedFlag = (m_SelectedObjectID == m_Objects[i]->id ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
+						ImGuiTreeNodeFlags_ leafFlag = (m_Objects[i]->GetChildren().empty() ? ImGuiTreeNodeFlags_Leaf : ImGuiTreeNodeFlags_None);
+						if (ImGui::TreeNodeEx(m_Objects[i]->name.c_str(), leafFlag | selectedFlag))
 						{
-							std::cout << "Select : " << m_Objects[i]->name << "\n";
-							m_SelectedObjectID = i + 1;
-							currentMat = m_Objects[m_SelectedObjectID - 1]->GetModelMatrix();
+							if (ImGui::IsItemClicked())
+							{
+								std::cout << "Select : " << m_Objects[i]->name << "\n";
+								m_SelectedObjectID = m_Objects[i]->id;
+							}
+							DisplayHierachy(m_Objects[i].get());
+							ImGui::TreePop();
 						}
-						ImGui::TreePop();
 					}
 				}
 				ImGui::End();
@@ -378,7 +385,7 @@ namespace Parfait
 				};
 
 				
-				selectObject->id = 0;
+				selectObject->id = std::numeric_limits<uint32_t>::max();
 				selectObject->minDepth = std::numeric_limits<float>::max();
 
 				VkClearValue clearValues[2];
@@ -403,7 +410,7 @@ namespace Parfait
 				//render all renderables
 				for (auto& obj : m_Objects)
 				{
-					if (Model* model = dynamic_cast<Model*>(obj.get()))
+					if (Model* model = dynamic_cast<Model*>(obj.second.get()))
 					{
 						VkViewport viewport{};
 						viewport.x = 0.0f;
@@ -508,8 +515,8 @@ namespace Parfait
 				m_SelectedObjectID = selectObject->id;
 				std::cout << "Update Object ID: " << m_SelectedObjectID << "\n";
 
-				if(m_SelectedObjectID != 0)
-					currentMat = m_Objects[m_SelectedObjectID - 1]->GetModelMatrix();
+				if(m_SelectedObjectID != std::numeric_limits<uint32_t>::max())
+					currentMat = m_Objects[m_SelectedObjectID]->GetModelMatrix();
 
 				m_IsUpdateSelectedObject = false;
 			}
@@ -604,7 +611,7 @@ namespace Parfait
 			m_Objects[0]->scale = glm::vec3(5.0f);
 			m_Objects[0]->position.y = -0.1f;
 
-			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(m_VkContextRef, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), dynamic_cast<Model*>(m_Objects.back().get())->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
+			m_OffscreenRenderer = std::make_unique<OffScreenRenderer>(m_VkContextRef, std::vector<VkDescriptorSetLayout>{ m_Descriptor->GetDescriptorSetLayout(0), dynamic_cast<Model*>(m_Objects[0].get())->GetDescriptor().GetDescriptorSetLayout(0), m_FrameDescriptor->GetDescriptorSetLayout(0)});
 			m_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(m_OffscreenRenderer->GetTextureSampler(), m_OffscreenRenderer->GetTextureImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			m_BonePipeline = std::make_unique<VulkanGraphicsPipeline>(m_VkContextRef,
@@ -629,15 +636,16 @@ namespace Parfait
 				VK_POLYGON_MODE_FILL,
 				false);
 
-			/*
-			curve = std::make_unique<Curve>(m_VkContextRef, *m_CommandPool);
+			curve = CreateCurve();
 			std::vector<glm::vec3> controlPoints = {
 				{-6.0f, 0.0f, 0.0f},{-3.0f, 0.0f, -4.0f}, { 3.0f, 0.0f, -4.0f}, { 6.0f, 0.0f, 0.0f},
 				{ 4.0f, 0.0f, 2.0f},{ 1.0f, 0.0f,  5.0f}, {-2.0f, 0.0f,  1.0f}, {-3.0f, 0.0f, 0.0f}
 			};
 			for (const auto& pos : controlPoints)
 			{
-				curve->AddPoint(2.0f * pos);
+				auto ptr = curve->AddPoint(m_LastObjectID, 2.0f * pos);
+				m_Objects[m_LastObjectID++] = ptr;
+				ptr->SetParent(curve);
 			}
 
 			curvePositionList = curve->GetPositionList();
@@ -665,7 +673,6 @@ namespace Parfait
 				sizeof(glm::mat4),
 				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
 				VK_POLYGON_MODE_FILL);
-			*/
 
 			CreateObjectPicking();
 		}
@@ -885,22 +892,50 @@ namespace Parfait
 
 		Model* VulkanRenderer::LoadModel(const std::filesystem::path& _path, const std::string& _objectName)
 		{
-			std::unique_ptr<Model> newModel = std::make_unique<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID++, _objectName == "" ? "untitled_" + std::to_string(m_LastObjectID) : _objectName);
+			std::shared_ptr<Model> newModel = std::make_shared<Model>(m_VkContextRef, *m_CommandPool, _path, m_LastObjectID, _objectName == "" ? "untitled_" + std::to_string(m_LastObjectID) : _objectName);
 
 			newModel->SetBoneTransformOffset(m_TotalBoneTransform);
 			m_TotalBoneTransform += newModel->GetBoneCount();
 
-			m_Objects.push_back(std::move(newModel));
-			return dynamic_cast<Model*>(m_Objects.back().get());
+			m_Objects[m_LastObjectID++] = newModel;
+			return newModel.get();
 		}
 		Animator* VulkanRenderer::LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName)
 		{
 			Model* newModel = LoadModel(_path, _objectName);
 			newModel->SetIsAnimation(true);
-			std::unique_ptr<Animator> newAnimator = std::make_unique<Animator>(newModel);
+			std::shared_ptr<Animator> newAnimator = std::make_shared<Animator>(newModel);
 
 			m_Animators.push_back(std::move(newAnimator));
 			return m_Animators.back().get();
+		}
+		Curve* VulkanRenderer::CreateCurve(const std::string& _objectName)
+		{
+			std::shared_ptr<Curve> newCurve = std::make_shared<Curve>(m_VkContextRef, *m_CommandPool, m_LastObjectID, _objectName == "" ? "untitled_" + std::to_string(m_LastObjectID) : _objectName);
+			m_Objects[m_LastObjectID++] = newCurve;
+			return newCurve.get();
+		}
+
+		void VulkanRenderer::DisplayHierachy(Object* object)
+		{
+			const std::vector<Object*>& childs = object->GetChildren();
+			for (size_t i = 0; i < childs.size(); i++)
+			{
+				ImGuiTreeNodeFlags_ selectedFlag = (m_SelectedObjectID == childs[i]->id ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
+				ImGuiTreeNodeFlags_ leafFlag = (childs[i]->GetChildren().empty() ? ImGuiTreeNodeFlags_Leaf : ImGuiTreeNodeFlags_None);
+				if (ImGui::TreeNodeEx(childs[i]->name.c_str(), leafFlag | selectedFlag))
+				{
+					if (ImGui::IsItemClicked())
+					{
+						std::cout << "Select : " << childs[i]->name << "\n";
+						m_SelectedObjectID = childs[i]->id;
+					}
+					ImGui::TreePop();
+				}
+
+				if (!childs[i]->GetChildren().empty())
+					DisplayHierachy(childs[i]);
+			}
 		}
 	}
 }

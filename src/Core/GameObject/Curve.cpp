@@ -9,8 +9,10 @@
 
 namespace Parfait
 {
-	Curve::Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool)
-		: m_VulkanContextRef(_vulkanContext), m_VulkanCommandPool(_vulkanCommandPool)
+	Curve::Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, uint32_t _id, const std::string& _objectName)
+		: m_VulkanContextRef(_vulkanContext), 
+		m_VulkanCommandPool(_vulkanCommandPool),
+		Object(_id, _objectName)
 	{
 		m_SphereVertices = Primitive::CreateSphere(0.025f, 10, 10);
 		m_SpherePointBuffer = std::make_unique<Graphics::VulkanVertexBuffer<glm::vec3>>(m_VulkanContextRef, m_VulkanCommandPool, m_SphereVertices.data(), m_SphereVertices.size());
@@ -22,22 +24,21 @@ namespace Parfait
 		AddVelocity(0.25f, 1.0f);
 		AddVelocity(0.75f, 1.0f);
 	}
-	void Curve::AddPoint(const glm::vec3& _newPosition)
+	std::shared_ptr<Object> Curve::AddPoint(uint32_t _id, const glm::vec3& _newPosition)
 	{
-		// TODO: Find Proper ID for each point
-		uint32_t tmpID = 0;
-
-		Object newObject(tmpID,"");
-		newObject.position = _newPosition;
-		m_Points.push_back(std::move(newObject));
+		std::shared_ptr<Object> newObject = std::make_shared<Object>(_id, "Control Point_" + std::to_string(m_PointVertices.size()));
+		newObject->position = _newPosition;
+		m_Points.push_back(newObject.get());
 		m_PointVertices.push_back({ _newPosition, glm::vec3(1.0f) });
 
 		UpdateCurve();
+
+		return newObject;
 	}
 	void Curve::Render(VkCommandBuffer commandBuffer, VkPipelineLayout _curvePipelineLayout)
 	{
 		// Render Path
-		glm::mat4 model(1.0f);
+		glm::mat4 model = GetModelMatrix();
 
 		const VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_VertexBuffer->GetBuffer(), offsets);
@@ -51,8 +52,7 @@ namespace Parfait
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_SpherePointBuffer->GetBuffer(), offsets);
 		for (size_t i = 0; i < m_Points.size(); i++)
 		{
-			glm::mat4 model(1.0f);
-			model = glm::translate(model, m_Points[i].position);
+			glm::mat4 model = m_Points[i]->GetModelMatrix();
 
 			vkCmdPushConstants(commandBuffer, _spherePointPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &model);
 			vkCmdDraw(commandBuffer, m_SphereVertices.size(), 1, 0, 0);
@@ -106,10 +106,10 @@ namespace Parfait
 			int i2 = i + 1 > m_Points.size() - 1 ? (i + 1) % m_Points.size() : i + 1;
 			int i3 = i + 2 > m_Points.size() - 1 ? (i + 2) % m_Points.size() : i + 2;
 
-			const glm::vec3& P0 = m_Points[i0].position;
-			const glm::vec3& P1 = m_Points[i1].position;
-			const glm::vec3& P2 = m_Points[i2].position;
-			const glm::vec3& P3 = m_Points[i3].position;
+			const glm::vec3& P0 = m_Points[i0]->position;
+			const glm::vec3& P1 = m_Points[i1]->position;
+			const glm::vec3& P2 = m_Points[i2]->position;
+			const glm::vec3& P3 = m_Points[i3]->position;
 
 			float step = 0.01f;
 			for (float t = 0.0f; t <= 1.0f; t += step)
@@ -224,10 +224,10 @@ namespace Parfait
 		int i2 = qIndex + 1 > m_Points.size() - 1 ? (qIndex + 1) % m_Points.size() : qIndex + 1;
 		int i3 = qIndex + 2 > m_Points.size() - 1 ? (qIndex + 2) % m_Points.size() : qIndex + 2;
 
-		const glm::vec3& P0 = m_Points[i0].position;
-		const glm::vec3& P1 = m_Points[i1].position;
-		const glm::vec3& P2 = m_Points[i2].position;
-		const glm::vec3& P3 = m_Points[i3].position;
+		const glm::vec3& P0 = m_Points[i0]->position;
+		const glm::vec3& P1 = m_Points[i1]->position;
+		const glm::vec3& P2 = m_Points[i2]->position;
+		const glm::vec3& P3 = m_Points[i3]->position;
 
 		return Math::CatmullRom(P0, P1, P2, P3, _t / (m_EventPoint_t[qIndex + 1] - m_EventPoint_t[qIndex]));
 	}
@@ -242,7 +242,7 @@ namespace Parfait
 		// Table Construction - Adaptive Approach
 		std::queue<std::pair<float, float>> segmentList;
 		m_ArcLengthTable[0.0f] = 0.0f;
-		m_PointTable[0.0f] = m_Points[0].position;
+		m_PointTable[0.0f] = m_Points[0]->position;
 		segmentList.push({ 0.0f, 1.0f });
 		while (!segmentList.empty())
 		{

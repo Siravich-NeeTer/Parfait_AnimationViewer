@@ -19,9 +19,9 @@ namespace Parfait
 	class Curve : public Object
 	{
 		public:
-			Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool);
+			Curve(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, uint32_t _id, const std::string& _objectName);
 
-			void AddPoint(const glm::vec3& _newPosition);
+			std::shared_ptr<Object> AddPoint(uint32_t _id, const glm::vec3& _newPosition);
 			void Render(VkCommandBuffer commandBuffer, VkPipelineLayout _curvePipelineLayout);
 			void RenderPoint(VkCommandBuffer commandBuffer, VkPipelineLayout _spherePointPipelineLayout);
 
@@ -74,13 +74,13 @@ namespace Parfait
 				}
 				return positions;
 			}
-			std::vector<Object>& GetPointObject() { return m_Points; }
+			std::vector<Object*>& GetPointObject() { return m_Points; }
 
 		private:
 			const Graphics::VulkanContext& m_VulkanContextRef;
 			const Graphics::VulkanCommandPool& m_VulkanCommandPool;
 
-			std::vector<Object> m_Points;
+			std::vector<Object*> m_Points;
 			std::vector<PointVertex> m_PointVertices;
 			std::vector<glm::vec3> m_SphereVertices;
 

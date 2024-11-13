@@ -39,12 +39,23 @@ namespace Parfait
 			{
 				glm::mat4 model(1.0f);
 
+				// Compute with parent's model matrix
+				Object* curParent = parent;
+				while (curParent != nullptr)
+				{
+					model = model * curParent->GetModelMatrix();
+					curParent = curParent->parent;
+				}
+
 				model = glm::translate(model, position);
 				model *= glm::toMat4(glm::quat(glm::radians(rotation)));
 				model = glm::scale(model, scale);
 
 				return model;
 			}
+
+			const Object* GetParent() const { return parent; }
+			const std::vector<Object*>& GetChildren() const { return children; }
 
 			void SetParent(Object* _parent)
 			{

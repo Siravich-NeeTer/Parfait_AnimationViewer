@@ -42,7 +42,7 @@ namespace Parfait
             float m_BlendFactor;
 
             // Move Along Path
-            Curve* m_pCurrentPath;
+            Curve* m_pCurrentPath = nullptr;
             float m_PathLoopTime;
             float m_CurrentLoopTime;
 

@@ -89,11 +89,11 @@ namespace Parfait
 				VkImageView m_DepthImageView;
 
 				// Models - Animations
-				std::vector<std::unique_ptr<Object>> m_Objects;
-				std::vector<std::unique_ptr<Animator>> m_Animators;
+				std::map<uint32_t, std::shared_ptr<Object>> m_Objects;
+				std::vector<std::shared_ptr<Animator>> m_Animators;
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
-				int m_LastObjectID = 1;
+				int m_LastObjectID = 0;
 				
 				// Time Counter
 				float m_Time;
@@ -129,23 +129,21 @@ namespace Parfait
 				std::unique_ptr<VulkanBuffer> m_ObjectPickingBuffers[MAX_FRAMES_IN_FLIGHT];
 				struct SelectObjectComponent
 				{
-					uint32_t id;
+					uint32_t id = std::numeric_limits<uint32_t>::max();
 					float minDepth;
 				};
 				void* m_SelectedObject[MAX_FRAMES_IN_FLIGHT];
 				bool m_IsUpdateSelectedObject;
 				bool m_IsUsingGizmo;
 				ImGuizmo::OPERATION m_CurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
-				uint32_t m_SelectedObjectID;
+				uint32_t m_SelectedObjectID = std::numeric_limits<uint32_t>::max();
 				glm::mat4 currentMat = glm::mat4(1.0f);
 
 				// TODO: TEMP
-				/*
-				std::unique_ptr<Curve> curve;
+				Curve* curve;
 				std::vector<glm::vec3> curvePositionList;
 				std::unique_ptr<VulkanGraphicsPipeline> curvePipeline;
 				std::unique_ptr<VulkanGraphicsPipeline> spherePointPipeline;
-				*/
 
 				bool m_IsRenderGrid = true;
 
@@ -175,6 +173,9 @@ namespace Parfait
 
 				Model* LoadModel(const std::filesystem::path& _path, const std::string& _objectName = "");
 				Animator* LoadAnimator(const std::filesystem::path& _path, const std::string& _objectName = "");
+				Curve* CreateCurve(const std::string& _objectName = "");
+
+				void DisplayHierachy(Object* object);
 		};
 	}
 }
