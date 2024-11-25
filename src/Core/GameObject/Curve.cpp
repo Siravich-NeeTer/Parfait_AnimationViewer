@@ -26,7 +26,7 @@ namespace Parfait
 	}
 	std::shared_ptr<Object> Curve::AddPoint(uint32_t _id, const glm::vec3& _newPosition)
 	{
-		std::shared_ptr<Object> newObject = std::make_shared<Object>(_id, "Control Point_" + std::to_string(m_PointVertices.size()));
+		std::shared_ptr<Object> newObject = std::make_shared<Object>(_id, this->name + "_ControlPoint_" + std::to_string(m_Points.size()));
 		newObject->position = _newPosition;
 
 		newObject->AddOnObjectTransformCallback([this]() {

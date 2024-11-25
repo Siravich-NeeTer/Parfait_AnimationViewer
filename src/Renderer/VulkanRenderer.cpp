@@ -270,7 +270,7 @@ namespace Parfait
 						m_CurrentGizmoOperation = ImGuizmo::OPERATION::SCALE;
 
 					ImGuizmo::Enable(true);
-					glm::mat view = m_Camera.GetViewMatrix();
+					glm::mat4 view = m_Camera.GetViewMatrix();
 					glm::mat4 proj = glm::perspective(glm::radians(45.0f), m_OffscreenRenderer->GetWidth() / (float)m_OffscreenRenderer->GetHeight(), 0.1f, 10000.0f);
 
 					ImGuizmo::Manipulate(&view[0][0],
