@@ -42,11 +42,7 @@ namespace Parfait
 
 		m_PipelineLayoutRef = _pipelineLayout;
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model *= glm::translate(glm::mat4(1.0f), position);
-		model *= glm::toMat4(glm::quat(glm::radians(rotation)));
-		model *= glm::scale(glm::mat4(1.0f), scale);
-		//model *= glm::translate(glm::mat4(1.0f), -center);
+		glm::mat4 model = GetModelMatrix();
 
 		Graphics::MeshPushConstants meshConstants;
 		meshConstants.model = model;
@@ -292,11 +288,7 @@ namespace Parfait
 				currentParent = currentParent->parent;
 			}
 
-
-			glm::mat4 model = glm::mat4(1.0f);
-			model *= glm::translate(glm::mat4(1.0f), position);
-			model *= glm::toMat4(glm::quat(glm::radians(rotation)));
-			model *= glm::scale(glm::mat4(1.0f), scale);
+			glm::mat4 model = GetModelMatrix();
 
 			Graphics::MeshPushConstants meshConstants;
 			meshConstants.model = model * nodeMatrix;
@@ -336,10 +328,7 @@ namespace Parfait
 				currentParent = currentParent->parent;
 			}
 
-			glm::mat4 model = glm::mat4(1.0f);
-			model *= glm::translate(glm::mat4(1.0f), position);
-			model *= glm::toMat4(glm::quat(glm::radians(rotation)));
-			model *= glm::scale(glm::mat4(1.0f), scale);
+			glm::mat4 model = GetModelMatrix();
 
 			glm::mat4 modelPushConst = model * nodeMatrix;
 

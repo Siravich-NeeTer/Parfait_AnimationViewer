@@ -28,6 +28,11 @@ namespace Parfait
 	{
 		std::shared_ptr<Object> newObject = std::make_shared<Object>(_id, "Control Point_" + std::to_string(m_PointVertices.size()));
 		newObject->position = _newPosition;
+
+		newObject->AddOnObjectTransformCallback([this]() {
+			UpdateCurve();
+			});
+
 		m_Points.push_back(newObject.get());
 		m_PointVertices.push_back({ _newPosition, glm::vec3(1.0f) });
 

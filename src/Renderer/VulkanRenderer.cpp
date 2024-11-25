@@ -21,7 +21,7 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/Run.dae", "Run");
 			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
 			animator->PlayAnimation("SlowRun");
-			//animator->AttachPath(curve, 20.0f);
+			animator->AttachPath(curve, 20.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -293,7 +293,7 @@ namespace Parfait
 						m_Objects[m_SelectedObjectID]->position = position;
 						m_Objects[m_SelectedObjectID]->rotation = glm::degrees(glm::eulerAngles(rotation));
 						m_Objects[m_SelectedObjectID]->scale = scale;
-
+						m_ToggleOnObjectTransform = true;
 						m_IsUsingGizmo = true;
 					}
 					else
@@ -520,12 +520,14 @@ namespace Parfait
 
 				m_IsUpdateSelectedObject = false;
 			}
-			/*
-			if (updateCurve)
+
+			// Object Callback
+			if (m_ToggleOnObjectTransform)
 			{
-				curve->UpdateCurve();
+				m_Objects[m_SelectedObjectID]->OnObjectTransform();
+				m_ToggleOnObjectTransform = false;
 			}
-			*/
+
 			m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 		}
 		void VulkanRenderer::UpdateUniform(uint32_t _currentFrame)

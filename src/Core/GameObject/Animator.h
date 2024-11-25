@@ -24,6 +24,7 @@ namespace Parfait
             { 
                 m_pCurrentPath = _curve; 
                 m_PathLoopTime = _loopInSecond;
+                m_pCurrentModel->SetParent(_curve);
             }
 
             Animation* GetAnimation() const { return m_pCurrentAnimation; }

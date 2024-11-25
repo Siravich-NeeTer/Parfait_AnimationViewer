@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -63,8 +65,22 @@ namespace Parfait
 				_parent->children.push_back(this);
 			}
 
+			void AddOnObjectTransformCallback(const std::function<void()>& _objectTransformCallback)
+			{
+				m_OnObjectTransform.push_back(_objectTransformCallback);
+			}
+
+			void OnObjectTransform()
+			{
+				for (auto& objectTransformCallback : m_OnObjectTransform)
+				{
+					objectTransformCallback();
+				}
+			}
+
 		protected:
 			Object* parent = nullptr;
 			std::vector<Object*> children;
+			std::vector<std::function<void()>> m_OnObjectTransform;
 	};
 }

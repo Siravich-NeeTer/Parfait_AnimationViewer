@@ -94,6 +94,9 @@ namespace Parfait
 				bool m_IsDrawBone = false;
 				int m_TotalBoneTransform = 0;
 				int m_LastObjectID = 0;
+
+				bool m_ToggleOnObjectTransform;
+
 				
 				// Time Counter
 				float m_Time;
