@@ -26,6 +26,29 @@ namespace Parfait
         }
 
         m_DeltaTime = _dt;
+
+        // TODO: TEMP CODE
+        Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode("mixamorig_LeftHandMiddle3");
+        glm::vec3 Pd = m_pCurrentModel->focusPoint;
+        glm::vec3 Pc = m_pCurrentModel->GetBonePosition(boneNode), Pv = glm::vec3(0.0f);
+        for (int i = 5; i >= 0; i--)
+        {
+            glm::vec3 Jk = m_pCurrentModel->GetBonePosition(boneNode->parent);
+            glm::vec3 Vck = Pc - Jk;
+            glm::vec3 Vdk = Pd - Jk;
+
+            float alpha = acos(dot(Vck, Vdk) / (glm::length(Vck) * glm::length(Vdk)));
+            glm::vec3 Axis = glm::cross(Vck, Vdk);
+
+            boneNode->parent->offset = glm::rotate(glm::mat4(1.0f), alpha, Axis);
+
+            if (glm::distance(Pd, Pc) < 0.01f)
+                break;
+
+            boneNode = boneNode->parent;
+            Pv = Pc;
+        }
+
         if (m_pCurrentAnimation && m_pNextAnimation)
         {
             m_CurrentAnimationTime += m_pCurrentAnimation->GetTicksPerSecond() * _dt;
@@ -85,6 +108,15 @@ namespace Parfait
         {
             Bone->Update(m_CurrentAnimationTime);
             nodeTransform = Bone->GetLocalTransform();
+
+            Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode(nodeName);
+            if (boneNode->IsValid())
+            {
+                if(boneNode->matrixType == Model::BoneNode::OVERRIDE)
+                    nodeTransform = Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(nodeName)->offset);
+                else
+                    nodeTransform = nodeTransform * Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(nodeName)->offset);
+            }
         }
 
         const Math::VQS& globalTransformation = _parentTransform * nodeTransform;
@@ -128,6 +160,15 @@ namespace Parfait
             glm::vec3 finalScale = glm::mix(startScale, endScale, m_BlendFactor);
 
             nodeTransform = Math::VQS(finalTranslation, finalQuaternion, finalScale);
+
+            Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode(_currentAnimationNode->name);
+            if (boneNode->IsValid())
+            {
+                if (boneNode->matrixType == Model::BoneNode::OVERRIDE)
+                    nodeTransform = Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(_currentAnimationNode->name)->offset);
+                else
+                    nodeTransform = nodeTransform * Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(_currentAnimationNode->name)->offset);
+            }
         }
 
         const Math::VQS& globalTransformation = _parentTransform * nodeTransform;

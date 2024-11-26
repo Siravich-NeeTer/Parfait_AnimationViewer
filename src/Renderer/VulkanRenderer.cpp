@@ -20,8 +20,8 @@ namespace Parfait
 			animator->GetModel()->AddAnimation("Models/SlowRun.dae", "SlowRun");
 			animator->GetModel()->AddAnimation("Models/Run.dae", "Run");
 			animator->GetModel()->AddAnimation("Models/Idle.dae", "Idle");
-			animator->PlayAnimation("SlowRun");
-			animator->AttachPath(curve, 20.0f);
+			animator->PlayAnimation("Idle");
+			//animator->AttachPath(curve, 20.0f);
 			//LoadModel("Models/viking_room.obj");
 			//LoadAnimator("Models/Fox.gltf");
 			// -------------------------------------------------
@@ -318,6 +318,11 @@ namespace Parfait
 					ImGui::Text("Scale"); ImGui::SameLine();
 					ImGui::DragFloat3("##Scale", &m_Objects[m_SelectedObjectID]->scale[0], 0.01f, 0.0f, 100.0f);
 				}
+
+				// TODO: TMP DEBUG
+				ImGui::Text("IK Target"); ImGui::SameLine();
+				ImGui::DragFloat3("##Position", &m_Animators[0]->GetModel()->focusPoint[0], 0.01f, -100.0f, 100.0f);
+				
 				ImGui::End();
 
 				/*

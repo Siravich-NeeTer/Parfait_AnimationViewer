@@ -1,5 +1,7 @@
 #include "Model.h"
 
+#include <stack>
+
 namespace Parfait
 {
 	Model::Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, const std::string& _objectName, bool _isAnimation)
@@ -182,6 +184,13 @@ namespace Parfait
 		//scale = glm::vec3(1.0f);
 
 		ProcessNode(scene->mRootNode, scene, nullptr);
+		ExtractBoneHierachy();
+		// TODO: REMOVE THIS
+		/*
+		// Override mixamorig_LeftShoulder
+		if(m_BoneNodeMap.find("mixamorig_LeftShoulder") != m_BoneNodeMap.end())
+			m_BoneNodeMap["mixamorig_LeftShoulder"]->offset = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
+		*/
 
 		if (scene->HasAnimations())
 		{
@@ -387,6 +396,11 @@ namespace Parfait
 				m_BoneCounter++;
 				
 				aiNode* node = _mesh->mBones[boneIndex]->mNode;
+
+				m_BoneHierachy[node->mParent->mName.C_Str()].push_back(boneName);
+				m_BoneNameList.insert(node->mParent->mName.C_Str());
+				m_BoneNameList.insert(boneName);
+
 				if (m_BoneInfoMap.find(node->mParent->mName.C_Str()) != m_BoneInfoMap.end())
 				{
 					m_BoneVertices.push_back({ glm::vec3(glm::inverse(m_BoneInfoMap[node->mParent->mName.C_Str()].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), {1.0f, 0.0f, 0.0f}, m_BoneInfoMap[node->mParent->mName.C_Str()].id });
@@ -407,6 +421,80 @@ namespace Parfait
 				float weight = weights[weightIndex].mWeight;
 				assert(vertexId <= _vertices.size());
 				SetVertexBoneData(_vertices[_startIdx + vertexId], boneID, weight);
+			}
+		}
+	}
+	void Model::ExtractBoneHierachy()
+	{
+		std::set<std::string> _BoneName(m_BoneNameList);
+		for (auto& boneNameMap : m_BoneHierachy)
+		{
+			for (auto& boneName : boneNameMap.second)
+			{
+				_BoneName.erase(boneName);
+			}
+		}
+
+		for (auto& rootNodeName : _BoneName)
+		{
+			BoneNode* rootNode = new BoneNode();
+			rootNode->name = rootNodeName;
+
+			m_RootBoneList.push_back(rootNode);
+			ProcessBoneNodeHierachy(rootNode);
+		}
+
+		PrintBoneHierachy();
+		return;
+	}
+	void Model::ProcessBoneNodeHierachy(BoneNode* _boneNode)
+	{
+		m_BoneNodeMap[_boneNode->name] = _boneNode;
+		const std::vector<std::string>& _BoneNameList = m_BoneHierachy[_boneNode->name];
+
+		if (_BoneNameList.size() == 0)
+			return;
+
+		for (const std::string& boneName : _BoneNameList)
+		{
+			BoneNode* newBoneNode = new BoneNode();
+			newBoneNode->parent = _boneNode;
+			newBoneNode->name = boneName;
+
+			_boneNode->children.push_back(newBoneNode);
+
+			ProcessBoneNodeHierachy(newBoneNode);
+		}
+	}
+	void Model::PrintBoneHierachy()
+	{
+		std::stack<std::pair<BoneNode*, int>> dfsBone;
+		std::map<int, int> depthCountBone;
+		for (auto& rootBoneNode : m_RootBoneList)
+		{
+			dfsBone.push({ rootBoneNode, 0 });
+			depthCountBone[0]++;
+		}
+
+		while (!dfsBone.empty())
+		{
+			BoneNode* curBoneNode = dfsBone.top().first;
+			int depth = dfsBone.top().second;
+			dfsBone.pop();
+
+			for (int i = 0; i < depth; i++)
+			{
+				std::cout << "\t";
+				if (depthCountBone[i + 1] > 0)
+					std::cout << "|";
+			}
+			std::cout << "--" << curBoneNode->name << "\n";
+			depthCountBone[depth]--;
+
+			for (auto& child : curBoneNode->children)
+			{
+				dfsBone.push({ child, depth + 1 });
+				depthCountBone[depth + 1]++;
 			}
 		}
 	}
