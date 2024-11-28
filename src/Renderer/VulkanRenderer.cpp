@@ -321,7 +321,7 @@ namespace Parfait
 
 				// TODO: TMP DEBUG
 				ImGui::Text("IK Target"); ImGui::SameLine();
-				ImGui::DragFloat3("##Position", &m_Animators[0]->GetModel()->focusPoint[0], 0.01f, -100.0f, 100.0f);
+				ImGui::DragFloat3("###Position", &m_Animators[0]->GetModel()->focusPoint[0], 0.001f, -100.0f, 100.0f);
 				
 				ImGui::End();
 

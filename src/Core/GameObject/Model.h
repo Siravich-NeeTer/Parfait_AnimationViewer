@@ -34,7 +34,7 @@ namespace Parfait
 	{
 		public:
 			// TODO: REMOVE THIS TEMP
-			glm::vec3 focusPoint = glm::vec3(0.0f);
+			glm::vec3 focusPoint = glm::vec3(0.8f, 1.47f, 1.0f);
 
 			struct Primitive
 			{
@@ -68,6 +68,7 @@ namespace Parfait
 
 				std::string name;
 				glm::mat4 offset = glm::mat4(1.0f);
+				glm::mat4 rot = glm::mat4(1.0f);
 				int depth = 0;
 
 				enum MatrixType
@@ -80,6 +81,18 @@ namespace Parfait
 				bool IsValid() const
 				{
 					return offset != glm::mat4(1.0f);
+				}
+
+				glm::mat4 GetModelMatrix()
+				{
+					glm::mat4 ret(1.0f);
+					BoneNode* cur = this;
+					while (cur)
+					{
+						ret *= cur->offset;
+						cur = cur->parent;
+					}
+					return ret;
 				}
 			};
 
@@ -106,11 +119,11 @@ namespace Parfait
 					return m_BoneNodeMap[_boneNodeName];
 				return nullptr;
 			}
-			glm::vec3 GetBonePosition(BoneNode* _boneNode) { return GetBonePosition(_boneNode->name); }
-			glm::vec3 GetBonePosition(std::string _boneNodeName)
+			const glm::vec3& GetBonePosition(BoneNode* _boneNode) { return GetBonePosition(_boneNode->name); }
+			const glm::vec3& GetBonePosition(std::string _boneNodeName)
 			{
 				if (m_BoneNodeMap.find(_boneNodeName) != m_BoneNodeMap.end())
-					return glm::vec3(this->GetModelMatrix() * glm::inverse(m_BoneInfoMap[_boneNodeName].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+					return glm::vec3(GetModelMatrix() * m_BoneNodeMap[_boneNodeName]->offset * glm::inverse(m_BoneInfoMap[_boneNodeName].offset) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 				return glm::vec3(0.0f);
 			}
 

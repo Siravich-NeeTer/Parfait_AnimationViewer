@@ -7,6 +7,8 @@
 
 namespace Parfait
 {
+    glm::quat FromToRotation(const glm::vec3& from, const glm::vec3& to);
+
     class Animator
     {
         public:

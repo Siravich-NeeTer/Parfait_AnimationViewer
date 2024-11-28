@@ -1,7 +1,47 @@
 #include "Animator.h"
+#include <iostream>
+#include <stdlib.h>
+#include <queue>
+#include <utility>
+
+#include <glm/gtx/string_cast.hpp>
 
 namespace Parfait
 {
+    glm::quat FromToRotation(const glm::vec3& from, const glm::vec3& to)
+    {
+        // Normalize the input vectors to ensure they are unit vectors
+        glm::vec3 fromNormalized = glm::normalize(from);
+        glm::vec3 toNormalized = glm::normalize(to);
+
+        // Compute the cross product (axis of rotation)
+        glm::vec3 axis = glm::cross(fromNormalized, toNormalized);
+
+        // If the cross product is close to zero, the vectors are parallel
+        if (glm::length(axis) < 1e-6f) {
+            // If vectors are parallel, we return identity quaternion
+            // (no rotation needed) or 180 degree rotation along any perpendicular axis
+            if (glm::dot(fromNormalized, toNormalized) > 0.0f) {
+                return glm::quat(1, 0, 0, 0); // No rotation
+            }
+            else {
+                // Vectors are exactly opposite, return 180 degree rotation around an arbitrary axis
+                return glm::quat(glm::pi<float>(), glm::vec3(1, 0, 0)); // 180 degree rotation along x-axis
+            }
+        }
+
+        // Normalize the axis of rotation
+        axis = glm::normalize(axis);
+
+        // Compute the angle between the two vectors (in radians)
+        float angle = acos(glm::dot(fromNormalized, toNormalized));
+
+        // Create a quaternion from the axis and angle
+        glm::quat rotation = glm::angleAxis(angle, axis);
+
+        return rotation;
+    }
+
     Animator::Animator(Model* model)
     {
         m_CurrentAnimationTime = 0.0f;
@@ -27,28 +67,6 @@ namespace Parfait
 
         m_DeltaTime = _dt;
 
-        // TODO: TEMP CODE
-        Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode("mixamorig_LeftHandMiddle3");
-        glm::vec3 Pd = m_pCurrentModel->focusPoint;
-        glm::vec3 Pc = m_pCurrentModel->GetBonePosition(boneNode), Pv = glm::vec3(0.0f);
-        for (int i = 5; i >= 0; i--)
-        {
-            glm::vec3 Jk = m_pCurrentModel->GetBonePosition(boneNode->parent);
-            glm::vec3 Vck = Pc - Jk;
-            glm::vec3 Vdk = Pd - Jk;
-
-            float alpha = acos(dot(Vck, Vdk) / (glm::length(Vck) * glm::length(Vdk)));
-            glm::vec3 Axis = glm::cross(Vck, Vdk);
-
-            boneNode->parent->offset = glm::rotate(glm::mat4(1.0f), alpha, Axis);
-
-            if (glm::distance(Pd, Pc) < 0.01f)
-                break;
-
-            boneNode = boneNode->parent;
-            Pv = Pc;
-        }
-
         if (m_pCurrentAnimation && m_pNextAnimation)
         {
             m_CurrentAnimationTime += m_pCurrentAnimation->GetTicksPerSecond() * _dt;
@@ -72,6 +90,153 @@ namespace Parfait
             m_CurrentLoopTime = fmod(m_CurrentLoopTime, m_PathLoopTime);
             MoveAlongPath();
         }
+
+        // Solve IK
+        Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode("mixamorig_LeftHandMiddle3");
+        const size_t BONE_SIZE = 6;
+        float boneLength[BONE_SIZE] = { 0 };
+
+        Model::BoneNode* boneNodeList[BONE_SIZE + 1] = { nullptr };
+
+        float fullLength = 0.0f;
+        boneNodeList[BONE_SIZE] = boneNode;
+        for (int i = BONE_SIZE - 1; i >= 0; i--)
+        {
+            const auto& currentBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(boneNode->name);
+            int index = currentBoneIt->second.id;
+            glm::vec3 b1 = m_pCurrentModel->GetBonePosition(boneNode);
+
+            const auto& nextBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(boneNode->parent->name);
+            int nextIndex = nextBoneIt->second.id;
+            glm::vec3 b2 = m_pCurrentModel->GetBonePosition(boneNode->parent);
+
+            boneLength[i] = glm::distance(b1, b2);
+            fullLength += boneLength[i];
+
+            boneNode = boneNode->parent;
+            boneNodeList[i] = boneNode;
+        }
+
+        glm::vec3 tmpPosition[BONE_SIZE + 1];
+        for (int i = 0; i <= BONE_SIZE; i++)
+        {
+            const auto& currentBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(boneNodeList[i]->name);
+            int index = currentBoneIt->second.id;
+            tmpPosition[i] = m_pCurrentModel->GetBonePosition(boneNodeList[i]);
+        }
+
+        // FABRIK
+        /*
+        float sqrDistanceToTarget = glm::distance(m_pCurrentModel->focusPoint, tmpPosition[BONE_SIZE]);
+        if (sqrDistanceToTarget >= fullLength * fullLength)
+        {
+            // Get the direction towards the target
+            glm::vec3 dir = glm::normalize(m_pCurrentModel->focusPoint - tmpPosition[BONE_SIZE]);
+
+            // Distribute bones along the direction towards the target
+            for (int i = BONE_SIZE - 1; i >= 0; i--)
+                tmpPosition[i] = tmpPosition[i + 1] - dir * boneLength[i];
+        }
+        */
+        glm::vec3 newFocusPoint = m_pCurrentModel->focusPoint;
+        if (glm::distance(tmpPosition[0], m_pCurrentModel->focusPoint) > fullLength)
+        {
+            newFocusPoint = tmpPosition[0] + glm::normalize(m_pCurrentModel->focusPoint - tmpPosition[0]) * fullLength;
+        }
+
+        glm::vec3 startDir[BONE_SIZE + 1] = { glm::vec3() };
+        startDir[BONE_SIZE] = newFocusPoint - tmpPosition[BONE_SIZE];
+        for (int i = 0; i < BONE_SIZE; i++)
+        {
+            startDir[i] = tmpPosition[i + 1] - tmpPosition[i];
+        }
+
+
+        int iterations = 10;
+        float accuracy = 0.001f;
+        for (int iteration = 0; iteration < iterations; iteration++)
+        {
+            // TODO: Back Propagation
+            for (int i = BONE_SIZE; i > 0; i--)
+            {
+                if (i == BONE_SIZE)
+                {
+                    // Just set the effector to the target position
+                    tmpPosition[i] = newFocusPoint;
+                }
+                else
+                {
+                    // Move the current bone to its new position on the line based on its length and the position of the next bone
+                    glm::vec3 dir = glm::normalize(tmpPosition[i] - tmpPosition[i + 1]);
+                    tmpPosition[i] = tmpPosition[i + 1] + dir * boneLength[i];
+                }
+            }
+
+            // TODO: Front Propagation
+            for (int i = 1; i <= BONE_SIZE; i++)
+            {
+                // This time set the current bone's position to the position on the line between itself and the previous bone, taking its length into consideration
+                tmpPosition[i] = tmpPosition[i - 1] + glm::normalize(tmpPosition[i] - tmpPosition[i - 1]) * boneLength[i - 1];
+            }
+
+            // Stop iterating if we are close enough according to the accuracy value
+            float sqdistance = glm::distance(tmpPosition[BONE_SIZE], newFocusPoint);
+            if (sqdistance < accuracy * accuracy)
+                break;
+        }
+
+        int debugIndex = 0;
+        for (int i = 0; i <= BONE_SIZE; i++)
+        {
+            const auto& currentBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(boneNodeList[i]->name);
+            int index = currentBoneIt->second.id;
+
+            if (i == BONE_SIZE)
+                debugIndex = index;
+
+            glm::vec3 currentBonePosition = m_pCurrentModel->GetBonePosition(boneNodeList[i]);
+            glm::vec3 translate = tmpPosition[i] - currentBonePosition;
+
+            glm::mat4 rot = glm::mat4(1.0f);
+            glm::quat qRot = glm::quat();
+            if (i < BONE_SIZE)
+            {
+                rot = glm::toMat4(FromToRotation(startDir[i], tmpPosition[i + 1] - tmpPosition[i]));
+                qRot = FromToRotation(startDir[i], tmpPosition[i + 1] - tmpPosition[i]);
+            }
+            boneNodeList[i]->offset = glm::translate(boneNodeList[i]->offset, 1.0f / m_pCurrentModel->scale * translate);
+            boneNodeList[i]->rot = rot;
+        }
+
+        /*
+        std::queue<std::pair<Model::BoneNode*, glm::mat4>> st;
+        st.push({ boneNodeList[0], boneNodeList[0]->offset });
+        while (!st.empty())
+        {
+            Model::BoneNode* currentBoneNode = st.front().first;
+            glm::mat4 parentMat = st.front().second;
+            st.pop();
+
+            for (size_t i = 0; i < currentBoneNode->children.size(); i++)
+            {
+                const auto& currentBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(currentBoneNode->children[i]->name);
+                int index = currentBoneIt->second.id;
+                if (currentBoneNode->children[i]->offset == glm::mat4(1.0f))
+                {
+                    //std::cout << currentBoneNode->children[i]->name << "\n";
+                    glm::mat4 tmp = m_FinalBoneMatrices[index];
+                    m_FinalBoneMatrices[index] = parentMat * m_FinalBoneMatrices[index];
+                    st.push({ currentBoneNode->children[i], tmp });
+                }
+                else
+                {
+                    st.push({ currentBoneNode->children[i], m_FinalBoneMatrices[index] });
+                }
+            }
+        }
+        //std::cout << "\n";
+        return;
+        */
     }
 
     void Animator::PlayAnimation(Animation* _pAnimation)
@@ -103,35 +268,39 @@ namespace Parfait
         Math::VQS nodeTransform = _node->transformation;
 
         Bone* Bone = m_pCurrentAnimation->FindBone(nodeName);
+        Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode(nodeName);
 
         if (Bone)
         {
             Bone->Update(m_CurrentAnimationTime);
             nodeTransform = Bone->GetLocalTransform();
 
-            Model::BoneNode* boneNode = m_pCurrentModel->GetBoneNode(nodeName);
             if (boneNode->IsValid())
-            {
-                if(boneNode->matrixType == Model::BoneNode::OVERRIDE)
-                    nodeTransform = Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(nodeName)->offset);
-                else
-                    nodeTransform = nodeTransform * Math::MatrixToVQS(m_pCurrentModel->GetBoneNode(nodeName)->offset);
-            }
+                nodeTransform = Math::MatrixToVQS(boneNode->offset);
         }
 
-        const Math::VQS& globalTransformation = _parentTransform * nodeTransform;
+        Math::VQS globalTransformation = _parentTransform * nodeTransform;
 
         auto& boneInfoMap = m_pCurrentAnimation->GetBoneIDMap();
         const auto& currentBoneIt = boneInfoMap.find(nodeName);
         if (currentBoneIt != boneInfoMap.end())
         {
             int index = currentBoneIt->second.id;
-            const glm::mat4& offset = currentBoneIt->second.offset;
-            m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
+            glm::mat4 offset = currentBoneIt->second.offset;
+
+            if (boneNode && boneNode->IsValid())
+                m_FinalBoneMatrices[index] = nodeTransform.Matrix();
+            else
+                m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
         }
 
         for (int i = 0; i < _node->childrenCount; i++)
-            CalculateBoneTransform(&_node->children[i], globalTransformation);
+        {
+            if (boneNode && boneNode->IsValid())
+                CalculateBoneTransform(&_node->children[i], nodeTransform);
+            else
+                CalculateBoneTransform(&_node->children[i], globalTransformation);
+        }
     }
     void Animator::CalculateBoneTransform(const AssimpNodeData* _currentAnimationNode, const AssimpNodeData* _nextAnimationNode, Math::VQS _parentTransform)
     {
