@@ -181,6 +181,10 @@ namespace Parfait
 							vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
 							vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_BonePipeline->GetPipelineLayout(), 1, 1, &m_FrameDescriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, nullptr);
 							model->DrawBone(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), m_BonePipeline->GetPipelineLayout());
+
+							vkCmdBindPipeline(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipeline());
+							vkCmdBindDescriptorSets(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, spherePointPipeline->GetPipelineLayout(), 0, 1, &m_Descriptor->GetDescriptorSets(0)[m_CurrentFrame], 0, NULL);
+							model->DrawJoint(m_CommandBuffers[m_CurrentFrame]->GetCommandBuffer(), spherePointPipeline->GetPipelineLayout());
 						}
 					}
 					else if (Curve* curve = dynamic_cast<Curve*>(obj.second.get()))
@@ -678,8 +682,9 @@ namespace Parfait
 				VkVertexInputBindingDescription{ .binding = 0, .stride = sizeof(glm::vec3), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX },
 				std::vector<VkVertexInputAttributeDescription>{ tmp },
 				sizeof(glm::mat4),
-				VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
-				VK_POLYGON_MODE_FILL);
+				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+				VK_POLYGON_MODE_FILL,
+				false);
 
 			CreateObjectPicking();
 		}

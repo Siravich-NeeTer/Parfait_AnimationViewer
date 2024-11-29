@@ -32,10 +32,9 @@ namespace Parfait
             Animation* GetAnimation() const { return m_pCurrentAnimation; }
             Model* GetModel() const { return m_pCurrentModel; }
             float GetBlendFactor() const { return m_BlendFactor; }
-            const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices;  }
+            const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_pCurrentModel->m_FinalBoneMatrices;  }
 
         private:
-            std::vector<glm::mat4> m_FinalBoneMatrices;
             Animation* m_pCurrentAnimation;
             Animation* m_pNextAnimation;
             Model* m_pCurrentModel;

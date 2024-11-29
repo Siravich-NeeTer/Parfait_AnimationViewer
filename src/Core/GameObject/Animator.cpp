@@ -51,11 +51,6 @@ namespace Parfait
 
         m_pCurrentAnimation = model->GetCurrentActiveAnimation();
         m_pNextAnimation = nullptr;
-
-        m_FinalBoneMatrices.reserve(model->GetCurrentActiveAnimation()->GetBoneIDMap().size());
-
-        for (int i = 0; i < model->GetCurrentActiveAnimation()->GetBoneIDMap().size(); i++)
-            m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
     }
 
     void Animator::UpdateAnimation(float _dt)
@@ -185,14 +180,11 @@ namespace Parfait
                 break;
         }
 
-        int debugIndex = 0;
+        glm::vec3 fullTrans = glm::vec3(0.0f);
         for (int i = 0; i <= BONE_SIZE; i++)
         {
             const auto& currentBoneIt = m_pCurrentAnimation->GetBoneIDMap().find(boneNodeList[i]->name);
             int index = currentBoneIt->second.id;
-
-            if (i == BONE_SIZE)
-                debugIndex = index;
 
             glm::vec3 currentBonePosition = m_pCurrentModel->GetBonePosition(boneNodeList[i]);
             glm::vec3 translate = tmpPosition[i] - currentBonePosition;
@@ -206,6 +198,7 @@ namespace Parfait
             }
             boneNodeList[i]->offset = glm::translate(boneNodeList[i]->offset, 1.0f / m_pCurrentModel->scale * translate);
             boneNodeList[i]->rot = rot;
+            fullTrans += translate;
         }
 
         /*
@@ -223,18 +216,18 @@ namespace Parfait
                 int index = currentBoneIt->second.id;
                 if (currentBoneNode->children[i]->offset == glm::mat4(1.0f))
                 {
-                    //std::cout << currentBoneNode->children[i]->name << "\n";
-                    glm::mat4 tmp = m_FinalBoneMatrices[index];
-                    m_FinalBoneMatrices[index] = parentMat * m_FinalBoneMatrices[index];
-                    st.push({ currentBoneNode->children[i], tmp });
+                    std::cout << currentBoneNode->children[i]->name << "\n";
+                    glm::mat4 tmp = m_pCurrentModel->m_FinalBoneMatrices[index];
+                    m_pCurrentModel->m_FinalBoneMatrices[index] = parentMat * m_pCurrentModel->m_FinalBoneMatrices[index];
+                    st.push({ currentBoneNode->children[i], parentMat * tmp });
                 }
                 else
                 {
-                    st.push({ currentBoneNode->children[i], m_FinalBoneMatrices[index] });
+                    st.push({ currentBoneNode->children[i], parentMat * m_pCurrentModel->m_FinalBoneMatrices[index] });
                 }
             }
         }
-        //std::cout << "\n";
+        std::cout << "\n";
         return;
         */
     }
@@ -289,9 +282,9 @@ namespace Parfait
             glm::mat4 offset = currentBoneIt->second.offset;
 
             if (boneNode && boneNode->IsValid())
-                m_FinalBoneMatrices[index] = nodeTransform.Matrix();
+                m_pCurrentModel->m_FinalBoneMatrices[index] = nodeTransform.Matrix();
             else
-                m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
+                m_pCurrentModel->m_FinalBoneMatrices[index] = globalTransformation.Matrix() * offset;
         }
 
         for (int i = 0; i < _node->childrenCount; i++)
@@ -355,7 +348,7 @@ namespace Parfait
 
             glm::mat4 offset = (1.0f - m_BlendFactor) * offset1 + m_BlendFactor * offset2;
 
-            m_FinalBoneMatrices[index1] = globalTransformation.Matrix() * offset;
+            m_pCurrentModel->m_FinalBoneMatrices[index1] = globalTransformation.Matrix() * offset;
         }
 
         // TODO: Assume currentAnimationNode & nextAnimationNode use same hierachy

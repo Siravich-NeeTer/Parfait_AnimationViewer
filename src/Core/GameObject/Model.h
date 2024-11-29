@@ -35,6 +35,7 @@ namespace Parfait
 		public:
 			// TODO: REMOVE THIS TEMP
 			glm::vec3 focusPoint = glm::vec3(0.8f, 1.47f, 1.0f);
+			std::vector<glm::mat4> m_FinalBoneMatrices;
 
 			struct Primitive
 			{
@@ -100,11 +101,20 @@ namespace Parfait
 			Model(const Graphics::VulkanContext& _vulkanContext, const Graphics::VulkanCommandPool& _vulkanCommandPool, const std::filesystem::path& _path, uint32_t _id, const std::string& _objectName, bool _isAnimation = false);
 			void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawBone(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
+			void DrawJoint(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 			void DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout);
 
 			void SetBoneTransformOffset(int offset) { m_BoneTransformOffset = offset; }
 			void SetIsAnimation(bool active) { m_IsAnimation = active; }
-			void SetCurrentActiveAnimation(const std::string& _animationName) { m_CurrentActiveAnimation = &m_Animations[_animationName]; }
+			void SetCurrentActiveAnimation(const std::string& _animationName) 
+			{ 
+				m_FinalBoneMatrices.clear();
+				m_CurrentActiveAnimation = &m_Animations[_animationName]; 
+				m_FinalBoneMatrices.reserve(m_CurrentActiveAnimation->GetBoneIDMap().size());
+
+				for (int i = 0; i < m_CurrentActiveAnimation->GetBoneIDMap().size(); i++)
+					m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+			}
 			void AddAnimation(const std::filesystem::path& _path, const std::string& customName = "");
 
 			std::map<std::string, BoneInfo>& GetBoneInfoMap() { return m_BoneInfoMap; }
@@ -161,6 +171,9 @@ namespace Parfait
 
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::BoneVertex>> m_BoneVertexBuffer;
 			std::unique_ptr<Graphics::VulkanVertexBuffer<Graphics::ObjectPickingVertex>> m_ObjectPickingVertexBuffer;
+
+			std::vector<glm::vec3> m_SphereVertices;
+			std::unique_ptr<Graphics::VulkanVertexBuffer<glm::vec3>> m_SpherePointBuffer;
 
 			// Temp: For Inverse Kinematic
 			std::map<std::string, std::vector<std::string>> m_BoneHierachy;

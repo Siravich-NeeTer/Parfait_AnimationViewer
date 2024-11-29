@@ -1,6 +1,8 @@
 #include "Model.h"
 
 #include <stack>
+#include "Math/MathUtility.h"
+#include "Renderer/Utilities/PrimitiveMesh.h"
 
 namespace Parfait
 {
@@ -16,6 +18,10 @@ namespace Parfait
 
 		m_VertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::Vertex>>(_vulkanContext, _vulkanCommandPool, m_Vertices.data(), m_Vertices.size());
 		m_IndexBuffer = std::make_unique<Graphics::VulkanIndexBuffer>(_vulkanContext, _vulkanCommandPool, m_Indices.data(), m_Indices.size());
+
+		m_SphereVertices = Parfait::Primitive::CreateSphere(1.0f, 32, 32);
+		m_SpherePointBuffer = std::make_unique<Graphics::VulkanVertexBuffer<glm::vec3>>(m_VulkanContextRef, m_VulkanCommandPool, m_SphereVertices.data(), m_SphereVertices.size());
+
 
 		m_ObjectPickingVertexBuffer = std::make_unique<Graphics::VulkanVertexBuffer<Graphics::ObjectPickingVertex>>(_vulkanContext, _vulkanCommandPool, m_ObjectPickingVertices.data(), m_ObjectPickingVertices.size());
 
@@ -56,6 +62,29 @@ namespace Parfait
 
 		vkCmdPushConstants(commandBuffer, m_PipelineLayoutRef, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Graphics::MeshPushConstants), &meshConstants);
 		vkCmdDraw(commandBuffer, m_BoneVertices.size(), 1, 0, 0);
+	}
+	void Model::DrawJoint(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
+	{
+		const VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_SpherePointBuffer->GetBuffer(), offsets);
+		for (auto& name : m_BoneNameList)
+		{
+			auto it = m_BoneInfoMap.find(name);
+			if (it == m_BoneInfoMap.end())
+				continue;
+
+			glm::mat4 model = GetModelMatrix() * m_FinalBoneMatrices[it->second.id] * glm::inverse(it->second.offset);
+
+			vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &model);
+			vkCmdDraw(commandBuffer, m_SphereVertices.size(), 1, 0, 0);
+		}
+
+		/*
+		glm::mat4 model = glm::mat4(1.0f);
+
+		vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &model);
+		vkCmdDraw(commandBuffer, m_SphereVertices.size(), 1, 0, 0);
+		*/
 	}
 	void Model::DrawPicking(VkCommandBuffer commandBuffer, VkPipelineLayout _pipelineLayout)
 	{
